@@ -1,0 +1,10 @@
+0.2 2007-09-05 First public release, as part of PostgreSQL 8.3 background
+               writer performance testing results.  Only supports Linux.
+
+0.3 2009-04-22 Released to beta testers, used to generate "Using and Abusing
+               pgbench" results presented PG East 2009
+
+0.4	2009-05-23 Added full support for separate test/results databases.
+               Bugs reported by Robert Treat and Jignesh Shah fixed,
+               improving compatiblity with Solaris.
+

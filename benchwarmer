@@ -1,0 +1,187 @@
+#!/bin/bash
+
+source ./config
+
+# Take clients and total transactions from command line if passed, use defaults
+# otherwise
+
+# Clients
+if [ ! -z "$1" ]; then
+  CLIENTS="$1"
+elif [ -z "$CLIENTS" ]; then
+  CLIENTS=4
+fi
+
+# Transactions
+if [ ! -z "$2" ]; then
+  TOTTRANS="$2"
+elif [ -z "$TOTTRANS" ]; then
+  TOTTRANS=1000
+fi
+
+# Query the test database and put its background writer statistics into
+# a set of environment variables, probably for use inserting stats into
+# the results database
+function get_bgwriter {
+  BGW=`$TESTPSQL -A -t -F" " -c "select checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc from pg_stat_bgwriter"`
+  set -- $BGW
+  checkpoints_timed=$1
+  checkpoints_req=$2
+  buffers_checkpoint=$3
+  buffers_clean=$4
+  maxwritten_clean=$5
+  buffers_backend=$6
+  buffers_alloc=$7
+}
+
+# Figure out how many transactions per client, then recompute
+# a new total; this copes with rounding issues
+TRANS=`expr $TOTTRANS / $CLIENTS`
+TOTTRANS=`expr $TRANS \* $CLIENTS`
+
+# psql statements for the test database and the result database
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+echo Running tests using:  $TESTPSQL
+echo Storing results using:  $RESULTPSQL
+
+# Determine database scale
+# TODO If running a custom test, this won't return a useful value.  Should
+# include a config file setting for whether we're testing with the
+# standard tables or not.
+SCALE=`$TESTPSQL -A -t -c "select count(*) from branches"`
+if [ -z "$SCALE" ]; then
+  echo ERROR:  Attempt to determine database scale returned \"$SCALE\", aborting
+  exit
+fi
+
+# Confirm we have a useful pgbench to run
+if [ ! -f $PGBENCHBIN ]; then
+  echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
+  exit
+fi
+
+# Find current test set
+SET=`$RESULTPSQL -A -t -c "select max(set) from testset"`
+if [ "$?" -ne "0" ]; then
+  echo ERROR:  Attempt to determine test set failed
+  # TODO Create a fake first set if this happens?  Right now,
+  # the likely case is that the test DDL was never added, which
+  # makes that sort of correction attempt unlikely to be useful
+  exit
+fi
+
+# Cleanuip pgbench tables, unless we've been told to skip that
+if [ "$SKIPINIT" -ne "1" ]; then
+  echo Cleaning up database $TESTDB
+  $TESTPSQL -c 'truncate table history'
+  $TESTPSQL -c 'vacuum'
+  $TESTPSQL -c 'vacuum analyze'
+  $TESTPSQL -c 'checkpoint'
+  # We want clean stats from the pg_stat_bgwriter, but those won't show up
+  # until after the checkpoint is done.  Wait a bit for the stats to update
+  sleep 20
+fi
+
+# Create the tests record
+DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
+$RESULTPSQL -q -c "insert into tests (script,clients,trans,set,scale,dbsize) values('$SCRIPT','$CLIENTS','$TOTTRANS','$SET','$SCALE','$DBSIZE')"
+TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
+if [ "$?" -ne "0" ]; then
+  echo ERROR  Can\'t read from tests table.  Was the test data installed?
+  exit
+fi
+
+if [ -z "$TEST" ]; then
+  echo ERROR:  Attempt to get a test number returned \"$TEST\", aborting
+  exit
+fi
+
+# Grab starting values for statistics
+get_bgwriter
+$RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc')"
+
+echo This is test $TEST
+
+mkdir -p results/$TEST
+cd results/$TEST
+
+echo Script $SCRIPT executing $TRANS transactions for each of $CLIENTS concurrent users... 1>&2
+$PGBENCHBIN -f $BASEDIR/tests/$SCRIPT -s $SCALE -l -n -U $TESTUSER -t $TRANS -h $TESTHOST -c $CLIENTS $TESTDB > results.txt &
+P=$!
+wait $P
+$RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
+
+# Update bgwriter data with delta
+get_bgwriter
+$RESULTPSQL -c "update test_bgwriter set \
+  checkpoints_timed=$checkpoints_timed - checkpoints_timed,\
+  checkpoints_req=$checkpoints_req - checkpoints_req,\
+  buffers_checkpoint=$buffers_checkpoint - buffers_checkpoint,\
+  buffers_clean=$buffers_clean - buffers_clean,\
+  maxwritten_clean=$maxwritten_clean - maxwritten_clean,\
+  buffers_backend=$buffers_backend - buffers_backend,\
+  buffers_alloc=$buffers_alloc - buffers_alloc \
+  where test='$TEST'"
+
+# Save pgbench log and results
+mv pgbench_log.${P} pgbench.log
+cat results.txt
+echo Worst latency results:
+
+# TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead
+cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
+
+tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
+$RESULTPSQL -q -c "update tests set tps='$tps' where test=$TEST"
+
+# Confirm we have an patched version of pgbench that has timestamps
+TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
+if [ -z "$TESTFORTS" ]; then
+  echo
+  echo ERROR:  the pgbench used for this test is missing transaction
+  echo timestamps.  No latency information will be imported into
+  echo the database, and no plots will be generated.
+  echo
+
+else
+
+  # Import timestamp information
+  $BASEDIR/log-to-csv.py $TEST < pgbench.log > timing.csv
+  $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
+
+  # Plot result graphs
+  $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
+  gnuplot $BASEDIR/tps.script
+
+  $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
+  gnuplot $BASEDIR/latency.script
+
+  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
+fi
+
+  cp $BASEDIR/test-index.html index.html
+
+# Now that we're done plotting and computing stats, wipe the low-level 
+# data we don't need anymore
+$RESULTPSQL -q -c "truncate table timing"
+
+# Save some configuration information about the server
+CLIENTHOST=`hostname`
+SERVERHOST="$TESTHOST"
+if [ "$SERVERHOST" = "localhost" ]; then
+  SERVERHOST="$CLIENTHOST"
+fi
+
+echo Test results: > pg_settings.txt
+$RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where test=$TEST" | grep -v " row)" >> pg_settings.txt
+echo Server $SERVERHOST, client $CLIENTHOST >> pg_settings.txt
+echo >> pg_settings.txt
+echo Server settings in postgresql.conf: >> pg_settings.txt
+$RESULTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> pg_settings.txt
+
+# Remove temporary files
+rm pgbench.log
+rm timing.csv
+rm tpsdata.txt
+rm latency.txt

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+. ./config
+
+# Confirm we have a useful pgbench to run
+if [ ! -f $PGBENCHBIN ]; then
+  echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
+  exit
+fi
+
+for SCALE in $SCALES; do
+  #
+  # Have a consistant, clean set of pgbench tables to start 
+  # each test run with
+  #
+
+  if [ "$SKIPINIT" -ne "1" ]; then
+    echo Removing old pgbench tables
+    TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+    $TESTPSQL -c "drop table accounts; drop table branches; drop table tellers; drop table history;"
+    $TESTPSQL -c "vacuum full"
+
+    echo Creating new pgbench tables
+    $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+  fi
+  #
+  # Run the main test
+  #
+  for (( t=1; t<=$SETTIMES; t++ )); do
+    for c in $SETCLIENTS; do
+      echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE
+      ./benchwarmer $c
+      echo
+    done
+  done
+done
+
+./webreport

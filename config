@@ -1,0 +1,23 @@
+BASEDIR=`pwd`
+PGBENCHBIN=`which pgbench`
+
+TESTHOST=localhost
+TESTUSER=postgres
+TESTDB=pgbench
+TESTPORT=5432
+
+RESULTHOST="$TESTHOST"
+RESULTUSER="$TESTUSER"
+RESULTDB="$TESTDB"
+RESULTPORT="$TESTPORT"
+
+SCALES="1 10 100 1000"
+SCRIPT="select.sql"
+TOTTRANS=100000
+
+SETTIMES=3
+SETCLIENTS="1 2 4 8 16 32"
+
+# SKIPINIT should be set to 1 either when simulating a cold cache, or
+# if you are not using the pgbench tables for your test
+SKIPINIT=0

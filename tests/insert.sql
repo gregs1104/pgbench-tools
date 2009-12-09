@@ -5,6 +5,4 @@
 \setrandom bid 1 :nbranches
 \setrandom tid 1 :ntellers
 \setrandom delta -5000 5000
-BEGIN;
 INSERT INTO history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
-END;

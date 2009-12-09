@@ -5,6 +5,4 @@
 \setrandom bid 1 :nbranches
 \setrandom tid 1 :ntellers
 \setrandom delta -5000 5000
-BEGIN;
 UPDATE accounts SET abalance = abalance + :delta WHERE aid = :aid;
-END;

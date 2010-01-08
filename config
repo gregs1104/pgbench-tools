@@ -1,6 +1,14 @@
 BASEDIR=`pwd`
 PGBENCHBIN=`which pgbench`
 
+# These values are for pgbench 8.4 and later
+TABLEPREFIX="pgbench_"
+TESTDIR="tests"
+
+# Use these values for pgbench 8.3
+#TABLEPREFIX=""
+#TESTDIR="tests-8.3"
+
 TESTHOST=localhost
 TESTUSER=postgres
 TESTDB=pgbench

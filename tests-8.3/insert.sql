@@ -5,4 +5,4 @@
 \setrandom bid 1 :nbranches
 \setrandom tid 1 :ntellers
 \setrandom delta -5000 5000
-UPDATE pgbench_accounts SET abalance = abalance + :delta WHERE aid = :aid;
+INSERT INTO history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);

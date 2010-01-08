@@ -1,61 +1,75 @@
 pgbench-tools Setup
 ===================
 
--Create databases for your test and for the results
---Both databases can be the same, but there may be more shared_buffers
-  cache churn in that case.  Some amount of cache disruption
-  is unavoidable unless the result database is remote, because
-  of the OS cache.
+* Create databases for your test and for the results
 
--Initialize the results database by executing
+  *  Both databases can be the same, but there may be more shared_buffers
+     cache churn in that case.  Some amount of cache disruption
+     is unavoidable unless the result database is remote, because
+     of the OS cache.
 
-  psql -f init/resultdb.sql
+* Initialize the results database by executing::
+
+    psql -f init/resultdb.sql
+
+  This will create a default test set entry with a blank description.
+  You may want to rename this.
 
 Running tests
 =============
 
--Edit the config file to run the tests you want
+* Edit the config file to run the tests you want
 
--Execute
+* Execute::
 
-  ./runset
+    ./runset
 
- In order to execute all the tests
+  In order to execute all the tests
 
 Results
 =======
 
--You can check results even as the test is running with:
+* You can check results even as the test is running with::
 
-  psql [resultdb] -f report.sql
+    psql [resultdb] -f report.sql
 
--Other useful reports you can run include:
+* Other useful reports you can run include:
    * summary.sql
    * bufreport.sql
    * bufsummary.sql
  
--Once the tests are done, the results/ directory will include
- a HTML subdirectory for each test giving its results,
- in addition to the summary information in the results database.
+* Once the tests are done, the results/ directory will include
+  a HTML subdirectory for each test giving its results,
+  in addition to the summary information in the results database.
 
--The results directory will also include its own index file that
- shows summary information and plots for all the tests.
+* The results directory will also include its own index file that
+  shows summary information and plots for all the tests.
 
--If you manually adjust the test result database, you can
- manually regenerate the summary graphs by running:
+* If you manually adjust the test result database, you can
+  manually regenerate the summary graphs by running::
 
-  ./webreport
+    ./webreport
+
+Version Compatibility
+=====================
+
+The default configuration now aims to support the pgbench that ships with
+PostgreSQL 8.4 and later versions, which uses names such as "pgbench_accounts"
+for its tables.  There are commented out settings on the config file that
+show what changes need to be made in order to make the program compatible
+with PostgreSQL 8.3, where the names were like "accounts" instead.
+
+Support for PostgreSQL versions before 8.3 is not possible, because a
+change was made to the pgbench client in that version that is needed
+by the program to work properly.  It is possible to use the PostgreSQL 8.3
+pgbench client against a newer database server, or to copy the pgbench.c
+program from 8.3 into a 8.2 source code build and use it instead.
 
 Known issues
 ============
 
--If running tests against non-pgbench tables, the database scale
- will not be detected correctly yet
+* If running tests against non-pgbench tables, the database scale
+  will not be detected correctly yet
 
--Recent PostgreSQL 8.4 development releases have changed the
- names of all the pgbench tables such that this program doesn't
- work against recent code snapshots yet
-
--On Solaris, where the benchwarmer script calls tail it may need
- to use /usr/xpg4/bin/tail instead
-
+* On Solaris, where the benchwarmer script calls tail it may need
+  to use /usr/xpg4/bin/tail instead

@@ -17,7 +17,7 @@ for SCALE in $SCALES; do
   if [ "$SKIPINIT" -ne "1" ]; then
     echo Removing old pgbench tables
     TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
-    $TESTPSQL -c "drop table accounts; drop table branches; drop table tellers; drop table history;"
+    $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
     $TESTPSQL -c "vacuum full"
 
     echo Creating new pgbench tables

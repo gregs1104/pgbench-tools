@@ -5,4 +5,4 @@
 \setrandom bid 1 :nbranches
 \setrandom tid 1 :ntellers
 \setrandom delta -5000 5000
-INSERT INTO history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);
+INSERT INTO pgbench_history (tid, bid, aid, delta, mtime) VALUES (:tid, :bid, :aid, :delta, CURRENT_TIMESTAMP);

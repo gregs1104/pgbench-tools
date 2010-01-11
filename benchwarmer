@@ -49,7 +49,7 @@ echo Storing results using:  $RESULTPSQL
 # TODO If running a custom test, this won't return a useful value.  Should
 # include a config file setting for whether we're testing with the
 # standard tables or not.
-SCALE=`$TESTPSQL -A -t -c "select count(*) from branches"`
+SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
 if [ -z "$SCALE" ]; then
   echo ERROR:  Attempt to determine database scale returned \"$SCALE\", aborting
   exit
@@ -74,10 +74,9 @@ fi
 # Cleanuip pgbench tables, unless we've been told to skip that
 if [ "$SKIPINIT" -ne "1" ]; then
   echo Cleaning up database $TESTDB
-  $TESTPSQL -c 'truncate table history'
-  $TESTPSQL -c 'vacuum'
-  $TESTPSQL -c 'vacuum analyze'
-  $TESTPSQL -c 'checkpoint'
+  $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
+  $TESTPSQL -c "vacuum analyze"
+  $TESTPSQL -c "checkpoint"
   # We want clean stats from the pg_stat_bgwriter, but those won't show up
   # until after the checkpoint is done.  Wait a bit for the stats to update
   sleep 20

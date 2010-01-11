@@ -10,8 +10,9 @@ pgbench-tools Setup
 
 * Initialize the results database by executing::
 
-    psql -f init/resultdb.sql
+    psql -f init/resultdb.sql -d pgbench
 
+  Make sure to reference the correct database.
   This will create a default test set entry with a blank description.
   You may want to rename this.
 

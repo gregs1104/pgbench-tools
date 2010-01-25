@@ -106,7 +106,7 @@ mkdir -p results/$TEST
 cd results/$TEST
 
 echo Script $SCRIPT executing $TRANS transactions for each of $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/tests/$SCRIPT -s $SCALE -l -n -U $TESTUSER -t $TRANS -h $TESTHOST -c $CLIENTS $TESTDB > results.txt &
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n -U $TESTUSER -t $TRANS -h $TESTHOST -c $CLIENTS $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"

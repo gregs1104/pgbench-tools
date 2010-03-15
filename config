@@ -9,6 +9,15 @@ TESTDIR="tests"
 #TABLEPREFIX=""
 #TESTDIR="tests-8.3"
 
+# Set this to a number only when using pgbench 9.0 or later.  This will set
+# the number of worker threads up to this maximum for each client count
+MAX_WORKERS=""
+
+# SKIPINIT should be set to 1 either when simulating a cold cache, or
+# if you are not using the pgbench tables for your test
+SKIPINIT=0
+
+# Test/result database connection
 TESTHOST=localhost
 TESTUSER=postgres
 TESTPORT=5432
@@ -19,13 +28,9 @@ RESULTUSER="$TESTUSER"
 RESULTPORT="$TESTPORT"
 RESULTDB=results
 
-SCALES="1 10 100 1000"
+# Test run customization
 SCRIPT="select.sql"
 TOTTRANS=100000
-
-SETTIMES=3
 SETCLIENTS="1 2 4 8 16 32"
-
-# SKIPINIT should be set to 1 either when simulating a cold cache, or
-# if you are not using the pgbench tables for your test
-SKIPINIT=0
+SCALES="1 10 100 1000"
+SETTIMES=3

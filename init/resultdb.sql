@@ -21,6 +21,7 @@ CREATE TABLE tests(
   tps decimal default 0,
   script text,
   clients int,
+  workers int,
   trans int,
   avg_latency float,
   max_latency float,

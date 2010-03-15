@@ -39,6 +39,34 @@ function get_bgwriter {
 TRANS=`expr $TOTTRANS / $CLIENTS`
 TOTTRANS=`expr $TRANS \* $CLIENTS`
 
+# Set WORKERS string so that the largest possible worker count
+# up to MAX_WORKERS is used, while still dividing CLIENTS into an
+# even number per worker.
+WORKERS=""
+NUM_WORKERS="1"
+
+if [ -n "$MAX_WORKERS" ] ; then
+
+  # Only bother with/allow adjustment to WORKERS if the max is >1.
+  # That keeps up out of trouble if using a pgbench before 9.0,
+  # where using any value for "-j" won't be allowed, as long as the
+  # config file we're given isn't setup incorrectly.
+
+  if [ "$MAX_WORKERS" -gt 1 ]; then
+    NUM_WORKERS=$MAX_WORKERS
+
+    while [ "$NUM_WORKERS" -gt 1 ]; do
+      (( remainder=$CLIENTS % $NUM_WORKERS ))
+      if [ $remainder -eq 0 ] ; then
+        break
+      fi
+      (( NUM_WORKERS = $NUM_WORKERS - 1 ))
+    done
+
+    WORKERS="-j ${NUM_WORKERS}"
+  fi
+fi
+
 # psql statements for the test database and the result database
 TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
@@ -71,7 +99,7 @@ if [ "$?" -ne "0" ]; then
   exit
 fi
 
-# Cleanuip pgbench tables, unless we've been told to skip that
+# Cleanup pgbench tables, unless we've been told to skip that
 if [ "$SKIPINIT" -ne "1" ]; then
   echo Cleaning up database $TESTDB
   $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
@@ -84,7 +112,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (script,clients,trans,set,scale,dbsize) values('$SCRIPT','$CLIENTS','$TOTTRANS','$SET','$SCALE','$DBSIZE')"
+$RESULTPSQL -q -c "insert into tests (script,clients,workers,trans,set,scale,dbsize) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$TOTTRANS','$SET','$SCALE','$DBSIZE')"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
@@ -106,7 +134,7 @@ mkdir -p results/$TEST
 cd results/$TEST
 
 echo Script $SCRIPT executing $TRANS transactions for each of $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n -U $TESTUSER -t $TRANS -h $TESTHOST -c $CLIENTS $TESTDB > results.txt &
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n -U $TESTUSER -t $TRANS -h $TESTHOST -c $CLIENTS $WORKERS $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"

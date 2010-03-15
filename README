@@ -1,16 +1,20 @@
 pgbench-tools Setup
 ===================
 
-* Create databases for your test and for the results
+* Create databases for your test and for the results::
+
+    createdb results
+    createdb pgbench
 
   *  Both databases can be the same, but there may be more shared_buffers
      cache churn in that case.  Some amount of cache disruption
      is unavoidable unless the result database is remote, because
-     of the OS cache.
+     of the OS cache.  The recommended and default configuration
+     is to have a pgbench database and a results database.
 
 * Initialize the results database by executing::
 
-    psql -f init/resultdb.sql -d pgbench
+    psql -f init/resultdb.sql -d results
 
   Make sure to reference the correct database.
   This will create a default test set entry with a blank description.
@@ -32,7 +36,7 @@ Results
 
 * You can check results even as the test is running with::
 
-    psql [resultdb] -f report.sql
+    psql -d results -f report.sql
 
 * Other useful reports you can run include:
    * summary.sql

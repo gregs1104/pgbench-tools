@@ -152,7 +152,9 @@ $RESULTPSQL -c "update test_bgwriter set \
   where test='$TEST'"
 
 # Save pgbench log and results
-mv pgbench_log.${P} pgbench.log
+# In the multi-threaded case, there may be a number of files, so copy
+# them all in
+cat pgbench_log.${P}* > pgbench.log
 cat results.txt
 echo Worst latency results:
 
@@ -208,6 +210,7 @@ echo Server settings in postgresql.conf: >> pg_settings.txt
 $RESULTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> pg_settings.txt
 
 # Remove temporary files
+rm pgbench_log.${P}*
 rm pgbench.log
 rm timing.csv
 rm tpsdata.txt

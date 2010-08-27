@@ -10,3 +10,5 @@
 
 0.5	2010-01-08 Add PostgreSQL 8.4 and later support.  README is now valid
                reST.
+
+0.6 Future     Use TESTPORT properly, bug report from Jignesh.

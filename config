@@ -1,3 +1,9 @@
+#
+# Basic setup options.  If you are running as the postgres user and
+# are using PostgreSQL 8.4 or later, you normally don't need to
+# change any of these.
+#
+
 BASEDIR=`pwd`
 PGBENCHBIN=`which pgbench`
 
@@ -8,10 +14,6 @@ TESTDIR="tests"
 # Use these values for pgbench 8.3
 #TABLEPREFIX=""
 #TESTDIR="tests-8.3"
-
-# Set this to a number only when using pgbench 9.0 or later.  This will set
-# the number of worker threads up to this maximum for each client count
-MAX_WORKERS=""
 
 # SKIPINIT should be set to 1 either when simulating a cold cache, or
 # if you are not using the pgbench tables for your test
@@ -28,9 +30,25 @@ RESULTUSER="$TESTUSER"
 RESULTPORT="$TESTPORT"
 RESULTDB=results
 
-# Test run customization
+#
+# Main test run customization
+#
+
+# Set this to a number only when using pgbench 9.0 or later.  This will set
+# the number of worker threads up to this maximum for each client count
+MAX_WORKERS=""
+
 SCRIPT="select.sql"
-TOTTRANS=100000
-SETCLIENTS="1 2 4 8 16 32"
 SCALES="1 10 100 1000"
+SETCLIENTS="1 2 4 8 16 32"
 SETTIMES=3
+
+# RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
+# Setting a time instead of a transaction account is only available
+# in 8.4 and later.
+RUNTIME=60
+TOTTRANS=""
+
+# Use a transaction count instead for 8.3 or earlier
+#RUNTIME=""
+#TOTTRANS=100000

@@ -39,6 +39,15 @@ function get_bgwriter {
 TRANS=`expr $TOTTRANS / $CLIENTS`
 TOTTRANS=`expr $TRANS \* $CLIENTS`
 
+# If a runtime has been specified instead, throw away the transaction counts
+# use it instead
+if [ -n "$RUNTIME" ] ; then
+  TESTLEN="-T $RUNTIME"
+  TOTTRANS=""
+else
+  TESTLEN="-t $TRANS"
+fi
+
 # Set WORKERS string so that the largest possible worker count
 # up to MAX_WORKERS is used, while still dividing CLIENTS into an
 # even number per worker.
@@ -112,7 +121,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (script,clients,workers,trans,set,scale,dbsize) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$TOTTRANS','$SET','$SCALE','$DBSIZE')"
+$RESULTPSQL -q -c "insert into tests (script,clients,workers,set,scale,dbsize) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE')"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
@@ -133,8 +142,8 @@ echo This is test $TEST
 mkdir -p results/$TEST
 cd results/$TEST
 
-echo Script $SCRIPT executing $TRANS transactions for each of $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n -U $TESTUSER -t $TRANS -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $TESTDB > results.txt &
+echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
@@ -162,7 +171,8 @@ echo Worst latency results:
 cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
 
 tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
-$RESULTPSQL -q -c "update tests set tps='$tps' where test=$TEST"
+trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
+$RESULTPSQL -q -c "update tests set tps='$tps',trans='$trans' where test=$TEST"
 
 # Confirm we have an patched version of pgbench that has timestamps
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`

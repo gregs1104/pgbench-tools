@@ -21,9 +21,12 @@ fi
 
 # Query the test database and put its background writer statistics into
 # a set of environment variables, probably for use inserting stats into
-# the results database
+# the results database.
+#
+# This presumes that you have already set $BACKEND_FSYNC before
+# calling.
 function get_bgwriter {
-  BGW=`$TESTPSQL -A -t -F" " -c "select checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc from pg_stat_bgwriter"`
+  BGW=`$TESTPSQL -A -t -F" " -c "select checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,$BACKEND_FSYNC from pg_stat_bgwriter"`
   set -- $BGW
   checkpoints_timed=$1
   checkpoints_req=$2
@@ -32,6 +35,7 @@ function get_bgwriter {
   maxwritten_clean=$5
   buffers_backend=$6
   buffers_alloc=$7
+  buffers_backend_fsync=$8
 }
 
 # Figure out how many transactions per client, then recompute
@@ -133,9 +137,17 @@ if [ -z "$TEST" ]; then
   exit
 fi
 
+# Figure out if this version of PostgreSQL includes buffers_backend_fsync
+$TESTPSQL -c "SELECT buffers_backend_fsync FROM pg_stat_bgwriter" >> /dev/null
+if [ "$?" -ne "0" ]; then
+  BACKEND_FSYNC="0"
+else
+  BACKEND_FSYNC="buffers_backend_fsync"
+fi
+
 # Grab starting values for statistics
 get_bgwriter
-$RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc')"
+$RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 
 echo This is test $TEST
 
@@ -157,7 +169,8 @@ $RESULTPSQL -c "update test_bgwriter set \
   buffers_clean=$buffers_clean - buffers_clean,\
   maxwritten_clean=$maxwritten_clean - maxwritten_clean,\
   buffers_backend=$buffers_backend - buffers_backend,\
-  buffers_alloc=$buffers_alloc - buffers_alloc \
+  buffers_alloc=$buffers_alloc - buffers_alloc,\
+  buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync \
   where test='$TEST'"
 
 # Save pgbench log and results
@@ -178,7 +191,7 @@ $RESULTPSQL -q -c "update tests set tps='$tps',trans='$trans' where test=$TEST"
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
 if [ -z "$TESTFORTS" ]; then
   echo
-  echo ERROR:  the pgbench used for this test is missing transaction
+  echo "ERROR:  the pgbench used for this test is missing transaction"
   echo timestamps.  No latency information will be imported into
   echo the database, and no plots will be generated.
   echo
@@ -211,13 +224,32 @@ SERVERHOST="$TESTHOST"
 if [ "$SERVERHOST" = "localhost" ]; then
   SERVERHOST="$CLIENTHOST"
 fi
+SETTINGS="pg_settings.txt"
 
-echo Test results: > pg_settings.txt
-$RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where test=$TEST" | grep -v " row)" >> pg_settings.txt
-echo Server $SERVERHOST, client $CLIENTHOST >> pg_settings.txt
-echo >> pg_settings.txt
-echo Server settings in postgresql.conf: >> pg_settings.txt
-$RESULTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> pg_settings.txt
+# PostgreSQL and results
+echo Test results: > $SETTINGS
+$RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where test=$TEST" | grep -v " row)" >> $SETTINGS
+echo Server $SERVERHOST, client $CLIENTHOST >> $SETTINGS
+echo >> $SETTINGS
+echo Server settings in postgresql.conf: >> $SETTINGS
+$RESULTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> $SETTINGS
+
+# Operating system information 
+echo >> $SETTINGS
+echo "benchmark client OS Configuration (may not be the same as the server)" >> $SETTINGS
+uname -a >> $SETTINGS
+for f in `ls /proc/sys/vm/dirty_*` ; do
+  S=`cat $f`
+  echo  $f=$S >> $SETTINGS
+done
+echo >> $SETTINGS
+
+for f in `ls /etc/lsb-release /etc/debian_version /etc/redhat-release 2>/dev/null` ; do
+  echo $f: >> $SETTINGS
+  cat $f >> $SETTINGS
+  echo >> $SETTINGS
+done
+
 
 # Remove temporary files
 rm pgbench_log.${P}*

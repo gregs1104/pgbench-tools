@@ -12,3 +12,8 @@
                reST.
 
 0.6 Future     Use TESTPORT properly, bug report from Jignesh.
+               Add support for pg_stat_bgwriter.buffers_backend_fsync
+               Add new bufsummary.sql with derived buffer cache stats
+               Rename README to .rst for better GitHub display
+               Add contact info and ReST notes
+               Save some operating system information into the report

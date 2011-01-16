@@ -145,3 +145,29 @@ Planned features
 
 * The client+scale data table used to generate the 3D report would be
   useful to generate in tabular text format as well.
+
+Documentation
+=============
+
+The documentation ``README.rst`` for the program is in ReST markup.  Tools
+that operate on ReST can be used to make versions of it formatted
+for other purposes, such as rst2html to make a HTML version.
+
+Contact
+=======
+
+The project is hosted at https://github.com/gregs1104/pgbench-tools
+and is also a PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
+or http://git.postgresql.org/gitweb
+
+If you have any hints, changes or improvements, please contact:
+
+ * Greg Smith gsmith@gregsmith.com
+
+Credits
+=======
+
+Copyright (c) 2007-2011, Gregory Smith
+All rights reserved.
+See COPYRIGHT file for full license details
+

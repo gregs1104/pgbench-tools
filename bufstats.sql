@@ -29,8 +29,9 @@ FROM
   buffers_backend,
   buffers_alloc,
   buffers_backend_fsync,
-  (SELECT cast(current_setting('block_size') AS integer)) AS block_size
+  (SELECT cast(current_setting('block_size') AS int8)) AS block_size
 from test_bgwriter right join tests on tests.test=test_bgwriter.test WHERE NOT end_time is NULL
 ) raw
+WHERE (checkpoints_timed + checkpoints_req)>0
 order by scale,set,clients,test;
 

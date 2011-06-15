@@ -214,7 +214,7 @@ fi
 
   cp $BASEDIR/test-index.html index.html
 
-# Now that we're done plotting and computing stats, wipe the low-level 
+# Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore
 $RESULTPSQL -q -c "truncate table timing"
 
@@ -232,9 +232,9 @@ $RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/
 echo Server $SERVERHOST, client $CLIENTHOST >> $SETTINGS
 echo >> $SETTINGS
 echo Server settings in postgresql.conf: >> $SETTINGS
-$RESULTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> $SETTINGS
+$TESTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> $SETTINGS
 
-# Operating system information 
+# Operating system information
 echo >> $SETTINGS
 echo "benchmark client OS Configuration (may not be the same as the server)" >> $SETTINGS
 uname -a >> $SETTINGS

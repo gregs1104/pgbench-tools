@@ -17,3 +17,4 @@
                Rename README to .rst for better GitHub display
                Add contact info and ReST notes
                Save some operating system information into the report
+               Correct where to pull pg_settings from (Patryk Kordylewski) 

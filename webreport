@@ -141,7 +141,8 @@ plot \
 ENDING
 
 for SET in $SETS ; do
-  DESCR=`$RESULTPSQL -A -t -c "select info from testset where set='$SET'"`
+  # Trimmed down descriptions needed to fit into the graph key
+  DESCR=`$RESULTPSQL -A -t -c "select substring(info from 1 for 35) from testset where set='$SET'"`
 
   if [ "$SET" -eq "$LASTSET" ] ; then
     DELIM=""

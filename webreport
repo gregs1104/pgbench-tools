@@ -18,8 +18,7 @@ function sed-i {
   mv ${filename}.new ${filename}
 }
 
-# TODO These two plots should be computed on a per-set basis by the below code
-# instead of just having the one combined graph here
+# Produce combined report, averaged across all test sets
 $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests group by scale order by scale" > scaling.txt
 gnuplot plots/scaling.plot
 mv scaling.png results/
@@ -35,21 +34,52 @@ gnuplot plots/3d.plot
 mv 3d.png results/
 rm 3d.txt
 
-# Generate HTML
+# Copy the header HTML template to our outfile
+cp templates/header.html $OUTFILE
 
-echo > $OUTFILE
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE
 echo "<img src=\"3d.png\"><p>" >> $OUTFILE
 
 # Loop over all the active test sets
 SETS=`$RESULTPSQL -A -t -c "select set from tests group by set order by set"`
+
+# Build table of contents
+echo '<ul>' >> $OUTFILE
 for SET in $SETS ; do
   DESCR=`$RESULTPSQL -A -t -c "select info from testset where set='$SET'"`
-  echo "<h3>Set" $SET : $DESCR"</h3>" >> $OUTFILE
+  echo "<li><a href='#set-$SET'>Test Set $SET - $DESCR</a></li>" >> $OUTFILE
+done
+echo '</ul>' >> $OUTFILE
+
+for SET in $SETS ; do
+  DESCR=`$RESULTPSQL -A -t -c "select info from testset where set='$SET'"`
+  echo "<div id='set-$SET'>" >> $OUTFILE
+  echo "<hr><h3>Set" $SET : $DESCR"</h3>" >> $OUTFILE
+
+  # Generate graphs for just this test set
+  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling.txt
+  gnuplot plots/scaling.plot
+  mv scaling.png results/scaling-$SET.png
+  rm scaling.txt
+
+  $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients.txt
+  gnuplot plots/clients.plot
+  mv clients.png results/clients-$SET.png
+  rm clients.txt
+
+  $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d.txt
+  gnuplot plots/3d.plot
+  mv 3d.png results/3d-$SET.png
+  rm 3d.txt
+
+  echo "<img src=\"scaling-$SET.png\"><p>" >> $OUTFILE
+  echo "<img src=\"clients-$SET.png\"><p>" >> $OUTFILE
+  # The 3D results set isn't that useful, don't want to repeat it for
+  # every single set, too
+  # echo "<img src=\"3d-$SET.png\"><p>" >> $OUTFILE
 
   # Summarize the test set
-
   echo Averages for test set $SET by scale: >> $OUTFILE
   $RESULTPSQL -H -c "select set,scale,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale order by set,scale;" >> $OUTFILE
 
@@ -60,7 +90,7 @@ for SET in $SETS ; do
   $RESULTPSQL -H -c "select set,scale,clients,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale,clients order by set,scale,clients;" >> $OUTFILE
 
   echo Detail for test set $SET: >> $OUTFILE
-  # Create a line showing the results for every test as an HTML table
+  # Create a line showing the results for every test as an HTML table  
   $RESULTPSQL -H -c "select set,'<a href=\"' || tests.test || '/\">' || tests.test || '</a>' as test,scale,clients,round(tps) as tps,max_latency, checkpoints_timed+checkpoints_req as chkpts,buffers_checkpoint as buf_check,buffers_clean as buf_clean,buffers_backend as buf_backend,buffers_alloc as buf_alloc, maxwritten_clean as max_clean, buffers_backend_fsync as backend_sync from test_bgwriter right join tests on tests.test=test_bgwriter.test where tests.set='$SET' order by set,scale,clients,tests.test;" > temp.txt
 
   # Now we need to fix lines like this
@@ -73,6 +103,8 @@ for SET in $SETS ; do
   # Remove row counts
   cp $OUTFILE temp.txt
   cat temp.txt | grep -v " rows)" > $OUTFILE
+  echo "</div>" >> $OUTFILE
 done
 
 rm temp.txt
+cat templates/footer.html >> $OUTFILE

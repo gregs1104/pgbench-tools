@@ -19,6 +19,9 @@ TESTDIR="tests"
 # if you are not using the pgbench tables for your test
 SKIPINIT=0
 
+# Set TABBED to 1 to use Javascript for a multi-tabbed display format
+TABBED=0
+
 # Test/result database connection
 TESTHOST=localhost
 TESTUSER=postgres

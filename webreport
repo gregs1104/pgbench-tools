@@ -35,7 +35,11 @@ mv 3d.png results/
 rm 3d.txt
 
 # Copy the header HTML template to our outfile
-cp templates/header.html $OUTFILE
+if [ "$TABBED" -eq "1" ]; then
+  cp templates/header-tabbed.html $OUTFILE
+else
+  cp templates/header.html $OUTFILE
+fi
 
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE

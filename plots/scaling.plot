@@ -12,5 +12,5 @@ set y2tics
 set y2tics autofreq
 
 plot \
-  "scaling.txt" using 1:3 axis x1y1 title 'TPS' with lines,\
-  "scaling.txt" using 1:2 axis x1y2 title 'Database Size' with lines
+  "scaling.txt" using 1:3 axis x1y1 title 'TPS' with linespoints,\
+  "scaling.txt" using 1:2 axis x1y2 title 'Database Size' with linespoints

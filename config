@@ -24,7 +24,7 @@ TABBED=0
 
 # Test/result database connection
 TESTHOST=localhost
-TESTUSER=postgres
+TESTUSER=`whoami`
 TESTPORT=5432
 TESTDB=pgbench
 

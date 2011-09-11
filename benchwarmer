@@ -138,7 +138,7 @@ if [ -z "$TEST" ]; then
 fi
 
 # Figure out if this version of PostgreSQL includes buffers_backend_fsync
-$TESTPSQL -c "SELECT buffers_backend_fsync FROM pg_stat_bgwriter" >> /dev/null
+$TESTPSQL -c "SELECT buffers_backend_fsync FROM pg_stat_bgwriter" >> /dev/null 2>&1
 if [ "$?" -ne "0" ]; then
   BACKEND_FSYNC="0"
 else

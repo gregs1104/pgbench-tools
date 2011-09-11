@@ -41,9 +41,13 @@ else
   cp templates/header.html $OUTFILE
 fi
 
+echo "<h3>Averages across all test sets:</h3>" >> $OUTFILE
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE
 echo "<img src=\"3d.png\"><p>" >> $OUTFILE
+echo "<h3>Test sets comparison:</h3>" >> $OUTFILE
+echo "<img src=\"scaling-sets.png\"><p>" >> $OUTFILE
+echo "<img src=\"clients-sets.png\"><p>" >> $OUTFILE
 
 # Loop over all the active test sets
 SETS=`$RESULTPSQL -A -t -c "select set from tests group by set order by set"`
@@ -61,16 +65,19 @@ for SET in $SETS ; do
   echo "<div id='set-$SET'>" >> $OUTFILE
   echo "<hr><h3>Set" $SET : $DESCR"</h3>" >> $OUTFILE
 
+  # We'll need to know the last set plot for the multi-plot below
+  LASTSET="$SET"
+
   # Generate graphs for just this test set
   $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling.txt
   gnuplot plots/scaling.plot
   mv scaling.png results/scaling-$SET.png
-  rm scaling.txt
+  mv scaling.txt scaling-$SET.txt
 
   $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients.txt
   gnuplot plots/clients.plot
   mv clients.png results/clients-$SET.png
-  rm clients.txt
+  mv clients.txt clients-$SET.txt
 
   $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d.txt
   gnuplot plots/3d.plot
@@ -108,6 +115,53 @@ for SET in $SETS ; do
   cp $OUTFILE temp.txt
   cat temp.txt | grep -v " rows)" > $OUTFILE
   echo "</div>" >> $OUTFILE
+done
+
+# Plot set comparison
+cat > multi-client.plot << "ENDING"
+set term png size 640,480
+set terminal png medium
+set output "clients-sets.png"
+set title "pgbench transactions/sec"
+set grid xtics ytics
+set xlabel "Clients"
+set ylabel "TPS"
+plot \
+ENDING
+
+cat > multi-scale.plot << "ENDING"
+set term png size 640,480
+set terminal png medium
+set output "scaling-sets.png"
+set title "pgbench transactions/sec"
+set grid xtics ytics
+set xlabel "Scaling factor"
+set ylabel "TPS"
+plot \
+ENDING
+
+for SET in $SETS ; do
+  DESCR=`$RESULTPSQL -A -t -c "select info from testset where set='$SET'"`
+
+  if [ "$SET" -eq "$LASTSET" ] ; then
+    DELIM=""
+  else
+    DELIM=",\\"
+  fi
+
+  echo  "'scaling-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with lines $DELIM" >> multi-scale.plot
+  echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with lines $DELIM" >> multi-client.plot
+done
+
+gnuplot multi-scale.plot
+gnuplot multi-client.plot
+mv clients-sets.png results/
+mv scaling-sets.png results/
+rm multi-scale.plot
+rm multi-client.plot
+
+for SET in $SETS ; do
+  rm scaling-$SET.txt clients-$SET.txt
 done
 
 rm temp.txt

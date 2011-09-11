@@ -20,3 +20,4 @@
                Correct where to pull pg_settings from (Patryk Kordylewski)
                Generate graphs per test set (Ben Bleything)
                Allow putting result sets into in-page tabs (Ben Bleything)
+               Show comparison of all test sets on a single graph

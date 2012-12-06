@@ -86,14 +86,30 @@ RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 echo Running tests using:  $TESTPSQL
 echo Storing results using:  $RESULTPSQL
 
+# See if this database has all the standard pgbench tables in it
+PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('pgbench_history','pgbench_tellers','pgbench_accounts','pgbench_branches')"`
+echo "prefixed count=$PGCOUNT"
+if [ "$PGCOUNT" -eq 4 ] ; then
+  TABLEPREFIX="pgbench_"
+  PGBENCH_TABLES=1
+  echo Found standard pgbench tables with prefix=$TABLEPREFIX
+else
+  TABLEPREFIX=""
+  PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('history','tellers','accounts','branches')"`
+  echo "count=$PGCOUNT"
+  if [ "$PGCOUNT" -eq 4 ] ; then
+    echo Found standard pgbench tables with prefix=$TABLEPREFIX
+    PGBENCH_TABLES=1
+  else
+    echo Did not find standard pgbench tables
+    PGBENCH_TABLES=0
+  fi
+fi
+
 # Determine database scale
-# TODO If running a custom test, this won't return a useful value.  Should
-# include a config file setting for whether we're testing with the
-# standard tables or not.
-SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
-if [ -z "$SCALE" ]; then
-  echo ERROR:  Attempt to determine database scale returned \"$SCALE\", aborting
-  exit
+SCALE=0
+if [ "$PGBENCH_TABLES" -eq "1" ] ; then
+  SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
 fi
 
 # Confirm we have a useful pgbench to run
@@ -115,7 +131,9 @@ fi
 # Cleanup pgbench tables, unless we've been told to skip that
 if [ "$SKIPINIT" -ne "1" ]; then
   echo Cleaning up database $TESTDB
-  $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
+  if [ "$PGBENCH_TABLES" -eq "1" ] ; then
+    $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
+  fi
   $TESTPSQL -c "vacuum analyze"
   $TESTPSQL -c "checkpoint"
   # We want clean stats from the pg_stat_bgwriter, but those won't show up
@@ -226,7 +244,7 @@ if [ "$SERVERHOST" = "localhost" ]; then
 fi
 SETTINGS="pg_settings.txt"
 
-# PostgreSQL and results
+# Write out system and PostgreSQL installation
 echo Test results: > $SETTINGS
 $RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where test=$TEST" | grep -v " row)" >> $SETTINGS
 echo Server $SERVERHOST, client $CLIENTHOST >> $SETTINGS

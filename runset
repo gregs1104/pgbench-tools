@@ -8,6 +8,23 @@ if [ ! -f $PGBENCHBIN ]; then
   exit
 fi
 
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+
+# See if this database has all the standard pgbench tables in it
+PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('pgbench_history','pgbench_tellers','pgbench_accounts','pgbench_branches')"`
+if [ "$PGCOUNT" -eq 4 ] ; then
+  TABLEPREFIX="pgbench_"
+  PGBENCH_TABLES=1
+else
+  TABLEPREFIX=""
+  PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('history','tellers','accounts','branches')"`
+  if [ "$PGCOUNT" -eq 4 ] ; then
+    PGBENCH_TABLES=1
+  else
+    PGBENCH_TABLES=0
+  fi
+fi
+
 for SCALE in $SCALES; do
   #
   # Have a consistant, clean set of pgbench tables to start 
@@ -15,10 +32,11 @@ for SCALE in $SCALES; do
   #
 
   if [ "$SKIPINIT" -ne "1" ]; then
-    echo Removing old pgbench tables
-    TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
-    $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
-    $TESTPSQL -c "vacuum full"
+    if [ "$PGBENCH_TABLES" -eq "1" ] ; then
+      echo Removing old pgbench tables
+      $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
+    fi
+    $TESTPSQL -c "vacuum"
 
     echo Creating new pgbench tables
     $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB

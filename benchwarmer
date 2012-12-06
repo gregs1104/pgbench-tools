@@ -88,7 +88,6 @@ echo Storing results using:  $RESULTPSQL
 
 # See if this database has all the standard pgbench tables in it
 PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('pgbench_history','pgbench_tellers','pgbench_accounts','pgbench_branches')"`
-echo "prefixed count=$PGCOUNT"
 if [ "$PGCOUNT" -eq 4 ] ; then
   TABLEPREFIX="pgbench_"
   PGBENCH_TABLES=1

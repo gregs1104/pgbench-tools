@@ -256,6 +256,8 @@ $RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/
 echo Server $SERVERHOST, client $CLIENTHOST >> $SETTINGS
 echo >> $SETTINGS
 echo Server settings in postgresql.conf: >> $SETTINGS
+$TESTPSQL -c "select version();" | grep -v " row" >> $SETTINGS
+$TESTPSQL -c "show data_directory" | grep -v " row" >> $SETTINGS
 $TESTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> $SETTINGS
 
 # Operating system information
@@ -274,6 +276,8 @@ for f in `ls /etc/lsb-release /etc/debian_version /etc/redhat-release 2>/dev/nul
   echo >> $SETTINGS
 done
 
+echo >> $SETTINGS
+mount >> $SETTINGS
 
 # Remove temporary files
 rm pgbench_log.${P}*

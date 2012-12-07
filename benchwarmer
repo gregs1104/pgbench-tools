@@ -164,6 +164,7 @@ fi
 
 # Grab starting values for statistics
 get_bgwriter
+START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 $RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 
 echo This is test $TEST
@@ -189,6 +190,12 @@ $RESULTPSQL -c "update test_bgwriter set \
   buffers_alloc=$buffers_alloc - buffers_alloc,\
   buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync \
   where test='$TEST'"
+
+# WAL values are initially saved as text because they're pulled from the test
+# database--but the functions to turn them into numeric types is available
+# only in the results one.
+END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
+$RESULTPSQL -q -c "UPDATE tests SET wal_written=wal_lsn('$END_WAL') - wal_lsn('$START_WAL') WHERE test=$TEST"
 
 # Save pgbench log and results
 # In the multi-threaded case, there may be a number of files, so copy

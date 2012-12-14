@@ -133,7 +133,23 @@ if [ "$SKIPINIT" -ne "1" ]; then
   if [ "$PGBENCH_TABLES" -eq "1" ] ; then
     $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
   fi
-  $TESTPSQL -c "vacuum analyze"
+
+  # If the previous test ran recently and it did a cleanup, we should
+  # be safe to skip this possibly lengthy step.  "Recently" is defined
+  # as within 10 seconds of when the last test cleanup finished.  There
+  # is some margin for error here, particulary if processing the results
+  # latency log was very time consuming.  The price of making a mistake
+  # is just some extra run-time though, doing a redundant vacuum.  On
+  # databases sizes where the vacuum time is very long, its actually less
+  # likely that the results log is large.  Tests against large database
+  # tend to run slowly.
+  CLEANED=`$RESULTPSQL -A -t -c "SELECT EXISTS(SELECT 1 FROM tests WHERE cleanup IS NOT NULL AND ((now() - end_time) + cleanup) < '100 seconds'::interval ORDER BY test DESC LIMIT 1)"`
+  if [ "$CLEANED" = 'f' ] ; then
+    $TESTPSQL -c "vacuum analyze"
+  else
+    echo "Skipping vacuum, it was recently ran by the last test"
+  fi
+
   $TESTPSQL -c "checkpoint"
   # We want clean stats from the pg_stat_bgwriter, but those won't show up
   # until after the checkpoint is done.  Wait a bit for the stats to update
@@ -197,11 +213,26 @@ $RESULTPSQL -c "update test_bgwriter set \
 END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 $RESULTPSQL -q -c "UPDATE tests SET wal_written=wal_lsn('$END_WAL') - wal_lsn('$START_WAL') WHERE test=$TEST"
 
-# Save pgbench log and results
+cat results.txt
+
+# Try to do the table cleanup before spoiling the database and OS cache by
+# touching the results heavily.  That means before reading pgbench.log,
+# which can be quite large on a fast server.
+if [ "$SKIPINIT" -ne "1" ]; then
+  echo Cleaning up database $TESTDB
+  if [ "$PGBENCH_TABLES" -eq "1" ] ; then
+    $TESTPSQL -c "truncate table ${TABLEPREFIX}history"
+  fi
+  VACUUMSTART=`$RESULTPSQL -A -t -c "SELECT now()"`
+  $TESTPSQL -c "vacuum"
+  $TESTPSQL -c "checkpoint"
+  $RESULTPSQL -q -c "UPDATE tests SET cleanup=now() - '$VACUUMSTART'::timestamp WHERE test=$TEST"
+fi
+
+# Save pgbench log
 # In the multi-threaded case, there may be a number of files, so copy
 # them all in
 cat pgbench_log.${P}* > pgbench.log
-cat results.txt
 echo Worst latency results:
 
 # TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead

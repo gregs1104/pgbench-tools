@@ -286,8 +286,8 @@ echo Test results: > $SETTINGS
 $RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where test=$TEST" | grep -v " row)" >> $SETTINGS
 echo Server $SERVERHOST, client $CLIENTHOST >> $SETTINGS
 echo >> $SETTINGS
-echo Server settings in postgresql.conf: >> $SETTINGS
-$TESTPSQL -c "select version();" | grep -v " row" >> $SETTINGS
+echo "Server info and settings in postgresql.conf:" >> $SETTINGS
+$TESTPSQL -At -c "select version();" | grep -v " row" >> $SETTINGS
 $TESTPSQL -c "show data_directory" | grep -v " row" >> $SETTINGS
 $TESTPSQL -c "select name,current_setting(name) from pg_settings where source='configuration file' and not name in ('DateStyle','lc_messages','lc_monetary','lc_numeric','lc_time','listen_addresses','log_directory','log_rotation_age','log_rotation_size','log_truncate_on_rotation');" | grep -v " rows)" >> $SETTINGS
 
@@ -295,19 +295,29 @@ $TESTPSQL -c "select name,current_setting(name) from pg_settings where source='c
 echo >> $SETTINGS
 echo "benchmark client OS Configuration (may not be the same as the server)" >> $SETTINGS
 uname -a >> $SETTINGS
-for f in `ls /proc/sys/vm/dirty_*` ; do
-  S=`cat $f`
-  echo  $f=$S >> $SETTINGS
-done
-echo >> $SETTINGS
 
+# Linux OS release is likely to be in one or more of these files
 for f in `ls /etc/lsb-release /etc/debian_version /etc/redhat-release 2>/dev/null` ; do
   echo $f: >> $SETTINGS
   cat $f >> $SETTINGS
   echo >> $SETTINGS
 done
 
+# Save version info on Mac OS X
+OSNAME=`uname`
+if [ "$OSNAME" = "Darwin" ] ; then
+  sw_vers >> $SETTINGS
+fi
 echo >> $SETTINGS
+
+if [ -d /proc/sys/vm/ ] ; then
+  for f in `ls /proc/sys/vm/dirty_*` ; do
+    S=`cat $f`
+    echo  $f=$S >> $SETTINGS
+  done
+  echo >> $SETTINGS
+fi
+
 mount >> $SETTINGS
 
 # Remove temporary files

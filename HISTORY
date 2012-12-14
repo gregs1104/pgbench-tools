@@ -24,3 +24,4 @@
                Automatically detect if running with standard pgbench tables
                Add tracking of WAL activity during test
                Do vacuum cleanup at the end of the test and time it
+               Basic support for Mac OS X, tested with homebrew gnuplot

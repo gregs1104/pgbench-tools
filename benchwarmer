@@ -150,10 +150,19 @@ if [ "$SKIPINIT" -ne "1" ]; then
     echo "Skipping vacuum, it was recently ran by the last test"
   fi
 
-  $TESTPSQL -c "checkpoint"
   # We want clean stats from the pg_stat_bgwriter, but those won't show up
   # until after the checkpoint is done.  Wait a bit for the stats to update
-  sleep 20
+  STARTCHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
+  $TESTPSQL -c "checkpoint"
+  echo "Waiting for checkpoint statistics"
+  while [ 1 ] ; do
+    CHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
+    if [ "$CHECK" -gt "$STARTCHECK" ] ; then
+      break
+    fi 
+    sleep 1
+  done
+
 fi
 
 # Create the tests record

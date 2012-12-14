@@ -25,3 +25,4 @@
                Add tracking of WAL activity during test
                Do vacuum cleanup at the end of the test and time it
                Basic support for Mac OS X, tested with homebrew gnuplot
+               Reduce wait time for setup checkpoint statistics update

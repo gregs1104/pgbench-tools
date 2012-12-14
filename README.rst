@@ -73,6 +73,10 @@ test that is run will be put into the same test set until you tell the
 program to switch to a new set.  Each test set is assigned both a
 serial number and a test description.
 
+New test sets are added like this::
+
+  psql -d results -c "INSERT INTO testset (info) VALUES ('set name')"
+
 pgbench-tools aims to help compare multiple setups of PostgreSQL.  That
 might be different configuration parameters, different source code builds, or
 even different versions of the database.  One reason the results database is

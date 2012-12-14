@@ -20,6 +20,9 @@ SKIPINIT=0
 # Set TABBED to 1 to use Javascript for a multi-tabbed display format
 TABBED=0
 
+# Set OSDATA to 1 to collect OS data using vmstat and iostat
+OSDATA=1
+
 # Test/result database connection
 TESTHOST=localhost
 TESTUSER=`whoami`

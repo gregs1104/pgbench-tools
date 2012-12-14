@@ -192,16 +192,29 @@ get_bgwriter
 START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 $RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 
+# Setup test directory tree
 echo This is test $TEST
-
 mkdir -p results/$TEST
-cd results/$TEST
 
+# Start background daemon collectors
+if [ "$OSDATA" -eq "1" ]; then
+  ./timed-os-stats vmstat > results/$TEST/vmstat.log &
+  VMSTAT=$!
+  ./timed-os-stats iostat > results/$TEST/iostat.log &
+  IOSTAT=$!
+fi
+
+# Run the main pgbench test
+cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 $PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
+
+if [ "$OSDATA" -eq "1" ]; then
+  kill $VMSTAT $IOSTAT
+fi
 
 # Update bgwriter data with delta
 get_bgwriter

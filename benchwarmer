@@ -223,7 +223,7 @@ if [ -z "$TESTFORTS" ]; then
 else
 
   # Import timestamp information
-  $BASEDIR/log-to-csv.py $TEST < pgbench.log > timing.csv
+  $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
 
   # Plot result graphs

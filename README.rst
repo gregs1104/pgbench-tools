@@ -19,10 +19,9 @@ pgbench-tools setup
     psql -f init/resultdb.sql -d results
 
   Make sure to reference the correct database.
-  This will create a default test set entry with a blank description.
-  You may want to rename that using something like this::
+  You have to create a test set with a descritption::
 
-    psql -c "UPDATE testset SET info='better name' WHERE set=1" -d results
+    bash start-testset.sh 'Initial Config'
 
 Running tests
 =============

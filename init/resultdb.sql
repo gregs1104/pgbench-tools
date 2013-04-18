@@ -37,7 +37,6 @@ CREATE TABLE testset(
   info text
   );
 
-INSERT INTO testset (info) VALUES ('');
 
 DROP TABLE test_bgwriter;
 

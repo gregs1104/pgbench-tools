@@ -29,7 +29,7 @@ Running tests
 
 * Edit the config file to reference the test and results database, as
   well as list the test you want to run.  The default test is a
-  SELECT-only one that runs for 
+  SELECT-only one that runs for 60 seconds.
 
 * Execute::
 

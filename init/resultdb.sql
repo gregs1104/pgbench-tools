@@ -1,4 +1,4 @@
-DROP TABLE timing;
+DROP TABLE IF EXISTS timing;
 
 CREATE TABLE timing(
   ts timestamp,
@@ -9,7 +9,7 @@ CREATE TABLE timing(
 
 CREATE INDEX idx_timing_test on timing(test,ts);
 
-DROP TABLE tests;
+DROP TABLE IF EXISTS tests;
 
 CREATE TABLE tests(
   test serial,
@@ -30,7 +30,7 @@ CREATE TABLE tests(
   cleanup interval default null
   );
 
-DROP TABLE testset;
+DROP TABLE IF EXISTS testset;
 
 CREATE TABLE testset(
   set serial,
@@ -39,7 +39,7 @@ CREATE TABLE testset(
 
 INSERT INTO testset (info) VALUES ('');
 
-DROP TABLE test_bgwriter;
+DROP TABLE IF EXISTS test_bgwriter;
 
 CREATE TABLE test_bgwriter(
   test int,

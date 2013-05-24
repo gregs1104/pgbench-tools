@@ -293,7 +293,7 @@ else
   $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
 fi
 
-  cp $BASEDIR/test-index.html index.html
+cp $BASEDIR/test-index.html index.html
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore

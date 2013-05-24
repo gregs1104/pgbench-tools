@@ -186,9 +186,6 @@ at a shell prompt like this::
   psql -d results -At -c "DELETE FROM tests WHERE tps=0"
   ./webreport 
 
-Note that this will not remove entries from any related tables, such as
-test_bgwriter.  This is normally not a problem since all of the
-reports require a valid entry in the tests table.
 
 Known issues
 ============

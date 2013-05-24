@@ -8,9 +8,6 @@ import signal
 import sys
 
 
-if len(sys.argv) < 2:
-   print "Pass process ID as first argument"
-
 def kill_pg(pid):
    pgid = os.getpgid(pid)
 

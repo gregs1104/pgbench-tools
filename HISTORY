@@ -27,3 +27,4 @@
                Basic support for Mac OS X, tested with homebrew gnuplot
                Reduce wait time for setup checkpoint statistics update
                Enabled by default vmstat/iostat data collection during tests
+               Add newset utility and some reporting scripts

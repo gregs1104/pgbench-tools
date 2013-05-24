@@ -1,19 +1,15 @@
-DROP TABLE IF EXISTS timing;
+BEGIN;
 
-CREATE TABLE timing(
-  ts timestamp,
-  filenum int, 
-  latency numeric(9,3),
-  test int
+DROP TABLE IF EXISTS testset;
+CREATE TABLE testset(
+  set serial PRIMARY KEY,
+  info text
   );
 
-CREATE INDEX idx_timing_test on timing(test,ts);
-
 DROP TABLE IF EXISTS tests;
-
 CREATE TABLE tests(
-  test serial,
-  set serial,
+  test serial PRIMARY KEY,
+  set int NOT NULL REFERENCES testset(set) ON DELETE CASCADE,
   scale int,
   dbsize int8,
   start_time timestamp default now(),
@@ -30,19 +26,22 @@ CREATE TABLE tests(
   cleanup interval default null
   );
 
-DROP TABLE IF EXISTS testset;
-
-CREATE TABLE testset(
-  set serial,
-  info text
-  );
-
 INSERT INTO testset (info) VALUES ('');
 
-DROP TABLE IF EXISTS test_bgwriter;
+DROP TABLE IF EXISTS timing;
+-- Staging table, for loading in data from CSV
+CREATE TABLE timing(
+  ts timestamp,
+  filenum int, 
+  latency numeric(9,3),
+  test int NOT NULL REFERENCES tests(test)
+  );
 
+CREATE INDEX idx_timing_test on timing(test,ts);
+
+DROP TABLE IF EXISTS test_bgwriter;
 CREATE TABLE test_bgwriter(
-  test int,
+  test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
   checkpoints_timed int,
   checkpoints_req int,
   buffers_checkpoint int,
@@ -112,3 +111,4 @@ SELECT hex_to_dec(split_part($1,'/',1)) * 16 * 1024 * 1024 * 255
 $$ language sql
 ;
 
+COMMIT;

@@ -196,10 +196,6 @@ Known issues
 * On Solaris, where the benchwarmer script calls tail it may need
   to use /usr/xpg4/bin/tail instead
 
-* test_bgwriter should use a proper foreign key relationship to tests.
-  This would make it possible for deletion of tests to cascade and
-  automatically cleanup up test_bgwriter too.
-
 Planned features
 ================
 

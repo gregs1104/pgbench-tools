@@ -213,12 +213,11 @@ wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
 
 if [ "$OSDATA" -eq "1" ]; then
-  # The PIDs we have will be the parent process ID and process group ID,
-  # but we must make sure to also kill the child processes (launched
-  # via subprocess.Popen() from timed-os-stats) so they are not
-  # lingering forever.
-  kill -- -"$VMSTAT"
-  kill -- -"$IOSTAT"
+  # The PIDs we have will be the process ID of the Python timed-os-stats
+  # process, but we must make sure to also kill the child processes (launched
+  # via subprocess.Popen()) so they are not lingering forever.
+  ../../kill_pg "${VMSTAT}"
+  ../../kill_pg "${IOSTAT}"
 fi
 
 # Update bgwriter data with delta

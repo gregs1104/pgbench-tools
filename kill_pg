@@ -1,0 +1,32 @@
+#!/usr/bin/env python
+
+# Given a process ID, find the process group ID and
+# then kill the entire process group.
+
+import os
+import signal
+import sys
+
+
+if len(sys.argv) < 2:
+   print "Pass process ID as first argument"
+
+def kill_pg(pid):
+   pgid = os.getpgid(pid)
+
+   if not pgid:
+      print >> sys.stderr, \
+               "ERROR unable to find process group ID from PID: %d" % pid
+   else:
+      os.killpg(pgid, signal.SIGKILL)
+
+
+def usage():
+   print >> sys.stderr, "Pass a process ID as the first argument"
+   sys.exit(1)
+
+if __name__ == '__main__':
+   if len(sys.argv) < 2:
+      usage()
+
+   kill_pg(int(sys.argv[1]))

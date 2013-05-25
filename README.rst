@@ -1,5 +1,17 @@
+About pgbench-tools
+===================
+
+pgbench-tools automates running PostgreSQL's built-in pgbench tool in a
+useful ways.  It will run some number of database sizes (the database
+scale) and various concurrent client count combinations.
+Scale/client runs with some common characteristic--perhaps one
+configuration of the postgresql.conf--can be organized into a "set"
+of runs.  The program graphs transaction rate during each test,
+latency, and comparisons between test sets.
+
 pgbench-tools setup
 ===================
+
 
 * Create databases for your test and for the results::
 
@@ -47,7 +59,7 @@ Results
 
     psql -d results -f report.sql
 
-  This is unlikely to disrupte the test results very much unless you've
+  This is unlikely to disrupt the test results very much unless you've
   run an enormous number of tests already.
 
 * Other useful reports you can run include:
@@ -60,8 +72,8 @@ Results
   a HTML subdirectory for each test giving its results,
   in addition to the summary information in the results database.
 
-* The results directory will also include its own index HTML file that
-  shows summary information and plots for all the tests.
+* The results directory will also include its own index HTML file (named
+  index.html) that shows summary information and plots for all the tests.
 
 * If you manually adjust the test result database, you can
   then manually regenerate the summary graphs by running::

@@ -27,7 +27,7 @@ fi
 
 for SCALE in $SCALES; do
   #
-  # Have a consistant, clean set of pgbench tables to start 
+  # Have a consistent, clean set of pgbench tables to start 
   # each test run with
   #
 

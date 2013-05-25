@@ -15,6 +15,7 @@
 # case.
 #
 
+import os
 import subprocess
 import sys
 import datetime
@@ -31,6 +32,20 @@ class FlushFile(object):
 sys.stdout = FlushFile(sys.__stdout__)
 
 def capture(cmd,tag_all=True,tag_when=None):
+    try:
+        # Attempt to call setsid() so that this Python process and its
+        # children (shell and cmd) are in a new process group.
+        # (On some platforms/shells, this Python process may already
+        # be a process group leader, on some it will not be.)
+        # We need to be in a new process group
+        # because when it is time to kill this script we will want to kill
+        # by process group ID from benchwarmer, and we don't wan't
+        # benchwarmer to kill itself as well.
+        os.setsid()
+    except OSError:
+        print >> sys.stderr, \
+                 "Unable to setsid(). Already process group leader?"
+
     p = subprocess.Popen(cmd, shell = True,
                          stdout = subprocess.PIPE,
                          stderr = subprocess.STDOUT,

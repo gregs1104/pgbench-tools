@@ -29,7 +29,7 @@ Running tests
 
 * Edit the config file to reference the test and results database, as
   well as list the test you want to run.  The default test is a
-  SELECT-only one that runs for 
+  SELECT-only one that runs for 60 seconds.
 
 * Execute::
 
@@ -95,7 +95,7 @@ Note that all of the built-in pgbench tests use very simple queries.  The
 results can be useful for testing read-only SELECT scaling at different
 client counts.  They can also be useful for seeing how the server handles
 heavy write volume.  But none of these results will change if you alter
-server parameters that adjust query exeutionion, such as work_mem or
+server parameters that adjust query execution, such as work_mem or
 effective_cache_size.  Many of the useful PostgreSQL parameters to tune
 for better query execution on larger servers in particular fall into
 this category.  You will not always be able to compare configurations
@@ -112,7 +112,7 @@ Version compatibility
 
 The default configuration now aims to support the pgbench that ships with
 PostgreSQL 8.4 and later versions, which uses names such as "pgbench_accounts"
-for its tables.  There are commented out settings on the config file that
+for its tables.  There are commented out settings in the config file that
 show what changes need to be made in order to make the program compatible
 with PostgreSQL 8.3, where the names were like "accounts" instead.
 
@@ -186,19 +186,12 @@ at a shell prompt like this::
   psql -d results -At -c "DELETE FROM tests WHERE tps=0"
   ./webreport 
 
-Note that this will not remove entries from any related tables, such as
-test_bgwriter.  This is normally not a problem since all of the
-reports require a valid entry in the tests table.
 
 Known issues
 ============
 
 * On Solaris, where the benchwarmer script calls tail it may need
   to use /usr/xpg4/bin/tail instead
-
-* test_bgwriter should use a proper foreign key relationship to tests.
-  This would make it possible for deletion of tests to cascade and
-  automatically cleanup up test_bgwriter too.
 
 Planned features
 ================

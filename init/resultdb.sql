@@ -26,8 +26,6 @@ CREATE TABLE tests(
   cleanup interval default null
   );
 
-INSERT INTO testset (info) VALUES ('');
-
 DROP TABLE IF EXISTS timing;
 -- Staging table, for loading in data from CSV
 CREATE TABLE timing(

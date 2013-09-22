@@ -56,3 +56,7 @@ TOTTRANS=""
 # Use a transaction count instead for 8.3 or earlier
 #RUNTIME=""
 #TOTTRANS=100000
+
+# Starting in the 9.4 pgbench, you can limit the maximum rate.
+# This takes a list like scale and clients
+SETRATES=""

@@ -2,7 +2,7 @@
 
 source ./config
 
-# Take clients and total transactions from command line if passed, use defaults
+# Take clients and rate limit from command line if passed, use defaults
 # otherwise
 
 # Clients
@@ -12,11 +12,13 @@ elif [ -z "$CLIENTS" ]; then
   CLIENTS=4
 fi
 
-# Transactions
-if [ ! -z "$2" ]; then
-  TOTTRANS="$2"
-elif [ -z "$TOTTRANS" ]; then
-  TOTTRANS=1000
+# Rate limit
+if [ -n "$2" ]; then
+  RATE="$2"
+  RATEOPT="-R $2 "
+else
+  RATE="NULL"
+  RATEOPT=""
 fi
 
 # Query the test database and put its background writer statistics into
@@ -167,7 +169,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (script,clients,workers,set,scale,dbsize) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE')"
+$RESULTPSQL -q -c "insert into tests (script,clients,workers,set,scale,dbsize,rate_limit) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
@@ -207,7 +209,7 @@ fi
 # Run the main pgbench test
 cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $TESTDB > results.txt &
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"

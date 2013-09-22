@@ -46,8 +46,15 @@ for SCALE in $SCALES; do
   #
   for (( t=1; t<=$SETTIMES; t++ )); do
     for c in $SETCLIENTS; do
-      echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE
-      ./benchwarmer $c
+      if [ -z "$SETRATES" ] ; then
+        echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE
+        ./benchwarmer $c
+      else
+        for r in $SETRATES; do
+          echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE rate=$r
+          ./benchwarmer $c $r
+        done 
+      fi
       echo
     done
   done

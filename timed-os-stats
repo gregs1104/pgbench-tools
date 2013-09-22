@@ -19,6 +19,7 @@ import os
 import subprocess
 import sys
 import datetime
+import time
 
 class FlushFile(object):
     """Write-only flushing wrapper for file-type objects."""
@@ -67,9 +68,39 @@ def capture(cmd,tag_all=True,tag_when=None):
 
     retcode = p.returncode
 
+def linux_meminfo(interval=5):
+    """
+    Read /proc/meminfo on a Linux system and output its
+    values with a timestamp.  That file has a mix of lines
+    that end in "kB" and numbers that are a count.  The
+    "kB" suffixes are stripped out, which means parsers
+    of this data need to know whether keys are in kB or not.
+    """
+    try:
+        os.setsid()
+    except OSError:
+        print >> sys.stderr, \
+                 "Unable to setsid(). Already process group leader?"
+
+    while True:
+        meminfo="/proc/meminfo"
+        mem=open(meminfo,"r")
+        lines=mem.readlines()
+        ts=datetime.datetime.now()
+        for line in lines:
+            if line.find(":")<0:  continue
+            if line.find("kB")<0:
+                (key,val)=line.split()
+            else:
+                (key,val,kb)=line.split()
+            key=key.rstrip(":")
+            sys.stdout.write("%s\t%s\t%s\n" % (ts,key,val))
+        time.sleep(interval)
+
 def usage():
-    print >> sys.stderr, "Usage:  %s [vmstat | iostat]" % sys.argv[0]
+    print >> sys.stderr, "Usage:  %s [vmstat | iostat | meminfo]" % sys.argv[0]
     print >> sys.stderr, "Supported platforms are linux and darwin"
+    print >> sys.stderr, "meminfo is only available on linux"
     sys.exit(1)
 
 if __name__=='__main__':
@@ -83,6 +114,8 @@ if __name__=='__main__':
             capture("vmstat 5")
         elif cmd=='iostat':
             capture("iostat -mx 5",False,"avg-cpu:")
+        elif cmd=='meminfo':
+            linux_meminfo(5)
         else:
             usage()
 

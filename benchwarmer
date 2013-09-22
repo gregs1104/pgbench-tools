@@ -42,6 +42,9 @@ function get_bgwriter {
 
 # Figure out how many transactions per client, then recompute
 # a new total; this copes with rounding issues
+if [ -z "$TOTTRANS" ] ; then
+  TOTTRANS=1000
+fi
 TRANS=`expr $TOTTRANS / $CLIENTS`
 TOTTRANS=`expr $TRANS \* $CLIENTS`
 
@@ -204,6 +207,8 @@ if [ "$OSDATA" -eq "1" ]; then
   VMSTAT=$!
   ./timed-os-stats iostat > results/$TEST/iostat.log &
   IOSTAT=$!
+  ./timed-os-stats meminfo > results/$TEST/meminfo.log &
+  MEMINFO=$!
 fi
 
 # Run the main pgbench test
@@ -220,6 +225,7 @@ if [ "$OSDATA" -eq "1" ]; then
   # via subprocess.Popen()) so they are not lingering forever.
   ../../kill_pg "${VMSTAT}"
   ../../kill_pg "${IOSTAT}"
+  ../../kill_pg "${MEMINFO}"
 fi
 
 # Update bgwriter data with delta

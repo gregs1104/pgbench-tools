@@ -113,7 +113,27 @@ if __name__=='__main__':
         if cmd=='vmstat':
             capture("vmstat 5")
         elif cmd=='iostat':
-            capture("iostat -mx 5",False,"avg-cpu:")
+            # Originally collection only added a timestamp per output set
+            # using this call:
+            #
+            #   capture("iostat -mx 5",False,"avg-cpu:")
+            #
+            # While the most accurate approach, that result requires a
+            # non-trivial parser to insert the time stamps later.
+            # Instead, now every line gets a timestamp.  The main
+            # downside is that times won't match up exactly
+            # for multiple disks worth of data.  That's annoying,
+            # but it doesn't make a real difference to graphers of
+            # the resulting data.  The other piece that a real
+            # parser would help with is eliminating the first output
+            # set, which is a set of averages we'd prefer to throw
+            # away.
+            # Also:  current iostat on RHEL6 at least has a "-t"
+            # option that adds timestmaps before each new "avg-cpu:",
+            # exactly where we'd want them to be.  No need for this Python
+            # program to get them.  vmstat also has a timestamp option with
+            # "-t", which puts them at the end of each line.
+            capture("iostat -mx 5")
         elif cmd=='meminfo':
             linux_meminfo(5)
         else:

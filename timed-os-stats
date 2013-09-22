@@ -93,5 +93,13 @@ if __name__=='__main__':
             capture("iostat -d -C -K 5")
         else:
             usage()
+    # TODO Test this section actually works
+    elif sys.platform.startswith('freebsd'):
+        if cmd=='vmstat':
+            capture("vmstat 5")
+        elif cmd=='iostat':
+            capture("iostat -Kx 5")
+        else:
+            usage()
     else:
         print >> sys.stderr, 'Unsupported platform', sys.platform

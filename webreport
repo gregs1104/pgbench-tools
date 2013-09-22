@@ -5,6 +5,18 @@
 # as index.htm that includes links to all the results in the database
 #
 
+# TODO gnuplot badly handles default font selection on many platforms.
+# Despite specifying "medium" as the font, it still looks for Ariel
+# which often is only there if you've installed Microsoft Core Fonts.
+# That results in this (harmless) warning constantly appearing:
+#   Could not find/open font when opening font "arial", using internal non-scalable font
+# On RHEL6 it's possible to switch to fonts other than Ariel like this:
+#   export GDFONTPATH=/usr/share/fonts/liberation
+#   export GNUPLOT_DEFAULT_GDFONT="LiberationMono-Regular"
+# It's not clear if it's worth detecting that font is available and
+# switching to it though.  Tests so far suggest it's slightly worse
+# than the internal font, and LiberationSans looks terrible.
+
 source ./config
 OUTFILE="results/index.htm"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
@@ -97,12 +109,12 @@ for SET in $SETS ; do
   echo Averages for test set $SET by clients: >> $OUTFILE
   $RESULTPSQL -H -c "select set,clients,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,clients order by set,clients;" >> $OUTFILE
 
-  echo Averages for test set $SET by scale and client: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,scale,clients,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale,clients order by set,scale,clients;" >> $OUTFILE
+  echo Averages for test set $SET by scale, client, and rate limit: >> $OUTFILE
+  $RESULTPSQL -H -c "select set,scale,clients,rate_limit,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency from tests where tests.set='$SET' group by set,scale,clients,rate_limit order by set,scale,clients,rate_limit;" >> $OUTFILE
 
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  
-  $RESULTPSQL -H -c "select set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,scale,clients,round(tps) as tps,max_latency, checkpoints_timed+checkpoints_req as chkpts,buffers_checkpoint as buf_check,buffers_clean as buf_clean,buffers_backend as buf_backend,buffers_alloc as buf_alloc, maxwritten_clean as max_clean, buffers_backend_fsync as backend_sync, wal_written,cleanup from test_bgwriter right join tests on tests.test=test_bgwriter.test where tests.set='$SET' order by set,scale,clients,tests.test;" > temp.txt
+  $RESULTPSQL -H -c "select set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,scale,clients,rate_limit,round(tps) as tps,max_latency, checkpoints_timed+checkpoints_req as chkpts,buffers_checkpoint as buf_check,buffers_clean as buf_clean,buffers_backend as buf_backend,buffers_alloc as buf_alloc, maxwritten_clean as max_clean, buffers_backend_fsync as backend_sync, wal_written,cleanup from test_bgwriter right join tests on tests.test=test_bgwriter.test where tests.set='$SET' order by set,scale,clients,rate_limit,tests.test;" > temp.txt
 
   # Now we need to fix lines like this
   # <td align="left">&lt;a href=&quot;results/201/&quot;&gt;201&lt;/a&gt;</td>

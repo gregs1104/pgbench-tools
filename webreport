@@ -119,8 +119,7 @@ done
 
 # Plot set comparison
 cat > multi-client.plot << "ENDING"
-set term png size 640,480
-set terminal png medium
+set terminal png medium size 640,480
 set output "clients-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
@@ -130,8 +129,7 @@ plot \
 ENDING
 
 cat > multi-scale.plot << "ENDING"
-set term png size 640,480
-set terminal png medium
+set terminal png medium size 640,480
 set output "scaling-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics

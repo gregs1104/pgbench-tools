@@ -9,7 +9,8 @@ select
   round(avg(buffers_clean)) as buf_clean,
   round(avg(buffers_backend)) as buf_backend,
   round(avg(buffers_alloc)) as buf_alloc ,
-  round(avg(buffers_backend_fsync)) as backend_fsync
+  round(avg(buffers_backend_fsync)) as backend_fsync,
+  round(avg(max_dirty)) as max_dirty
 from test_bgwriter 
 right join tests on tests.test=test_bgwriter.test 
 group by scale,set,clients

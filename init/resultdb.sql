@@ -48,7 +48,8 @@ CREATE TABLE test_bgwriter(
   maxwritten_clean int,
   buffers_backend int,
   buffers_alloc int,
-  buffers_backend_fsync int
+  buffers_backend_fsync int,
+  max_dirty int
 );
 
 --

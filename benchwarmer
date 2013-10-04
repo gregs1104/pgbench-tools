@@ -228,6 +228,12 @@ if [ "$OSDATA" -eq "1" ]; then
   ../../kill_pg "${MEMINFO}"
 fi
 
+# Find largest dirty memory value (which is in kB)
+max_dirty=`cat meminfo.log | grep Dirty | awk '{print $4}' | sort -n | tail -n 1`
+if [ -z "$max_dirty" ] ; then
+ max_dirty=0 
+fi
+
 # Update bgwriter data with delta
 get_bgwriter
 $RESULTPSQL -c "update test_bgwriter set \
@@ -238,7 +244,8 @@ $RESULTPSQL -c "update test_bgwriter set \
   maxwritten_clean=$maxwritten_clean - maxwritten_clean,\
   buffers_backend=$buffers_backend - buffers_backend,\
   buffers_alloc=$buffers_alloc - buffers_alloc,\
-  buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync \
+  buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync, \
+  max_dirty=1024 * '$max_dirty' \
   where test='$TEST'"
 
 # WAL values are initially saved as text because they're pulled from the test

@@ -144,6 +144,8 @@ if __name__=='__main__':
             capture("vm_stat 5")
         elif cmd=='iostat':
             capture("iostat -d -C -K 5")
+        elif cmd=='meminfo':
+            print >> sys.stderr, "meminfo unavailable on OS X, skipping"
         else:
             usage()
     # TODO Test this section actually works

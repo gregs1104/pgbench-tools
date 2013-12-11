@@ -30,21 +30,25 @@ function sed-i {
   mv ${filename}.new ${filename}
 }
 
-# Produce combined report, averaged across all test sets
-$RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests group by scale order by scale" > scaling.txt
-gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
-mv scaling.png results/
-rm scaling.txt
+if [ -z $GNUPLOT ] || [ ! -x $GNUPLOT ]; then
+  echo "gnuplot not found, skipping webreport charts generation"
+else
+  # Produce combined report, averaged across all test sets
+  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests group by scale order by scale" > scaling.txt
+  gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
+  mv scaling.png results/
+  rm scaling.txt
 
-$RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests group by clients order by clients" > clients.txt
-gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
-mv clients.png results/
-rm clients.txt
+  $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests group by clients order by clients" > clients.txt
+  gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
+  mv clients.png results/
+  rm clients.txt
 
-$RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests group by scale,clients order by scale,clients" > 3d.txt
-gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
-mv 3d.png results/
-rm 3d.txt
+  $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests group by scale,clients order by scale,clients" > 3d.txt
+  gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
+  mv 3d.png results/
+  rm 3d.txt
+fi
 
 # Copy the header HTML template to our outfile
 if [ "$TABBED" -eq "1" ]; then
@@ -80,21 +84,23 @@ for SET in $SETS ; do
   # We'll need to know the last set plot for the multi-plot below
   LASTSET="$SET"
 
-  # Generate graphs for just this test set
-  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling.txt
-  gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
-  mv scaling.png results/scaling-$SET.png
-  mv scaling.txt scaling-$SET.txt
+  if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
+    # Generate graphs for just this test set
+    $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling.txt
+    gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
+    mv scaling.png results/scaling-$SET.png
+    mv scaling.txt scaling-$SET.txt
 
-  $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients.txt
-  gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
-  mv clients.png results/clients-$SET.png
-  mv clients.txt clients-$SET.txt
+    $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients.txt
+    gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
+    mv clients.png results/clients-$SET.png
+    mv clients.txt clients-$SET.txt
 
-  $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d.txt
-  gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
-  mv 3d.png results/3d-$SET.png
-  rm 3d.txt
+    $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d.txt
+    gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
+    mv 3d.png results/3d-$SET.png
+    rm 3d.txt
+  fi
 
   echo "<img src=\"scaling-$SET.png\"><p>" >> $OUTFILE
   echo "<img src=\"clients-$SET.png\"><p>" >> $OUTFILE
@@ -164,15 +170,17 @@ for SET in $SETS ; do
   echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client.plot
 done
 
-gnuplot multi-scale.plot 2>&1 | grep -v "Warning: empty"
-gnuplot multi-client.plot 2>&1 | grep -v "Warning: empty"
-mv clients-sets.png results/
-mv scaling-sets.png results/
-rm multi-scale.plot
-rm multi-client.plot
+if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
+  gnuplot multi-scale.plot 2>&1 | grep -v "Warning: empty"
+  gnuplot multi-client.plot 2>&1 | grep -v "Warning: empty"
+  mv clients-sets.png results/
+  mv scaling-sets.png results/
+  rm multi-scale.plot
+  rm multi-client.plot
+fi
 
 for SET in $SETS ; do
-  rm scaling-$SET.txt clients-$SET.txt
+  rm -f scaling-$SET.txt clients-$SET.txt
 done
 
 rm temp.txt

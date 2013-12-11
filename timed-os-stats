@@ -3,7 +3,7 @@
 # timed-os-stats
 # Copyright 2012 Greg Smith gsmith@gregsmith.com
 #
-# Runs a command that produces regularly time output and adds time
+# Runs a command that produces regularly timed output and adds time
 # stamps for each line when appropriate.  Typical commands it might
 # be used for are vmstat and iostat.
 #

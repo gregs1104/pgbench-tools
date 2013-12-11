@@ -6,11 +6,11 @@
 #
 
 # TODO gnuplot badly handles default font selection on many platforms.
-# Despite specifying "medium" as the font, it still looks for Ariel
+# Despite specifying "medium" as the font, it still looks for Arial
 # which often is only there if you've installed Microsoft Core Fonts.
 # That results in this (harmless) warning constantly appearing:
 #   Could not find/open font when opening font "arial", using internal non-scalable font
-# On RHEL6 it's possible to switch to fonts other than Ariel like this:
+# On RHEL6 it's possible to switch to fonts other than Arial like this:
 #   export GDFONTPATH=/usr/share/fonts/liberation
 #   export GNUPLOT_DEFAULT_GDFONT="LiberationMono-Regular"
 # It's not clear if it's worth detecting that font is available and

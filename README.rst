@@ -163,9 +163,10 @@ extremely slow on recent Linux kernels.)
 Taking advantage of this feature is done in pgbench-tools by increasing the
 MAX_WORKERS setting in the configuration file.  It takes the value of `nproc`
 by default, or where that isn't available (typically on systems without a
-recent version of GNU coreutils), the default is equivalent to a blank setting,
-which avoids using this feature altogether -- thereby remaining compatible with
-PostgreSQL/pgbench versions before this capability was added.
+recent version of GNU coreutils), the default can be set to blank, which avoids
+using this feature altogether -- thereby remaining compatible not only with
+systems lacking the nproc program, but also with PostgreSQL/pgbench versions
+before this capability was added.
 
 When using multiple workers, each must be allocated an equal number of
 clients.  That means that client counts that are not a multiple of the

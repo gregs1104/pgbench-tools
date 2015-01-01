@@ -28,3 +28,4 @@
                Reduce wait time for setup checkpoint statistics update
                Enabled by default vmstat/iostat data collection during tests
                Add newset utility and some reporting scripts
+               Track dirty memory on Linux and plot the result

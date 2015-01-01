@@ -57,12 +57,17 @@ Results
 
 * You can check results even as the test is running with::
 
-    psql -d results -f report.sql
+    psql -d results -f reports/report.sql
 
   This is unlikely to disrupt the test results very much unless you've
-  run an enormous number of tests already.
+  run an enormous number of tests already.  There is also a helper
+  script named summary that shows reports/summary.sql
 
-* Other useful reports you can run include:
+* A helper script named set-times will show how long past tests have taken to
+  complete.  This can be useful to get an idea how long the currently running
+  test or test set will actually take to finish.
+
+* Other useful reports you can run are in the reports/ directory, including:
    * fastest.sql
    * summary.sql
    * bufreport.sql
@@ -235,7 +240,7 @@ If you have any hints, changes or improvements, please contact:
 Credits
 =======
 
-Copyright (c) 2007-2012, Gregory Smith
+Copyright (c) 2007-2014, Gregory Smith
 All rights reserved.
 See COPYRIGHT file for full license details and HISTORY for a list of
 other contributors to the program.

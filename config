@@ -11,7 +11,7 @@ PGBENCHBIN=`which pgbench`
 TESTDIR="tests"
 
 # Use these values for pgbench 8.3
-#TESTDIR="tests-8.3"
+#TESTDIR="tests/tests-8.3"
 
 # SKIPINIT should be set to 1 either when simulating a cold cache, or
 # if you are not using the pgbench tables for your test

@@ -300,18 +300,18 @@ else
 
   # Plot result graphs
   $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
-  gnuplot $BASEDIR/tps.script
+  gnuplot $BASEDIR/plots/tps.plot
 
   $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
-  gnuplot $BASEDIR/latency.script
+  gnuplot $BASEDIR/plots/latency.plot
 
   $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
 
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
-  gnuplot $BASEDIR/dirty.script
+  gnuplot $BASEDIR/plots/dirty.plot
 fi
 
-cp $BASEDIR/test-index.html index.html
+cp $BASEDIR/templates/test-index.html index.html
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore

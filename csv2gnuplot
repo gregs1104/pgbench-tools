@@ -88,7 +88,11 @@ def table_gnuplotter(rows, header=True, destination=sys.stdout, title=""):
     """
 
     # TODO Find gnuplot in the PATH.  It's different on Linux vs. Mac OS X.
-    gp = os.popen('/usr/local/bin/gnuplot', 'w')
+
+    # Mac    
+    #gp = os.popen('/usr/local/bin/gnuplot', 'w')
+    # Linux
+    gp = os.popen('/usr/bin/gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
     gp.write("set output 'graph.png'; set terminal png;\n")
@@ -176,7 +180,10 @@ def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1
     """
 
     # TODO Find gnuplot in the PATH.  It's different on Linux vs. Mac OS X.
-    gp = os.popen('/usr/local/bin/gnuplot', 'w')
+    # Mac    
+    #gp = os.popen('/usr/local/bin/gnuplot', 'w')
+    # Linux
+    gp = os.popen('/usr/bin/gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
     gp.write("set output 'graph.png'; set terminal png;\n")

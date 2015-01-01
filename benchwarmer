@@ -309,6 +309,12 @@ else
 
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
   gnuplot $BASEDIR/plots/dirty.plot
+
+  $BASEDIR/csv2gnuplot -i iostat.log -d iostat
+  mv graph.png iostat.png
+
+  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat
+  mv graph.png vmstat.png
 fi
 
 cp $BASEDIR/templates/test-index.html index.html

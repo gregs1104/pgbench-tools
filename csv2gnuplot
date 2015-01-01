@@ -1,0 +1,412 @@
+#!/usr/bin/env python
+"""
+  Input a CSV or similarly delimited file, output it to gnuplot.
+
+  The input files expected here have multiple data sets split across rows and columns, in a way that makes
+  the files easy to create in a spreadsheet or a logging data collector.  That information is parsed
+  into a data set format built with Python dictionary and list structures before going into the plotting core.
+
+  Special support is in place for files that come out of the timed-os-stats utility.
+  The original, more generic csv2gnuplot function is still in here as well.  Sample data for each
+  format is only in the doc comments of each function below so far.
+
+  Very rough code right now filled with TODO items.  This program aims to be a standalone tool that needs
+  only very basic Python and gnuplot.  The same job could be done with more advanced Python data tools,
+  like storing into a Pandas DataFrame and then using Matplotlib to render it.  Some of the users of
+  this code will not have those libraries available.  A long-term goal is to provide a functionally similar
+  program to this one that's based on a proper scientific Python stack instead.
+
+  Copyright 2011-2014, Greg Smith.
+  Part of the pgbench-tools set
+"""
+
+import csv
+import optparse
+import sys
+import string
+import os
+import time
+from dateutil import parser
+
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+def parse_options():
+    optparser = optparse.OptionParser(
+        usage="usage: %prog [options] [input_file] [output_file]",
+        version="1.0",
+        conflict_handler="resolve")
+
+    optparser.add_option('-i', '--input', dest="input_file", default=None,
+                         help="File to read from.  Defaults to standard input, except when overwritten by arguments after the regular options.")
+
+    optparser.add_option('-o', '--output', dest="output_file", default=None,
+                         help="File to write output to.  Defaults to standard output, except when overwritten by arguments after the regular options.")
+
+    optparser.add_option('-t', '--title', dest="title", default="PostgreSQL pgbench SELECT-Only Rate",
+                         help="Title of graph")
+
+    optparser.add_option('-d', '--data', dest="data_type", default=None,
+                         help="Type of data file.  options are 'table', 'iostat' and 'vmstat'")
+
+
+    options, args = optparser.parse_args()
+
+    if len(args) > 1:
+        options.output_file = args[1]
+    if len(args) > 0:
+        options.input_file = args[0]
+
+    return options, args
+
+# TODO Refactor the common gnuplot setup tasks in table_gnuplotter and ds_gnuplotter into gnuplot wrapper functions
+
+def table_gnuplotter(rows, header=True, destination=sys.stdout, title=""):
+    """
+    Outputs a list of lists into gnuplot
+
+        - rows - list of lists
+        - header - if True the first row is treated as a table header
+        - destination - file to write the table to.  Defaults to standard out.
+
+    This data format I'm thinking of as a 3D grid input, where one of the dimensions
+    can be converted to data sets for easy plotting.  The real distinction here is
+    that the first row is a header key describing one axis.  Here's an example:
+
+    "Drive",12,24,48,96
+    "DC-S3700",3682,6285,7581,9787
+    "With BBWC",1951,2171,2345,2298
+    "7200RPM",573,908,1306,1616
+
+    That header line is saying that "Drive" is the first column, and the then second through fifth columns
+    will have data entries for the values 12, 24, 48, and 96.  Each line here will turn into
+    its own plot on the graph.
+
+    """
+
+    # TODO Find gnuplot in the PATH.  It's different on Linux vs. Mac OS X.
+    gp = os.popen('/usr/local/bin/gnuplot', 'w')
+
+    # TODO Make the input destination actually get used by the output file here
+    gp.write("set output 'graph.png'; set terminal png;\n")
+    gp.write("set term png size 640,480;\n")
+    gp.write("set terminal png medium;\n")
+
+    # Alternate size code from other versions:
+    # gp.write("set size 0.75,0.75;\n")
+
+    gp.write("set grid xtics ytics;\n")
+    gp.write("set key right bottom;\n")
+
+
+    # TODO Add parameters for this text
+    gp.write("set xlabel 'Clients'; set ylabel 'Transactions per second'; ")
+    gp.write("set title '%s'; " % title)
+
+    # Sometimes needed if auto-detection doesn't work right
+    if (False):
+        gp.write("set yrange [0:30];\n")
+
+    gp.write("plot ")
+
+    # Each line here is a new gnuplot data set file.  Iterate over the
+    # list once to describe all of them.
+    header = True
+    header_text = None
+    for rownum, row in enumerate(rows):
+        if header:
+            header_text = row
+            header = False
+            continue
+        key = row[0]
+        delimiter = ""
+        if rownum < (len(rows) - 1):
+            delimiter = ", "
+        gp.write("'-' using 1:2 title '%s' with lines%s" % (key, delimiter))
+    gp.write("\n")
+
+    if header_text is not None:
+        logger.debug("header text is" + str(header_text))
+
+    # Now output the file data
+    header = True
+    for row in rows:
+        if header:
+            header = False
+            continue
+
+        # Iterate over the columns.  If not empty, print header for
+        # that position, then the value.
+        for column, value in enumerate(row):
+            logger.debug("column=%s value=%s" % (column, value))
+            if column == 0:
+                continue
+            elif value is None or value.strip() == "":
+                continue
+            else:
+                gp.write("%s %s\n" % (header_text[column], value))
+
+        # Write gnuplot file delimiter
+        gp.write("e\n")
+
+    gp.close()
+
+
+def table_csv2gnuplot(in_file, out_file, graph_title):
+    in_lines = []
+    reader = csv.reader(in_file)
+    for row in reader:
+        in_lines.append(row)
+    table_gnuplotter(in_lines, header=True, destination=out_file, title=graph_title)
+
+
+def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
+    """
+    Outputs data sets (dictionary of lists) into a gnuplot graph
+
+        - sets - dictionary (with data set as key) of lists
+        - header - if True the first row is treated as a table header
+        - destination - file to write the table to.  Defaults to standard out.
+
+    This expects that the first column in all data sets is a timestamp used for
+    the X axis values.  The time is in UNIX epoch format.
+    """
+
+    # TODO Find gnuplot in the PATH.  It's different on Linux vs. Mac OS X.
+    gp = os.popen('/usr/local/bin/gnuplot', 'w')
+
+    # TODO Make the input destination actually get used by the output file here
+    gp.write("set output 'graph.png'; set terminal png;\n")
+    gp.write("set term png size 640,480;\n")
+    gp.write("set terminal png medium;\n")
+    gp.write("set title '%s'; " % title)
+
+    # Alternate size code from other versions:
+    if (False):
+        gp.write("set size 0.75,0.75;\n")
+
+    if tsdata:
+        gp.write("set xdata time;\n")
+        gp.write("set timefmt \"%s\";\n")
+        gp.write("set format x \"%H:%M:%S\"\n")
+        # When x axis label are in HH:MM::SS format, they will often overlap in common
+        # gnuplot version+font combinations.  The problem seems related to how errors
+        # like "using internal non-scalable font" will show up regularly.
+        # This hard-coded workaround is hackish, but it works well enough for
+        # the fixed 640x480 resolution of this program.
+        gp.write("set xtics 10;\n")
+
+    gp.write("set grid xtics ytics;\n")
+    gp.write("set key right bottom;\n")
+    gp.write("set xlabel 'Time'; set ylabel '%s'; " % ylabel)
+
+    # Sometimes needed if auto-detection doesn't work right
+    if False:
+        gp.write("set yrange [0:30];\n")
+
+    gp.write("plot ")
+
+    # Each key here is a new gnuplot data set file.  Iterate over the
+    # list once to describe all of them.
+    logger.info(sets)
+
+    # TODO Convert key building to operate directly on dictionary
+    # Building a list of the keys in this dictionary is done only to
+    # detect when the last one is being processed, so that no "," is added.
+    # There should be a way to do that directly in dictionary form.
+    # enumerate works on dictionaries, but the result doesn't seem iterable.
+    keys = []
+    for key, rows in sets.items():
+        keys.append(key)
+
+    logger.debug("Data set list: %s\n" % keys)
+
+    # List the data sets.  They all have to be defined before any of their data is written.
+    # TODO Is it possible to define a set in a gnuplot input file and then immediately write its data?
+    # This would be simpler if that's the case.
+    for index, key in enumerate(keys):
+        delimiter = ""
+        if index < (len(keys) - 1):
+            delimiter = ", "
+        gp.write("'-' using 1:2 title '%s' with lines%s" % (key, delimiter))
+    gp.write("\n")
+
+    # Now output the file data
+    for k, v in sets.items():
+        logger.debug("v=", v)
+        for column, data in enumerate(v):
+            logger.debug("column=%s data=%s" % (column, data))
+            if len(data) < (ycolumn + 1):
+                continue
+            x = data[0]
+            # gnuplot expects epoch timestamp data will have no fractional part.
+            # Cope with that given data at this point is still in string form.
+            if tsdata:
+                x = int(float(x))
+            y = data[ycolumn]
+            if y is None or y.strip() == "":
+                continue
+            else:
+                logger.debug("(x,y)=%s %s\n" % (x, y))
+                gp.write("%s %s\n" % (x, y))
+
+        # Write gnuplot file delimiter
+        gp.write("e\n")
+    gp.close()
+
+
+def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, ycolumn=None, ylabel=None):
+    """
+    Provides a generic way to derive labels that takes advantage of how some common input
+    types--vmstat, iostat--are formatted.
+
+    For iostat, the key is finding a line with "Device" and splitting that via a delimiter:
+
+        Device:         rrqm/s   wrqm/s     r/s     w/s    rMB/s    wMB/s avgrq-sz avgqu-sz   await r_await w_await  svctm  %util
+
+    For vmstat, looking for "cache" might do, then splitting this:
+
+        r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+
+    This assumes that the first 2 columns are a timestamp that's the X axis, which is the format
+    output by the matching timed-os-stats program that feeds into this one
+
+    Column numbers are numbered 1,2,3,... starting *after* the two timestamp columns
+
+    Filters based on matching one of the entries in the filt_text
+
+    header_signal is text that you'll find in a header line.  Useful for
+    iostat and vmstat style data, where the you can find out all of the column
+    headers by parsing the right line.
+
+    You're expected to set either ycolumn or ylabel, and the program tries to figure the
+    other one out when there's a header_signal match.
+    """
+
+    search_for = None
+    if filt_text is not None:
+        search_for = filt_text.split(",")
+    header_labels = None
+    y_column_index = None
+
+    if ycolumn is None and ylabel is None:
+        print "Error:  one of ylabel or ycolumn has to be specified"
+        return
+
+    if ycolumn is not None:
+        # Convert y column number as a person counts columns into an array offset,
+        # knowing that there will be 2 timestamp columns before then too.
+        y_column_index = ycolumn + 1
+
+    sets = {}
+    for row in in_file:
+        columns = row.split()
+
+        # Look for a header label row and convert column labels to offsets.
+        # Stop processing when one is found, to handle things like vmstat
+        # republishing the header every screen.
+        if header_signal is not None:
+            if row.find(header_signal) >= 0:
+                if header_labels is None:
+                    header_labels = columns[2:]
+                    logger.debug("Header labels:  %s" % header_labels)
+
+                    if ylabel is None:
+                        if len(header_labels) >= (ycolumn - 1):
+                            ylabel = header_labels[ycolumn]
+                            logger.debug("Label for column %s is %s" % (ycolumn, ylabel))
+                continue
+
+        # When we don't know the column number yet, look for the ylabel the first
+        # time a header line is seen.
+        if ycolumn is None and (header_labels is not None):
+            logger.debug("Looking for ycolumn text %s in '%s'" % (ylabel, row))
+            for i, l in enumerate(header_labels):
+                if l == ylabel:
+                    # Set ycolumn using the same starting at 1 index as the
+                    # function input, while using an offset column index
+                    # internally.
+                    ycolumn = i + 1
+                    y_column_index = ycolumn + 1
+                    logger.debug("Matched column %s in header '%s'" % (ycolumn, header_labels))
+
+        # Can't proceed if we haven't figured out which column to graph yet
+        if y_column_index is None:
+            logger.debug("No y column index yet, skipping row %s" % row)
+            continue
+
+        # TODO Should this use ycolumnindex instead?
+        # It may only matter when trying to graph the rightmost columns
+        if len(columns) < ycolumn:
+            logger.debug("not enough columns - rejecting row %s" % row)
+            continue
+
+        matches = False
+        if search_for is None:
+            matches = True
+            # When there isn't really a key to filter data sets, use an empty
+            # string.  All useful lines will end up in that set.
+            dataset = ''
+        else:
+            for s in search_for:
+                if row.find(s) >= 0:
+                    matches = True
+                    dataset = str(s)
+        if not matches:
+            logger.debug("no match - rejecting row %s" % row)
+            continue
+
+        tstext = "%s %s" % (columns[0], columns[1])
+        logger.debug(tstext)
+        logger.debug(columns)
+
+        # This doesn't save all the resolution on millisecond level timestamps.
+        # But gnuplot don't handle them either though, so it's not a problem.
+        # They get truncated to second resolution anyway by later code.
+        ts = parser.parse(tstext)
+        epoch = time.mktime(ts.timetuple())
+        val = columns[y_column_index]
+        formatted = (str(epoch), str(val))
+        logger.debug(formatted)
+        if dataset not in sets:
+            sets[str(dataset)] = []
+        sets[str(dataset)].append(formatted)
+
+        logger.debug("%s %s %s" % (dataset, epoch, val))
+        logger.debug(row)
+
+    logger.debug("Sets as they come out of the data set parsing")
+    logger.debug(sets)
+    ds_gnuplotter(sets, destination=output_file, title=graph_title, ylabel=ylabel)
+
+def main():
+    (options, args) = parse_options()
+
+    if options.input_file is None:
+        file_to_process = sys.stdin
+    else:
+        file_to_process = open(options.input_file, 'r')
+
+    if options.output_file is None:
+        out_file = sys.stdout
+    else:
+        out_file = open(options.output_file, 'w')
+
+
+    # TODO Convert remaining fixed values to parameter inputs:  filt_text, ylabel, header_signal
+    if options.data_type == "table":
+        return table_csv2gnuplot(file_to_process,out_file,options.title)
+    if options.data_type == "iostat":
+        return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
+                               ylabel="wMB/s", filt_text="sdc,sdd", header_signal="Device:")
+    elif options.data_type == "vmstat":
+        return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
+                               ylabel="bo", filt_text=None, header_signal="cache")
+    else:
+        print "Error:  unknown data file type %s" % options.data_type
+
+if __name__ == '__main__':
+    main()

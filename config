@@ -60,3 +60,8 @@ TOTTRANS=""
 # Starting in the 9.4 pgbench, you can limit the maximum rate.
 # This takes a list like scale and clients
 SETRATES=""
+
+#
+# Parameters for system monitoring code
+#
+DISKLIST="sda"

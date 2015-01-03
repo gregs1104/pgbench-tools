@@ -310,10 +310,16 @@ else
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
   gnuplot $BASEDIR/plots/dirty.plot
 
-  $BASEDIR/csv2gnuplot -i iostat.log -d iostat
-  mv graph.png iostat.png
+  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
+  mv graph.png iostat-writeMB.png
 
-  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat
+  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
+  mv graph.png iostat-readMB.png
+
+  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
+  mv graph.png iostat-util.png
+
+  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
   mv graph.png vmstat.png
 fi
 

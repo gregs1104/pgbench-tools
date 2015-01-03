@@ -223,7 +223,7 @@ def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1
 
     # Each key here is a new gnuplot data set file.  Iterate over the
     # list once to describe all of them.
-    logger.info(sets)
+    logger.debug(sets)
 
     # TODO Convert key building to operate directly on dictionary
     # Building a list of the keys in this dictionary is done only to

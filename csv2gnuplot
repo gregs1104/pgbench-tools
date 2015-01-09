@@ -87,8 +87,7 @@ def table_gnuplotter(rows, header=True, destination=sys.stdout, title=""):
 
     """
 
-    # TODO Find gnuplot in the PATH.  It's different on Linux vs. Mac OS X.
-    gp = os.popen('/usr/local/bin/gnuplot', 'w')
+    gp = os.popen('gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
     gp.write("set output 'graph.png'; set terminal png;\n")
@@ -175,8 +174,7 @@ def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1
     the X axis values.  The time is in UNIX epoch format.
     """
 
-    # TODO Find gnuplot in the PATH.  It's different on Linux vs. Mac OS X.
-    gp = os.popen('/usr/local/bin/gnuplot', 'w')
+    gp = os.popen('gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
     gp.write("set output 'graph.png'; set terminal png;\n")
@@ -306,8 +304,8 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
         columns = row.split()
 
         # Look for a header label row and convert column labels to offsets.
-        # Stop processing when one is found, to handle things like vmstat
-        # republishing the header every screen.
+        # Stop processing once one is found, since programs like vmstat
+        # republish the header every screen.
         if header_signal is not None:
             if row.find(header_signal) >= 0:
                 if header_labels is None:

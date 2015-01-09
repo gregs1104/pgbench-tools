@@ -1,5 +1,6 @@
 SELECT
-  set,scale,test,script,clients,rate_limit,workers,
+  set,scale,test,script,clients,workers,
+  rate_limit AS limit,
   round(tps) AS tps,
   round(1000*avg_latency)/1000 AS avg_latency,
   round(1000*percentile_90_latency)/1000 AS "90%<",

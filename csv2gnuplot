@@ -52,6 +52,11 @@ def parse_options():
     optparser.add_option('-d', '--data', dest="data_type", default=None,
                          help="Type of data file.  options are 'table', 'iostat' and 'vmstat'")
 
+    optparser.add_option('--disks', dest="disk_list", default='sda',
+                         help="Comma separated list of disks to include in iostat format")
+
+    optparser.add_option('--diskstats', dest="disk_stats", default='wMB/s',
+                         help="Column to plot from iostat disk statistics")
 
     options, args = optparser.parse_args()
 
@@ -209,7 +214,7 @@ def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1
 
     # Each key here is a new gnuplot data set file.  Iterate over the
     # list once to describe all of them.
-    logger.info(sets)
+    logger.debug(sets)
 
     # TODO Convert key building to operate directly on dictionary
     # Building a list of the keys in this dictionary is done only to
@@ -399,10 +404,10 @@ def main():
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel="wMB/s", filt_text="sdc,sdd", header_signal="Device:")
+                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device:")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel="bo", filt_text=None, header_signal="cache")
+                               ylabel="us", filt_text=None, header_signal="cache")
     else:
         print "Error:  unknown data file type %s" % options.data_type
 

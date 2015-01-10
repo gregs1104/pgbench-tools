@@ -1,0 +1,8 @@
+#!/bin/bash
+# Test csv2gnuplot script
+../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="sdc" --diskstats="%util"
+mv graph.png iostat-util.png
+../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
+mv graph.png vmstat.png
+../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison"
+mv graph.png disks.png

@@ -40,7 +40,9 @@ RESULTDB=results
 
 # Set this to a number only when using pgbench 9.0 or later.  This will set
 # the number of worker threads up to this maximum for each client count
-MAX_WORKERS=""
+MAX_WORKERS=`nproc`
+# Blank setting, typically used with earlier pgbench versions
+#MAX_WORKERS=""
 
 SCRIPT="select.sql"
 SCALES="1 10 100 1000"

@@ -166,19 +166,22 @@ do not specify a host, and therefore connect via a local socket can be
 extremely slow on recent Linux kernels.)
 
 Taking advantage of this feature is done in pgbench-tools by increasing the
-MAX_WORKERS setting in the configuration file.  It defaults to blank, which
-avoids using this feature altogether--therefore remaining
-compatible with PostgreSQL/pgbench versions before this capability was added.
+MAX_WORKERS setting in the configuration file.  It takes the value of `nproc`
+by default, or where that isn't available (typically on systems without a
+recent version of GNU coreutils), the default can be set to blank, which avoids
+using this feature altogether -- thereby remaining compatible not only with
+systems lacking the nproc program, but also with PostgreSQL/pgbench versions
+before this capability was added.
 
 When using multiple workers, each must be allocated an equal number of
 clients.  That means that client counts that are not a multiple of the
 worker count will result in pgbench not running at all.
 
-According, if you set MAX_WORKERS to a number to enable this capability,
-pgbench-tools picks the maximum integer of that value or lower that the
-client count is evenly divisible by.  For example, if MAX_WORKERS is 4,
-running with 8 clients will use 4 workers, while 9 clients will shift
-downward to 3 workers as the best option.
+Accordingly, if you set MAX_WORKERS to a number to enable this capability,
+pgbench-tools picks the maximum integer of that value or lower that the client
+count is evenly divisible by.  For example, if MAX_WORKERS is 4, running with 8
+clients will use 4 workers, while 9 clients will shift downward to 3 workers as
+the best option.
 
 A reasonable setting for MAX_WORKERS is the number of physical cores
 on the server, typically giving best performance.  And when using this feature,

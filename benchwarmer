@@ -57,6 +57,12 @@ else
   TESTLEN="-t $TRANS"
 fi
 
+# Set MAX_WORKERS automatically on platforms that have the nproc
+# utility.  OS X is an example platform where it's not available.
+if [ "$MAX_WORKERS" == "auto" ] ; then
+  MAX_WORKERS=`nproc` 2>&1 >>/dev/null
+fi
+
 # Set WORKERS string so that the largest possible worker count
 # up to MAX_WORKERS is used, while still dividing CLIENTS into an
 # even number per worker.

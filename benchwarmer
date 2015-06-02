@@ -123,7 +123,7 @@ if [ "$PGBENCH_TABLES" -eq "1" ] ; then
 fi
 
 # Confirm we have a useful pgbench to run
-if [ ! -f $PGBENCHBIN ]; then
+if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
   echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
   exit
 fi
@@ -303,30 +303,34 @@ else
   # Import timestamp information
   $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-
-  # Plot result graphs
-  $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
-  gnuplot $BASEDIR/plots/tps.plot
-
-  $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
-  gnuplot $BASEDIR/plots/latency.plot
-
   $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
-
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
-  gnuplot $BASEDIR/plots/dirty.plot
 
-  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
-  mv graph.png iostat-writeMB.png
+  if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
+    # Plot result graphs
+    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
+    $GNUPLOT $BASEDIR/plots/tps.plot
 
-  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
-  mv graph.png iostat-readMB.png
+    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
+    $GNUPLOT $BASEDIR/plots/latency.plot
 
-  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
-  mv graph.png iostat-util.png
+    $GNUPLOT $BASEDIR/plots/dirty.plot
 
-  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
-  mv graph.png vmstat.png
+    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
+    mv graph.png iostat-writeMB.png
+
+    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
+    mv graph.png iostat-readMB.png
+
+    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
+    mv graph.png iostat-util.png
+
+    $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
+    mv graph.png vmstat.png
+  else
+    echo "gnuplot not found, skipping benchwarmer charts generation"
+  fi
+
 fi
 
 cp $BASEDIR/templates/test-index.html index.html
@@ -382,10 +386,11 @@ fi
 
 mount >> $SETTINGS
 
-# Remove temporary files
-rm pgbench_log.${P}*
-rm pgbench.log
-rm timing.csv
-rm tpsdata.txt
-rm latency.txt
-rm dirtydata.txt
+# Remove temporary files, don't complain if the files are missing e.g.
+# because we skipped gnuplot'ing and generating these files
+rm -f pgbench_log.${P}*
+rm -f pgbench.log
+rm -f timing.csv
+rm -f tpsdata.txt
+rm -f latency.txt
+rm -f dirtydata.txt

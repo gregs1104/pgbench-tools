@@ -3,7 +3,7 @@
 . ./config
 
 # Confirm we have a useful pgbench to run
-if [ ! -f $PGBENCHBIN ]; then
+if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
   echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
   exit
 fi

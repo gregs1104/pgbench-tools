@@ -41,15 +41,15 @@ CREATE INDEX idx_timing_test on timing(test,ts);
 DROP TABLE IF EXISTS test_bgwriter;
 CREATE TABLE test_bgwriter(
   test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
-  checkpoints_timed int,
-  checkpoints_req int,
-  buffers_checkpoint int,
-  buffers_clean int,
-  maxwritten_clean int,
-  buffers_backend int,
-  buffers_alloc int,
-  buffers_backend_fsync int,
-  max_dirty int
+  checkpoints_timed bigint,
+  checkpoints_req bigint,
+  buffers_checkpoint bigint,
+  buffers_clean bigint,
+  maxwritten_clean bigint,
+  buffers_backend bigint,
+  buffers_alloc bigint,
+  buffers_backend_fsync bigint,
+  max_dirty bigint
 );
 
 --

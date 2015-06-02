@@ -6,6 +6,7 @@
 
 BASEDIR=`pwd`
 PGBENCHBIN=`which pgbench`
+GNUPLOT=`which gnuplot`
 
 # These values are for pgbench 8.4 and later
 TESTDIR="tests"

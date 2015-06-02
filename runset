@@ -25,6 +25,12 @@ else
   fi
 fi
 
+# Make sure the configured test script actually exists
+if [ ! -f "${TESTDIR}/${SCRIPT}" ]; then
+  echo "ERROR: cannot find test script ${TESTDIR}/${SCRIPT}, aborting"
+  exit
+fi
+
 for SCALE in $SCALES; do
   #
   # Have a consistent, clean set of pgbench tables to start 

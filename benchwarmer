@@ -316,6 +316,9 @@ else
 
     $GNUPLOT $BASEDIR/plots/dirty.plot
 
+    # TODO If $GNUPLOT is set to something other than its default value from `which`, there
+    # should be a command line option in csv2gnuplot that informs the program of that path.
+
     $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
     mv graph.png iostat-writeMB.png
 

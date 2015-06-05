@@ -74,6 +74,11 @@ DISKLIST="sda"
 # This is very slow for longer / larger tests.
 GEN_TEST_CHARTS=false
 
+#
+# Email to send completion notification to. Leave blank for no email.
+#
+EMAIL=""
+
 if [ -f ./local_config ]; then
     echo "Loading local config"
     . ./local_config

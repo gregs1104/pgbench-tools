@@ -67,3 +67,7 @@ for SCALE in $SCALES; do
 done
 
 ./webreport
+
+if [ ! -z $EMAIL ]; then
+    echo -e "pgbench-tool test completed" | mail -s "[PGBench test] complete" $EMAIL
+fi

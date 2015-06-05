@@ -220,7 +220,12 @@ fi
 # Run the main pgbench test
 cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
+if [ $GEN_TEST_CHARTS = true ]; then
+  LOGOPT="-l"
+else
+  LOGOPT=""
+fi
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE $LOGOPT -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
@@ -276,20 +281,20 @@ if [ "$SKIPINIT" -ne "1" ]; then
   $RESULTPSQL -q -c "UPDATE tests SET cleanup=now() - '$VACUUMSTART'::timestamp WHERE test=$TEST"
 fi
 
-# Save pgbench log
-# In the multi-threaded case, there may be a number of files, so copy
-# them all in
-cat pgbench_log.${P}* > pgbench.log
-echo Worst latency results:
-
-# TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead
-cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
-
 tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
 $RESULTPSQL -q -c "update tests set tps='$tps',trans='$trans' where test=$TEST"
 
 if [ $GEN_TEST_CHARTS = true ]; then
+    # Save pgbench log
+    # In the multi-threaded case, there may be a number of files, so copy
+    # them all in
+    cat pgbench_log.${P}* > pgbench.log
+    echo Worst latency results:
+
+    # TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead
+    cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
+
     # Confirm we have an patched version of pgbench that has timestamps
     TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
     if [ -z "$TESTFORTS" ]; then

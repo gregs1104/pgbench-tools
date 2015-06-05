@@ -73,3 +73,8 @@ DISKLIST="sda"
 # Set to true to generate individual test charts (latency and tps)
 # This is very slow for longer / larger tests.
 GEN_TEST_CHARTS=false
+
+if [ -f ./local_config ]; then
+    echo "Loading local config"
+    . ./local_config
+fi

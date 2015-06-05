@@ -304,7 +304,9 @@ else
   $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
   $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
-  $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+  if [ "$OSDATA" -eq "1" ]; then
+    $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+  fi
 
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Plot result graphs
@@ -314,22 +316,25 @@ else
     $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
     $GNUPLOT $BASEDIR/plots/latency.plot
 
-    $GNUPLOT $BASEDIR/plots/dirty.plot
+    if [ "$OSDATA" -eq "1" ]; then
+        $GNUPLOT $BASEDIR/plots/dirty.plot
 
-    # TODO If $GNUPLOT is set to something other than its default value from `which`, there
-    # should be a command line option in csv2gnuplot that informs the program of that path.
 
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
-    mv graph.png iostat-writeMB.png
+        # TODO If $GNUPLOT is set to something other than its default value from `which`, there
+        # should be a command line option in csv2gnuplot that informs the program of that path.
 
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
-    mv graph.png iostat-readMB.png
+        $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
+        mv graph.png iostat-writeMB.png
 
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
-    mv graph.png iostat-util.png
+        $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
+        mv graph.png iostat-readMB.png
 
-    $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
-    mv graph.png vmstat.png
+        $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
+        mv graph.png iostat-util.png
+
+        $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
+        mv graph.png vmstat.png
+    fi
   else
     echo "gnuplot not found, skipping benchwarmer charts generation"
   fi

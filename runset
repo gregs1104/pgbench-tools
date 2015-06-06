@@ -68,6 +68,6 @@ done
 
 ./webreport
 
-if [ ! -z $EMAIL ]; then
+if [ ! -z "$EMAIL" ]; then
     echo -e "pgbench-tool test completed" | mail -s "[PGBench test] complete" $EMAIL
 fi

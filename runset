@@ -2,6 +2,12 @@
 
 . ./config
 
+# Allow specifying the set number via the command line (allows adding more tests to previous sets)
+SETOPT=""
+if [ ! -z "$1" ]; then
+  SETOPT="-s $1"
+fi
+
 # Confirm we have a useful pgbench to run
 if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
   echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
@@ -54,11 +60,11 @@ for SCALE in $SCALES; do
     for c in $SETCLIENTS; do
       if [ -z "$SETRATES" ] ; then
         echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE
-        ./benchwarmer $c
+        ./benchwarmer -c $c $SETOPT
       else
         for r in $SETRATES; do
           echo Run set \#$t of $SETTIMES with $c clients scale=$SCALE rate=$r
-          ./benchwarmer $c $r
+          ./benchwarmer -c $c -r $r $SETOPT
         done 
       fi
       echo

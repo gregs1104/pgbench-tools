@@ -5,20 +5,46 @@ source ./config
 # Take clients and rate limit from command line if passed, use defaults
 # otherwise
 
-# Clients
-if [ ! -z "$1" ]; then
-  CLIENTS="$1"
-elif [ -z "$CLIENTS" ]; then
-  CLIENTS=4
-fi
+# psql statements for the test database and the result database
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-# Rate limit
-if [ -n "$2" ]; then
-  RATE="$2"
-  RATEOPT="-R $2 "
+CLIENTS=4
+RATE="NULL"
+RATEOPT=""
+SET=""
+
+while getopts "c:r:s:" opt; do
+  case $opt in
+    c)
+      CLIENTS="$OPTARG"
+      ;;
+    r)
+      RATE="$OPTARG"
+      RATEOPT="-R $OPTARG "
+      ;;
+    s)
+      SET="$OPTARG"
+      ;;
+  esac
+done
+
+# Find current test set
+if [ ! -z "$SET" ]; then
+  VERIFY_SET=`$RESULTPSQL -A -t -c "select set from testset where set = $SET"`
+  if [ -z "$VERIFY_SET" ]; then
+    echo ERROR:  Invalid set specified
+    exit
+  fi
 else
-  RATE="NULL"
-  RATEOPT=""
+  SET=`$RESULTPSQL -A -t -c "select max(set) from testset"`
+  if [ "$?" -ne "0" ]; then
+    echo ERROR:  Attempt to determine test set failed
+    # TODO Create a fake first set if this happens?  Right now,
+    # the likely case is that the test DDL was never added, which
+    # makes that sort of correction attempt unlikely to be useful
+    exit
+  fi
 fi
 
 # Query the test database and put its background writer statistics into
@@ -91,9 +117,6 @@ if [ -n "$MAX_WORKERS" ] ; then
   fi
 fi
 
-# psql statements for the test database and the result database
-TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
-RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 echo Running tests using:  $TESTPSQL
 echo Storing results using:  $RESULTPSQL
 
@@ -125,16 +148,6 @@ fi
 # Confirm we have a useful pgbench to run
 if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
   echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
-  exit
-fi
-
-# Find current test set
-SET=`$RESULTPSQL -A -t -c "select max(set) from testset"`
-if [ "$?" -ne "0" ]; then
-  echo ERROR:  Attempt to determine test set failed
-  # TODO Create a fake first set if this happens?  Right now,
-  # the likely case is that the test DDL was never added, which
-  # makes that sort of correction attempt unlikely to be useful
   exit
 fi
 

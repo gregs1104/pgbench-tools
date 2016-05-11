@@ -209,6 +209,22 @@ at a shell prompt like this::
   psql -d results -At -c "DELETE FROM tests WHERE tps=0"
   ./webreport 
 
+Adding tests to a previous set
+==============================
+Occasionally you may want to run addional tests and have them be recorded
+with a previous set. To do this pass in the set number to the runset command.
+
+You can determine the set number by running "newset" without any arguments::
+
+  ./newset
+   set | info
+  -----+------
+     1 | "Initial set"
+     2 | "Second set"
+
+Now you can add tests to set "1" as follows::
+
+  ./runset 1
 
 Known issues
 ============

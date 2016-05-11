@@ -4,12 +4,12 @@
 # change any of these.
 #
 
-BASEDIR=`pwd`
-PGBENCHBIN=`which pgbench`
-GNUPLOT=`which gnuplot`
+BASEDIR="$( cd "$( dirname -- "$0" )" > /dev/null ; pwd )"
+PGBENCHBIN=$(command -v pgbench)
+GNUPLOT=$(command -v gnuplot)
 
 # These values are for pgbench 8.4 and later
-TESTDIR="tests"
+TESTDIR="tests/tests-8.4"
 
 # Use these values for pgbench 8.3
 #TESTDIR="tests/tests-8.3"
@@ -29,11 +29,13 @@ TESTHOST=localhost
 TESTUSER=`whoami`
 TESTPORT=5432
 TESTDB=pgbench
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
 
 RESULTHOST="$TESTHOST"
 RESULTUSER="$TESTUSER"
 RESULTPORT="$TESTPORT"
 RESULTDB=results
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
 #
 # Main test run customization
@@ -42,13 +44,9 @@ RESULTDB=results
 # Set this to a number only when using pgbench 9.0 or later.  This will set
 # the number of worker threads up to this maximum for each client count
 MAX_WORKERS="auto"
+
 # Blank setting, typically used with earlier pgbench versions
 #MAX_WORKERS=""
-
-SCRIPT="select.sql"
-SCALES="1 10 100 1000"
-SETCLIENTS="1 2 4 8 16 32"
-SETTIMES=3
 
 # RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
 # Setting a time instead of a transaction account is only available

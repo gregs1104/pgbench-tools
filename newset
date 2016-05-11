@@ -1,16 +1,14 @@
 #!/bin/bash
 SET="$1"
 
-source ./config
-RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+. ./config
 
 if [ -z "$SET" ] ; then
-  echo Usage:  $0 \"description\"
-  echo Run without any parameters for help and to display existing sets
+  echo "Usage:  $0 \"description\" "
+  echo "Run without any parameters for help and to display existing sets"
   echo
-  $RESULTPSQL -c "SELECT * FROM testset ORDER BY set"
+  $RESULTPSQL -c "SELECT * FROM testset ORDER BY set" 
   exit 1
 fi
 
 $RESULTPSQL -c "INSERT INTO testset(info) VALUES('$SET');"
-$RESULTPSQL -c "SELECT * FROM testset ORDER BY set"

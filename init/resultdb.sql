@@ -1,12 +1,12 @@
 BEGIN;
 
-DROP TABLE IF EXISTS testset;
+DROP TABLE IF EXISTS testset CASCADE;
 CREATE TABLE testset(
   set serial PRIMARY KEY,
   info text
   );
 
-DROP TABLE IF EXISTS tests;
+DROP TABLE IF EXISTS tests CASCADE;
 CREATE TABLE tests(
   test serial PRIMARY KEY,
   set int NOT NULL REFERENCES testset(set) ON DELETE CASCADE,
@@ -27,18 +27,18 @@ CREATE TABLE tests(
   rate_limit numeric default null
   );
 
-DROP TABLE IF EXISTS timing;
+DROP TABLE IF EXISTS timing CASCADE;
 -- Staging table, for loading in data from CSV
 CREATE TABLE timing(
   ts timestamp,
-  filenum int, 
+  filenum int,
   latency numeric(9,3),
   test int NOT NULL REFERENCES tests(test)
   );
 
 CREATE INDEX idx_timing_test on timing(test,ts);
 
-DROP TABLE IF EXISTS test_bgwriter;
+DROP TABLE IF EXISTS test_bgwriter CASCADE;
 CREATE TABLE test_bgwriter(
   test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
   checkpoints_timed bigint,

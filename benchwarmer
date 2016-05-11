@@ -337,6 +337,7 @@ else
 fi
 
 cp $BASEDIR/templates/test-index.html index.html
+cp $BASEDIR/config config
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore

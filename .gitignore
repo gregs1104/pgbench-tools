@@ -1,2 +1,6 @@
 *~
-/results
+results/
+*.plot
+.idea/
+*.iml
+.DS_Store

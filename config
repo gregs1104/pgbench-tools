@@ -9,7 +9,7 @@ PGBENCHBIN=$(command -v pgbench)
 GNUPLOT=$(command -v gnuplot)
 
 # These values are for pgbench 8.4 and later
-TESTDIR="tests"
+TESTDIR="tests/tests-8.4"
 
 # Use these values for pgbench 8.3
 #TESTDIR="tests/tests-8.3"

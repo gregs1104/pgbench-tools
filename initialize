@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#
+# Initialize the results database and results folder.
+#
+
+source ./config
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+PGDUMP="pg_dump -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT $RESULTDB"
+
+RESULTS_DIR="results"
+DATE=`date +%Y%m%d%H%M`
+BACKUP_DIR="results-$DATE"
+
+RESULT_DATA="$(ls -A $RESULTS_DIR)"
+SET=$($RESULTPSQL -A -t -c "select min(set) from testset")
+if [[ "$?" -eq "0" && $SET ]] || [ $RESULT_DATA ]; then
+    echo "You have already run some tests. This will backup all your data to $BACKUP_DIR"
+    read -p "Are you sure you want to continue? " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborting"
+        exit 1
+    else
+        echo "Backing up results database to $BACKUP_DIR"
+        mkdir -p $BACKUP_DIR
+        $PGDUMP > $BACKUP_DIR/results.sql
+
+        echo "Backing up results files to $BACKUP_DIR"
+        mv results/* $BACKUP_DIR/
+    fi
+fi
+
+echo
+echo "Initializing the result database"
+echo
+$RESULTPSQL -f init/resultdb.sql

@@ -5,20 +5,46 @@ source ./config
 # Take clients and rate limit from command line if passed, use defaults
 # otherwise
 
-# Clients
-if [ ! -z "$1" ]; then
-  CLIENTS="$1"
-elif [ -z "$CLIENTS" ]; then
-  CLIENTS=4
-fi
+# psql statements for the test database and the result database
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-# Rate limit
-if [ -n "$2" ]; then
-  RATE="$2"
-  RATEOPT="-R $2 "
+CLIENTS=4
+RATE="NULL"
+RATEOPT=""
+SET=""
+
+while getopts "c:r:s:" opt; do
+  case $opt in
+    c)
+      CLIENTS="$OPTARG"
+      ;;
+    r)
+      RATE="$OPTARG"
+      RATEOPT="-R $OPTARG "
+      ;;
+    s)
+      SET="$OPTARG"
+      ;;
+  esac
+done
+
+# Find current test set
+if [ ! -z "$SET" ]; then
+  VERIFY_SET=`$RESULTPSQL -A -t -c "select set from testset where set = $SET"`
+  if [ -z "$VERIFY_SET" ]; then
+    echo ERROR:  Invalid set specified
+    exit
+  fi
 else
-  RATE="NULL"
-  RATEOPT=""
+  SET=`$RESULTPSQL -A -t -c "select max(set) from testset"`
+  if [ "$?" -ne "0" ]; then
+    echo ERROR:  Attempt to determine test set failed
+    # TODO Create a fake first set if this happens?  Right now,
+    # the likely case is that the test DDL was never added, which
+    # makes that sort of correction attempt unlikely to be useful
+    exit
+  fi
 fi
 
 # Query the test database and put its background writer statistics into
@@ -91,9 +117,6 @@ if [ -n "$MAX_WORKERS" ] ; then
   fi
 fi
 
-# psql statements for the test database and the result database
-TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
-RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 echo Running tests using:  $TESTPSQL
 echo Storing results using:  $RESULTPSQL
 
@@ -125,16 +148,6 @@ fi
 # Confirm we have a useful pgbench to run
 if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
   echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
-  exit
-fi
-
-# Find current test set
-SET=`$RESULTPSQL -A -t -c "select max(set) from testset"`
-if [ "$?" -ne "0" ]; then
-  echo ERROR:  Attempt to determine test set failed
-  # TODO Create a fake first set if this happens?  Right now,
-  # the likely case is that the test DDL was never added, which
-  # makes that sort of correction attempt unlikely to be useful
   exit
 fi
 
@@ -220,7 +233,12 @@ fi
 # Run the main pgbench test
 cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
+if [ $GEN_TEST_CHARTS = true ]; then
+  LOGOPT="-l"
+else
+  LOGOPT=""
+fi
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE $LOGOPT -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
@@ -276,64 +294,71 @@ if [ "$SKIPINIT" -ne "1" ]; then
   $RESULTPSQL -q -c "UPDATE tests SET cleanup=now() - '$VACUUMSTART'::timestamp WHERE test=$TEST"
 fi
 
-# Save pgbench log
-# In the multi-threaded case, there may be a number of files, so copy
-# them all in
-cat pgbench_log.${P}* > pgbench.log
-echo Worst latency results:
-
-# TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead
-cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
-
 tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
 $RESULTPSQL -q -c "update tests set tps='$tps',trans='$trans' where test=$TEST"
 
-# Confirm we have an patched version of pgbench that has timestamps
-TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
-if [ -z "$TESTFORTS" ]; then
-  echo
-  echo "ERROR:  the pgbench used for this test is missing transaction"
-  echo timestamps.  No latency information will be imported into
-  echo the database, and no plots will be generated.
-  echo
+if [ $GEN_TEST_CHARTS = true ]; then
+    # Save pgbench log
+    # In the multi-threaded case, there may be a number of files, so copy
+    # them all in
+    cat pgbench_log.${P}* > pgbench.log
+    echo Worst latency results:
 
-else
+    # TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead
+    cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
 
-  # Import timestamp information
-  $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
-  $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
-  $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+    # Confirm we have an patched version of pgbench that has timestamps
+    TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
+    if [ -z "$TESTFORTS" ]; then
+      echo
+      echo "ERROR:  the pgbench used for this test is missing transaction"
+      echo timestamps.  No latency information will be imported into
+      echo the database, and no plots will be generated.
+      echo
 
-  if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
-    # Plot result graphs
-    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
-    $GNUPLOT $BASEDIR/plots/tps.plot
+    else
 
-    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
-    $GNUPLOT $BASEDIR/plots/latency.plot
+      # Import timestamp information
+      $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
+      $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
+      $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
+      if [ "$OSDATA" -eq "1" ]; then
+        $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+      fi
 
-    $GNUPLOT $BASEDIR/plots/dirty.plot
+      if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
+        # Plot result graphs
+        $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
+        $GNUPLOT $BASEDIR/plots/tps.plot
 
-    # TODO If $GNUPLOT is set to something other than its default value from `which`, there
-    # should be a command line option in csv2gnuplot that informs the program of that path.
+        $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
+        $GNUPLOT $BASEDIR/plots/latency.plot
 
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
-    mv graph.png iostat-writeMB.png
+        if [ "$OSDATA" -eq "1" ]; then
+            $GNUPLOT $BASEDIR/plots/dirty.plot
 
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
-    mv graph.png iostat-readMB.png
 
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
-    mv graph.png iostat-util.png
+            # TODO If $GNUPLOT is set to something other than its default value from `which`, there
+            # should be a command line option in csv2gnuplot that informs the program of that path.
 
-    $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
-    mv graph.png vmstat.png
-  else
-    echo "gnuplot not found, skipping benchwarmer charts generation"
-  fi
+            $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
+            mv graph.png iostat-writeMB.png
 
+            $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s"
+            mv graph.png iostat-readMB.png
+
+            $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util"
+            mv graph.png iostat-util.png
+
+            $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat"
+            mv graph.png vmstat.png
+        fi
+      else
+        echo "gnuplot not found, skipping benchwarmer charts generation"
+      fi
+
+    fi
 fi
 
 cp $BASEDIR/templates/test-index.html index.html

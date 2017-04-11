@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#
+# summary connects to the Results database and produces a report
+# of its contents
+#
+
+source ./config
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+$RESULTPSQL -f reports/report_orderbytest.sql

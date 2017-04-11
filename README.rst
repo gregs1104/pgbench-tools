@@ -144,6 +144,14 @@ program from 8.3 into a 8.2 source code build and use it instead (with
 some fixes--it won't compile unless you comment out code that refers to
 optional newer features added in 8.3).
 
+Regarding compatibility with 9.6 and higher, since the syntax for random changed, 
+you can find all the necessary tests in the subfolder test-9.6/ located in the tests/ directory.
+Be sure to check the name of de directory in the config script for your version of Postgres.
+
+The default test directory scripts is TESTDIR="tests/tests-9.6"
+
+
+
 Multiple worker support
 -----------------------
 

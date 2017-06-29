@@ -1,0 +1,10 @@
+#!/bin/bash
+
+
+#Cleaning results from test number and all higher numbers
+
+TEST=$1
+
+cd results
+psql -d results -At -c "SELECT test FROM tests WHERE test>=$TEST" | xargs rm -rf
+psql -d results -At -c "DELETE FROM tests WHERE test>=$TEST"

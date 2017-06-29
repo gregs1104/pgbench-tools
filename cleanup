@@ -1,0 +1,3 @@
+cd results
+psql -d results -At -c "SELECT test FROM tests WHERE tps=0" | xargs rm -rf
+psql -d results -At -c "DELETE FROM tests WHERE tps=0"

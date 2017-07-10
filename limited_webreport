@@ -65,6 +65,8 @@ echo "<img src=\"3d.png\"><p>" >> $OUTFILE
 echo "<h3>Test sets comparison:</h3>" >> $OUTFILE
 echo "<img src=\"scaling-sets.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients-sets.png\"><p>" >> $OUTFILE
+echo "<img src=\"scaling-latency-sets.png\"><p>" >> $OUTFILE
+echo "<img src=\"clients-latency-sets.png\"><p>" >> $OUTFILE
 
 # Loop over all the active test sets
 SETS=`$RESULTPSQL -A -t -c "select set from tests where set IN ($INSETS) group by set order by set"`
@@ -97,6 +99,19 @@ for SET in $SETS ; do
     mv clients.png results/clients-$SET.png
     mv clients.txt clients-$SET.txt
 
+    
+    $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(1000*avg(percentile_90_latency))/1000 as \"90%<\" from tests where set='$SET' group by scale order by scale" > scaling-latency.txt
+    gnuplot plots/scaling-latency.plot 2>&1 | grep -v "Warning: empty"
+    mv scaling-latency.png results/scaling-latency-$SET.png
+    mv scaling-latency.txt scaling-latency-$SET.txt
+
+    $RESULTPSQL -At -F" " -c "select clients,round(1000*avg(percentile_90_latency))/1000 as \"90%<\" from tests where set='$SET' group by clients order by clients" > clients-latency.txt
+    gnuplot plots/clients-latency.plot 2>&1 | grep -v "Warning: empty"
+    mv clients-latency.png results/clients-latency-$SET.png
+    mv clients-latency.txt clients-latency-$SET.txt
+
+## a supprimer
+
     $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d.txt
     gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
     mv 3d.png results/3d-$SET.png
@@ -105,6 +120,7 @@ for SET in $SETS ; do
 
   echo "<img src=\"scaling-$SET.png\"><p>" >> $OUTFILE
   echo "<img src=\"clients-$SET.png\"><p>" >> $OUTFILE
+  echo "<img src=\"scaling-latency-$SET.png\"><p>" >> $OUTFILE
   # The 3D results set isn't that useful, don't want to repeat it for
   # every single set, too
   # echo "<img src=\"3d-$SET.png\"><p>" >> $OUTFILE
@@ -136,7 +152,7 @@ for SET in $SETS ; do
   echo "</div>" >> $OUTFILE
 done
 
-# Plot set comparison
+# Plot set comparison of tps
 cat > multi-client.plot << "ENDING"
 set terminal png medium size 640,480
 set output "clients-sets.png"
@@ -157,6 +173,31 @@ set ylabel "TPS"
 plot \
 ENDING
 
+# addon of latency over time
+cat > multi-scale-latency.plot << "ENDING"
+set terminal png medium size 640,480
+set output "scaling-latency-sets.png"
+set title "pgbench scale latency"
+set grid xtics ytics
+set xlabel "Scaling factor"
+set ylabel "Latency (ms)"
+#set xdata time
+#set timefmt "%s"
+plot \
+ENDING
+
+cat > multi-client-latency.plot << "ENDING"
+set terminal png medium size 640,480
+set output "clients-latency-sets.png"
+set title "pgbench clients latency"
+set grid xtics ytics
+set xlabel "Clients"
+set ylabel "Latency (ms)"
+#set xdata time
+#set timefmt "%s"
+plot \
+ENDING
+
 for SET in $SETS ; do
   # Trimmed down descriptions needed to fit into the graph key
   DESCR=`$RESULTPSQL -A -t -c "select substring(info from 1 for 35) from testset where set='$SET'"`
@@ -169,19 +210,27 @@ for SET in $SETS ; do
 
   echo  "'scaling-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale.plot
   echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client.plot
+  echo  "'scaling-latency-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale-latency.plot  ## addon latency
+  echo  "'clients-latency-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client-latency.plot  ## addon latency
 done
 
 if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   gnuplot multi-scale.plot 2>&1 | grep -v "Warning: empty"
   gnuplot multi-client.plot 2>&1 | grep -v "Warning: empty"
+  gnuplot multi-scale-latency.plot 2>&1 | grep -v "Warning: empty"  ## addon latency
+  gnuplot multi-client-latency.plot 2>&1 | grep -v "Warning: empty"  ## addon latency
   mv clients-sets.png results/
   mv scaling-sets.png results/
+  mv scaling-latency-sets.png results/  ## addon latency
+  mv clients-latency-sets.png results/  ## addon latency
   rm multi-scale.plot
   rm multi-client.plot
+  rm multi-scale-latency.plot  ## addon latency
+  rm multi-client-latency.plot  ## addon latency
 fi
 
 for SET in $SETS ; do
-  rm -f scaling-$SET.txt clients-$SET.txt
+  rm -f scaling-$SET.txt clients-$SET.txt latency-$SET.txt clients-latency-$SET.txt scaling-latency-$SET.txt ## addon latency
 done
 
 rm temp.txt

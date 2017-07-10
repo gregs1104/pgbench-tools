@@ -50,6 +50,11 @@ SCALES="1 10 100 1000"
 SETCLIENTS="1 2 4 8 16 32"
 SETTIMES=3
 
+# FILLFACTOR option
+# uses fillfactor option from pgbench
+# default is 100
+FILLFACTOR="100"
+
 # RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
 # Setting a time instead of a transaction account is only available
 # in 8.4 and later.

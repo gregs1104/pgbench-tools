@@ -21,6 +21,16 @@ else
   RATEOPT=""
 fi
 
+# latency limit
+if [ -n "$3" ]; then
+  LAT="$3"
+  LATOPT="-L $3 "
+else
+  LAT="NULL"
+  LATOPT=""
+fi
+
+
 # Query the test database and put its background writer statistics into
 # a set of environment variables, probably for use inserting stats into
 # the results database.
@@ -220,7 +230,9 @@ fi
 # Run the main pgbench test
 cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $TESTDB > results.txt 2>&1 &
+
+
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
@@ -300,12 +312,25 @@ if [ -z "$TESTFORTS" ]; then
 
 else
 
+#Import format of csv file changes when --rates is used
+if [ -n "$2" ]; then
+# Import timestamp information
+  echo "log-to-csv_rates for --rates option" # DEBUG
+  $BASEDIR/log-to-csv_rates $TEST < pgbench.log > timing.csv
+  #$RESULTPSQL -c " truncate table timing; " # DEBUG
+  $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
+  #$RESULTPSQL -c "create table timing_temp as select * from timing " # DEBUG 
+  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) where tests.test='$TEST'"
+  $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+
+else
   # Import timestamp information
   $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
   $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
 
+fi
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Plot result graphs
     $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
@@ -341,7 +366,7 @@ cp $BASEDIR/config config
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore
-$RESULTPSQL -q -c "truncate table timing"
+$RESULTPSQL -q -c "truncate table timing" # DEBUG
 
 # Save some configuration information about the server
 CLIENTHOST=`hostname`
@@ -394,7 +419,7 @@ mount >> $SETTINGS
 # because we skipped gnuplot'ing and generating these files
 rm -f pgbench_log.${P}*
 rm -f pgbench.log
-rm -f timing.csv
+rm -f timing.csv # DEBUG
 rm -f tpsdata.txt
 rm -f latency.txt
 rm -f dirtydata.txt

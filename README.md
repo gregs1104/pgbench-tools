@@ -38,8 +38,8 @@ pgbench-tools setup
 
 * Create databases for your test and for the results::
 
-    createdb results
-    createdb pgbench
+      createdb results
+      createdb pgbench
 
   *  Both databases can be the same, but there may be more shared_buffers
      cache churn in that case.  Some amount of cache disruption
@@ -51,13 +51,13 @@ pgbench-tools setup
 
 * Initialize the results database by executing::
 
-    psql -f init/resultdb.sql -d results
+      psql -f init/resultdb.sql -d results
 
   Make sure to reference the correct database.
 
 * You need to create a test set with a descritption::
 
-    ./newset 'Initial Config'
+      ./newset 'Initial Config'
 
   Running the "newset" utility without any parameters will list all of the
   existing test sets.
@@ -71,7 +71,7 @@ Running tests
 
 * Execute::
 
-    ./runset
+      ./runset
 
   In order to execute all the tests
 
@@ -80,7 +80,7 @@ Results
 
 * You can check results even as the test is running with::
 
-    psql -d results -f reports/report.sql
+      psql -d results -f reports/report.sql
 
   This is unlikely to disrupt the test results very much unless you've
   run an enormous number of tests already.  There is also a helper
@@ -91,11 +91,11 @@ Results
   test or test set will actually take to finish.
 
 * Other useful reports you can run are in the reports/ directory, including:
-   * fastest.sql
-   * summary.sql
-   * bufreport.sql
-   * bufsummary.sql
-   * compromise_params.sql (see below)
+   * `fastest.sql`
+   * `summary.sql`
+   * `bufreport.sql`
+   * `bufsummary.sql`
+   * `compromise_params.sql` (see below)
  
 * Once the tests are done, the results/ directory will include
   a HTML subdirectory for each test giving its results,
@@ -105,9 +105,9 @@ Results
   index.html) that shows summary information and plots for all the tests.
 
 * If you manually adjust the test result database, you can
-  then manually regenerate the summary graphs by running::
+  then manually regenerate the summary graphs by running:
 
-    ./webreport
+      ./webreport
 
 Test sets comparison
 ====================
@@ -117,9 +117,9 @@ test that is run will be put into the same test set until you tell the
 program to switch to a new set.  Each test set is assigned both a
 serial number and a test description.
 
-New test sets are added like this::
+New test sets are added like this:
 
-  psql -d results -c "INSERT INTO testset (info) VALUES ('set name')"
+    psql -d results -c "INSERT INTO testset (info) VALUES ('set name')"
 
 pgbench-tools aims to help compare multiple setups of PostgreSQL.  That
 might be different configuration parameters, different source code builds, or
@@ -172,9 +172,9 @@ Regarding compatibility with 9.6 and higher, since the syntax for random changed
 you can find all the necessary tests in the subfolder test-9.6/ located in the tests/ directory.
 Be sure to check the name of de directory in the config script for your version of Postgres.
 
-The default test directory scripts is TESTDIR="tests/tests-9.6"
+The default test directory scripts is `TESTDIR="tests/tests-9.6"`
 
-No test were performed on version 10 as of yet. Please your feedback is needed.
+No test were performed on version 10 as of yet. Please, your feedback is needed.
 
 Multiple worker support
 -----------------------
@@ -236,8 +236,8 @@ the entire directory each of those bad test results are in, followed by
 removing their main entry from the results database.  You can do that
 at a shell prompt like this::
 
-  ./cleanup
-  ./webreport 
+    ./cleanup
+    ./webreport 
 
 To cleanup a single value use ./cleanup_singlevalue <testvaluenumber>
 To cleanup all values from a perticular starting point use ./cleanup_fromvalue <startingvalue>
@@ -246,14 +246,14 @@ Known issues
 ============
 
 * On Solaris, where the benchwarmer script calls tail it may need
-  to use /usr/xpg4/bin/tail instead
+  to use `/usr/xpg4/bin/tail` instead
   
 
 TODO: Planned features
 =======================
 
 * The client+scale data table used to generate the 3D report would be
-  useful to generate in tabular text format as well.
+  useful to generate in tabular text format as well (not a priority).
 * Graphs for buffers/checkpoints throughtout 
 * Fix the static number of scales/clients for rates_webreport
 * Fix zombie files when crash of bench on OS-stats processes

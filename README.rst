@@ -2,12 +2,35 @@ About pgbench-tools
 ===================
 
 pgbench-tools automates running PostgreSQL's built-in pgbench tool in a
-useful ways.  It will run some number of database sizes (the database
+useful way.  It will run some number of database sizes (the database
 scale) and various concurrent client count combinations.
 Scale/client runs with some common characteristic--perhaps one
 configuration of the postgresql.conf--can be organized into a "set"
 of runs.  The program graphs transaction rate during each test,
 latency, and comparisons between test sets.
+
+Latest Features (as of december 2017)
+================
+
+* **FILLFACTOR**
+* graphs for **latency** for all reports
+* limited_webreport followed by a comma seperated list of sets
+* rates_webreport in the same manner but **only for fixed tps tests**
+* **cleanups** (singlevalue, all dirty values, from a value till the end) see "Removing Bad Tests"
+* latest_set:  list of tests of the current/latest set (ordered)
+* list_orderbyset : lists sets ordered
+* lowest_latency (and fastest tests with different degrees of compromise)
+* **compromise_params**: allows to see a particular area of scale/client/tps/latency using only sql and no graph
+
+      psql -d results -v lat=15 -v tps=700 -v lscale=900 -v hscale=1000 -v lclients=1 -v hclients=16 -f reports/compromise_params.sql
+
+Latest bug fixes
+=================
+
+* Compatibility with 9.6+ random series generation
+* log-to-csv_rates otherwise not compatible 
+* fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
+
 
 pgbench-tools setup
 ===================
@@ -72,6 +95,7 @@ Results
    * summary.sql
    * bufreport.sql
    * bufsummary.sql
+   * compromise_params.sql (see below)
  
 * Once the tests are done, the results/ directory will include
   a HTML subdirectory for each test giving its results,
@@ -150,7 +174,7 @@ Be sure to check the name of de directory in the config script for your version 
 
 The default test directory scripts is TESTDIR="tests/tests-9.6"
 
-
+No test were performed on version 10 as of yet. Please your feedback is needed.
 
 Multiple worker support
 -----------------------
@@ -202,7 +226,7 @@ improving upon a single worker on common dual-core systems.  The worst
 choices would be 13 or 17 clients, which are prime and therefore cannot
 be usefully allocated more than one worker on common hardware.
 
-Removing bad tests
+Removing bad tests (UPDATED)
 ==================
 
 If you abort a test in the middle of running, you will end up with a
@@ -212,11 +236,11 @@ the entire directory each of those bad test results are in, followed by
 removing their main entry from the results database.  You can do that
 at a shell prompt like this::
 
-  cd results
-  psql -d results -At -c "SELECT test FROM tests WHERE tps=0" | xargs rm -rf
-  psql -d results -At -c "DELETE FROM tests WHERE tps=0"
+  ./cleanup
   ./webreport 
 
+To cleanup a single value use ./cleanup_singlevalue <testvaluenumber>
+To cleanup all values from a perticular starting point use ./cleanup_fromvalue <startingvalue>
 
 Known issues
 ============
@@ -224,32 +248,15 @@ Known issues
 * On Solaris, where the benchwarmer script calls tail it may need
   to use /usr/xpg4/bin/tail instead
   
-Latest Features
-================
 
-* FILLFACTOR
-* graphs for latency
-* limited_webreport
-* rates_webreport
-* cleanups (singlevalue, all dirty values, from a value till the end)
-* latest_set:  list of tests of the current/latest set (ordered)
-* list_orderbyset : lists sets ordered
-
-
-Planned features
-================
+TODO: Planned features
+=======================
 
 * The client+scale data table used to generate the 3D report would be
   useful to generate in tabular text format as well.
+* Graphs for buffers/checkpoints throughtout 
+* Fix the static number of scales/clients for rates_webreport
   
-Latest big fixes
-===============
-
-* Compatibility with 9.6+ random series generation
-* log-to-csv_rates otherwise not compatible 
-* fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
-
-
 Documentation
 =============
 
@@ -264,7 +271,7 @@ The original project is hosted at https://github.com/gregs1104/pgbench-tools
 and is also a PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
 or http://git.postgresql.org/gitweb
 
-The current project with the featured upgrades bug fixes can be found at https://github.com/emerichunter/pgbench-tools
+The current project with the featured upgrades and bug fixes can be found at https://github.com/emerichunter/pgbench-tools
 
 If you have any hints, changes or improvements, please contact:
 
@@ -283,5 +290,6 @@ other contributors to the program.
 
 ******
 References:
-1. Introduction [1](https://emerichunter.github.io/pgbench-tools-p1/) & [2](https://emerichunter.github.io/pgbench-tools-p2/) and in french [1](https://www.loxodata.com/post/benchmarking-pratique/) & [2](http://www.loxodata.com/post/benchmarking-pratique2/) 
+1. Introduction .. _link1: https://emerichunter.github.io/pgbench-tools-p1/ & .. _link2: https://emerichunter.github.io/pgbench-tools-p2/
+and in french .. _link1: https://www.loxodata.com/post/benchmarking-pratique/) & .. _link2: http://www.loxodata.com/post/benchmarking-pratique2/ 
 

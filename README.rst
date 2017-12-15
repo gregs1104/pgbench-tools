@@ -223,12 +223,32 @@ Known issues
 
 * On Solaris, where the benchwarmer script calls tail it may need
   to use /usr/xpg4/bin/tail instead
+  
+Latest Features
+================
+
+* FILLFACTOR
+* graphs for latency
+* limited_webreport
+* rates_webreport
+* cleanups (singlevalue, all dirty values, from a value till the end)
+* latest_set:  list of tests of the current/latest set (ordered)
+* list_orderbyset : lists sets ordered
+
 
 Planned features
 ================
 
 * The client+scale data table used to generate the 3D report would be
   useful to generate in tabular text format as well.
+  
+Latest big fixes
+===============
+
+* Compatibility with 9.6+ random series generation
+* log-to-csv_rates otherwise not compatible 
+* fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
+
 
 Documentation
 =============
@@ -240,13 +260,17 @@ for other purposes, such as rst2html to make a HTML version.
 Contact
 =======
 
-The project is hosted at https://github.com/gregs1104/pgbench-tools
+The original project is hosted at https://github.com/gregs1104/pgbench-tools
 and is also a PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
 or http://git.postgresql.org/gitweb
 
+The current project with the featured upgrades bug fixes can be found at https://github.com/emerichunter/pgbench-tools
+
 If you have any hints, changes or improvements, please contact:
 
+ * Emeric Tabakhoff etabakhoff@gmail.com or e.tabakhoff@loxodata.com
  * Greg Smith gsmith@gregsmith.com
+ 
 
 Credits
 =======
@@ -255,4 +279,9 @@ Copyright (c) 2007-2014, Gregory Smith
 All rights reserved.
 See COPYRIGHT file for full license details and HISTORY for a list of
 other contributors to the program.
+
+
+******
+References:
+1. Introduction [1](https://emerichunter.github.io/pgbench-tools-p1/) & [2](https://emerichunter.github.io/pgbench-tools-p2/) and in french [1](https://www.loxodata.com/post/benchmarking-pratique/) & [2](http://www.loxodata.com/post/benchmarking-pratique2/) 
 

@@ -290,5 +290,6 @@ other contributors to the program.
 
 ******
 References:
-1. Introduction [1](https://emerichunter.github.io/pgbench-tools-p1/) & [2](https://emerichunter.github.io/pgbench-tools-p2/) and in french [1](https://www.loxodata.com/post/benchmarking-pratique/) & [2](http://www.loxodata.com/post/benchmarking-pratique2/) 
+1. Introduction .. _link1: https://emerichunter.github.io/pgbench-tools-p1/ & .._ link2: https://emerichunter.github.io/pgbench-tools-p2/
+and in french .. _link1: https://www.loxodata.com/post/benchmarking-pratique/) & .._link2: http://www.loxodata.com/post/benchmarking-pratique2/ 
 

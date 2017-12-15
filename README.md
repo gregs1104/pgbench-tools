@@ -239,8 +239,8 @@ at a shell prompt like this::
     ./cleanup
     ./webreport 
 
-To cleanup a single value use ./cleanup_singlevalue <testvaluenumber>
-To cleanup all values from a perticular starting point use ./cleanup_fromvalue <startingvalue>
+To cleanup a single value use `./cleanup_singlevalue <testvaluenumber>`
+To cleanup all values from a perticular starting point use `./cleanup_fromvalue <startingvalue>`
 
 Known issues
 ============

@@ -256,6 +256,7 @@ TODO: Planned features
   useful to generate in tabular text format as well.
 * Graphs for buffers/checkpoints throughtout 
 * Fix the static number of scales/clients for rates_webreport
+* Fix zombie files when crash of bench on OS-stats processes
   
 Documentation
 =============
@@ -290,6 +291,6 @@ other contributors to the program.
 
 ******
 References:
-1. Introduction .. _link1: https://emerichunter.github.io/pgbench-tools-p1/ & .. _link2: https://emerichunter.github.io/pgbench-tools-p2/
-and in french .. _link1: https://www.loxodata.com/post/benchmarking-pratique/) & .. _link2: http://www.loxodata.com/post/benchmarking-pratique2/ 
+1. Introduction [1](https://emerichunter.github.io/pgbench-tools-p1/) & [2](https://emerichunter.github.io/pgbench-tools-p2/)
+and in french [1](https://www.loxodata.com/post/benchmarking-pratique/) & [2](http://www.loxodata.com/post/benchmarking-pratique2/)
 

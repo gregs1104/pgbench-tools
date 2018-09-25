@@ -208,9 +208,16 @@ else
   BACKEND_FSYNC="buffers_backend_fsync"
 fi
 
+# Version of Server
+SERVER_VERSION=`$TESTPSQL -A -t -F" " -c "select current_setting('server_version_num')::numeric;"`
+
 # Grab starting values for statistics
 get_bgwriter
+if [ "$SERVER_VERSION" -gt "100000" ]; then
+START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_wal_lsn()"`
+else
 START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
+fi
 $RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 
 # Setup test directory tree
@@ -269,7 +276,11 @@ $RESULTPSQL -c "update test_bgwriter set \
 # WAL values are initially saved as text because they're pulled from the test
 # database--but the functions to turn them into numeric types is available
 # only in the results one.
+if [ "$SERVER_VERSION" -gt "100000" ]; then
+END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_wal_lsn()"`
+else
 END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
+fi
 $RESULTPSQL -q -c "UPDATE tests SET wal_written=wal_lsn('$END_WAL') - wal_lsn('$START_WAL') WHERE test=$TEST"
 
 cat results.txt

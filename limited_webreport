@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #
-# webreport.sh connects to the Results database and generates a web page
-# as index.htm that includes links to all the results in the database
-#
+# limited_webreport.sh connects to the Results database and generates a web page
+# as limited_index.htm that includes links to the results in the database like so :
+# ./limited_webreport 1,6,7
 
 # TODO gnuplot badly handles default font selection on many platforms.
 # Despite specifying "medium" as the font, it still looks for Arial
@@ -58,6 +58,8 @@ else
   cp templates/header.html $OUTFILE
 fi
 
+echo "<body style="font-family:'Arial'">" >>$OUTFILE
+echo "<body style="font-size:'8px'">" >>$OUTFILE
 echo "<h3>Averages across all test sets:</h3>" >> $OUTFILE
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE
@@ -154,9 +156,13 @@ done
 
 # Plot set comparison of tps
 cat > multi-client.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
+set style line 1 \
+    linecolor rgb '#0060ad' \
+    linetype 1 linewidth 2 \
+    pointtype 7 pointsize 1.5
 set output "clients-sets.png"
-set title "pgbench transactions/sec"
+set title "pgbench transactions/sec (clients)"
 set grid xtics ytics
 set xlabel "Clients"
 set ylabel "TPS"
@@ -164,9 +170,13 @@ plot \
 ENDING
 
 cat > multi-scale.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
+set style line 1 \
+    linecolor rgb '#0060ad' \
+    linetype 1 linewidth 2 \
+    pointtype 7 pointsize 1.5
 set output "scaling-sets.png"
-set title "pgbench transactions/sec"
+set title "pgbench transactions/sec (scale)"
 set grid xtics ytics
 set xlabel "Scaling factor"
 set ylabel "TPS"
@@ -175,7 +185,11 @@ ENDING
 
 # addon of latency over time
 cat > multi-scale-latency.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
+set style line 1 \
+    linecolor rgb '#0060ad' \
+    linetype 1 linewidth 2 \
+    pointtype 7 pointsize 1.5
 set output "scaling-latency-sets.png"
 set title "pgbench scale latency"
 set grid xtics ytics
@@ -187,7 +201,11 @@ plot \
 ENDING
 
 cat > multi-client-latency.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
+set style line 1 \
+    linecolor rgb '#0060ad' \
+    linetype 1 linewidth 2 \
+    pointtype 7 pointsize 1.5
 set output "clients-latency-sets.png"
 set title "pgbench clients latency"
 set grid xtics ytics
@@ -208,10 +226,10 @@ for SET in $SETS ; do
     DELIM=",\\"
   fi
 
-  echo  "'scaling-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale.plot
-  echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client.plot
-  echo  "'scaling-latency-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale-latency.plot  ## addon latency
-  echo  "'clients-latency-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client-latency.plot  ## addon latency
+  echo  "'scaling-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints linestyle 1 $DELIM" >> multi-scale.plot
+  echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints linestyle 1 $DELIM" >> multi-client.plot
+  echo  "'scaling-latency-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints linestyle 1 $DELIM" >> multi-scale-latency.plot  ## addon latency
+  echo  "'clients-latency-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints linestyle 1 $DELIM" >> multi-client-latency.plot  ## addon latency
 done
 
 if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then

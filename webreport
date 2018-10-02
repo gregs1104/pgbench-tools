@@ -57,6 +57,7 @@ else
   cp templates/header.html $OUTFILE
 fi
 
+echo "<body style="font-family:'Arial'">" >>$OUTFILE
 echo "<h3>Averages across all test sets:</h3>" >> $OUTFILE
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE
@@ -137,7 +138,7 @@ done
 
 # Plot set comparison
 cat > multi-client.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
 set output "clients-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
@@ -147,7 +148,7 @@ plot \
 ENDING
 
 cat > multi-scale.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
 set output "scaling-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
@@ -166,8 +167,8 @@ for SET in $SETS ; do
     DELIM=",\\"
   fi
 
-  echo  "'scaling-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-scale.plot
-  echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints $DELIM" >> multi-client.plot
+  echo  "'scaling-$SET.txt' using 1:3 axis x1y1 title '$DESCR' with linespoints linetype 1 linewidth 2 pointtype 7 pointsize 1.5 $DELIM" >> multi-scale.plot
+  echo  "'clients-$SET.txt' using 1:2 axis x1y1 title '$DESCR' with linespoints linetype 1 linewidth 2 pointtype 7 pointsize 1.5$DELIM" >> multi-client.plot
 done
 
 if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then

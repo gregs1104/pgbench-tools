@@ -9,9 +9,9 @@ configuration of the postgresql.conf--can be organized into a "set"
 of runs.  The program graphs transaction rate during each test,
 latency, and comparisons between test sets.
 
-Latest Features (as of september 2018 or december 2017)
+Latest Features (as of october 2018)
 ================
-
+* Compatibility for PG v11b4 (oct 2018)
 * Compatibility for PG v 10 (sept 2018)
 * **FILLFACTOR**
 * graphs for **latency** for all reports
@@ -28,6 +28,7 @@ Latest Features (as of september 2018 or december 2017)
 Latest bug fixes
 =================
 
+* Compatibility with V10 (transition from xlog to wal designation with pg_current_wal_lsn)
 * Compatibility with 9.6+ random series generation
 * log-to-csv_rates otherwise not compatible 
 * fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
@@ -36,6 +37,7 @@ Latest bug fixes
 pgbench-tools setup
 ===================
 
+* Install GNUplot.
 
 * Create databases for your test and for the results::
 
@@ -62,6 +64,11 @@ pgbench-tools setup
 
   Running the "newset" utility without any parameters will list all of the
   existing test sets.
+  
+  * Allow linux user to fire the tools::
+  
+        chmod +x benchwarmer
+        chmod +x cleanup
 
 Running tests
 =============
@@ -75,6 +82,8 @@ Running tests
       ./runset
 
   In order to execute all the tests
+  
+HINT:: change the pg_hba.conf or setup a pgpass file to avoid password prompt for each connection (there's a lot of them). You can also `export` the password in your shell session.
 
 Results
 =======
@@ -266,7 +275,9 @@ TODO: Planned features
 * Graphs for buffers/checkpoints throughtout 
 * Fix the static number of scales/clients for rates_webreport
 * Fix zombie files when crash of bench on OS-stats processes
-  
+* TPC-C, TPC-E, TPC-H for more realistic approach
+* Import of real life datebase and full log file
+
 Documentation
 =============
 

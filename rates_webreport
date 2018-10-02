@@ -1,8 +1,9 @@
 #!/bin/bash
 
 #
-# webreport.sh connects to the Results database and generates a web page
-# as index.htm that includes links to all the results in the database
+# rates_webreport.sh connects to the Results database and generates a web page
+# as rates_index.htm that includes links to all the results selected in the database like so 
+# ./rates_webreport 2,8,9
 #
 
 # TODO gnuplot badly handles default font selection on many platforms.
@@ -58,6 +59,7 @@ else
   cp templates/header.html $OUTFILE
 fi
 
+echo "<body style="font-family:'Arial'">" >>$OUTFILE
 echo "<h3>Averages across all test sets:</h3>" >> $OUTFILE
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE
@@ -203,7 +205,7 @@ done
 
 # addon of latency over time
 cat > multi-scale-latency.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
 set output "scaling-latency-sets.png"
 set title "pgbench scale latency"
 set grid xtics ytics
@@ -215,7 +217,7 @@ plot \
 ENDING
 
 cat > multi-client-latency.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
 set output "clients-latency-sets.png"
 set title "pgbench clients latency"
 set grid xtics ytics
@@ -228,7 +230,7 @@ ENDING
 
 # addon of rates over latency
 cat > multi-rates-latency.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
 set output "rates-latency-sets.png"
 set title "pgbench rates latency"
 set grid xtics ytics
@@ -241,7 +243,7 @@ ENDING
 
 # addon rates
 cat > multi-scale-latency-rates.plot << "ENDING"
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
 set output "scaling-latency-sets-rates.png"
 set title "pgbench scales latency"
 set grid xtics ytics

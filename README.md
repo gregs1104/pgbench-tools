@@ -109,6 +109,14 @@ Results
   then manually regenerate the summary graphs by running:
 
       ./webreport
+      
+* If you want to generate a report with selected testsets only (for example sets 1, 6 and 7):
+
+      ./limited_webreport 1,6,7
+      
+* In case you test for static rates amount (for example sets 2, 8 and 9):
+
+      ./rates_webreport 2,8,9
 
 Test sets comparison
 ====================

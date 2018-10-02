@@ -28,6 +28,7 @@ Latest Features (as of september 2018 or december 2017)
 Latest bug fixes
 =================
 
+* Compatibility with V10 (transition from xlog to wal designation with pg_current_wal_lsn)
 * Compatibility with 9.6+ random series generation
 * log-to-csv_rates otherwise not compatible 
 * fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency

@@ -267,7 +267,9 @@ TODO: Planned features
 * Graphs for buffers/checkpoints throughtout 
 * Fix the static number of scales/clients for rates_webreport
 * Fix zombie files when crash of bench on OS-stats processes
-  
+* TPC-C, TPC-E, TPC-H for more realistic approach
+* Import of real life datebase and full log file
+
 Documentation
 =============
 

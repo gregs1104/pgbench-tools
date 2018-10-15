@@ -9,9 +9,9 @@ configuration of the postgresql.conf--can be organized into a "set"
 of runs.  The program graphs transaction rate during each test,
 latency, and comparisons between test sets.
 
-Latest Features (as of september 2018 or december 2017)
+Latest Features (as of october 2018)
 ================
-
+* Compatibility for PG v11b4 (oct 2018)
 * Compatibility for PG v 10 (sept 2018)
 * **FILLFACTOR**
 * graphs for **latency** for all reports

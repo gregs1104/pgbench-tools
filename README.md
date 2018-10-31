@@ -37,6 +37,7 @@ Latest bug fixes
 pgbench-tools setup
 ===================
 
+* Install GNUplot.
 
 * Create databases for your test and for the results::
 
@@ -63,6 +64,11 @@ pgbench-tools setup
 
   Running the "newset" utility without any parameters will list all of the
   existing test sets.
+  
+  * Allow linux user to fire the tools::
+  
+        chmod +x benchwarmer
+        chmod +x cleanup
 
 Running tests
 =============
@@ -76,6 +82,8 @@ Running tests
       ./runset
 
   In order to execute all the tests
+  
+HINT:: change the pg_hba.conf or setup a pgpass file to avoid password prompt for each connection (there's a lot of them). You can also `export` the password in your shell session.
 
 Results
 =======

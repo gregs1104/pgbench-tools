@@ -9,6 +9,12 @@ configuration of the postgresql.conf--can be organized into a "set"
 of runs.  The program graphs transaction rate during each test,
 latency, and comparisons between test sets.
 
+pgbench-tools requirment
+===================
+You need install python 2.7
+
+pip install python-dateutil
+
 pgbench-tools setup
 ===================
 

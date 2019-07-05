@@ -240,6 +240,18 @@ if [ -z "$max_dirty" ] ; then
  max_dirty=0 
 fi
 
+##check pg is ready  Add by allenlee 2019-07-05
+res=`pg_isready | awk -F"[ ]"+ '{if(match($3, /accepting$/)) {print 1 ;} else {print 0}}'`
+
+i=1
+
+while(( res == 0 ))
+do
+    sleep $i
+    let "i += 2"  
+    res=`pg_isready | awk -F"[ ]"+ '{if(match($3, /accepting$/)) {print 1 ;} else {print 0}}'`     
+done
+
 # Update bgwriter data with delta
 get_bgwriter
 $RESULTPSQL -c "update test_bgwriter set \

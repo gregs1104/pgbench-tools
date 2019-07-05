@@ -1,0 +1,56 @@
+#!/bin/bash
+# @date 2019-07-05 10:00:00 write by allen lee lilun@zte.com.cn
+# run init/resultdb ,run newset and runset
+#-------------------------------------------------------------
+source ./config
+
+DROPDBSQL="dropdb -h $TESTHOST -U $TESTUSER -p $TESTPORT"
+CREATEDBSQL="createdb -h $TESTHOST -U $TESTUSER -p $TESTPORT"
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+
+print() {
+    msg=$1
+    echo -ne "[`date`]${msg}\n"
+}
+
+execute() {
+    cmd=$1
+    param=$2
+    print "[$FUNCNAME:$LINENO BEGIN] $cmd $param"
+    $cmd $param
+    [ "$?" -ne 0 ] && {
+        print "execute command:$cmd $param FAILED!!!" $red
+        exit 1
+    }
+    print "[$FUNCNAME:$LINENO END] $cmd $param"
+}
+
+drop_testdb() {
+    execute "$DROPDBSQL" "$RESULTDB"
+    execute "$DROPDBSQL" "$TESTDB"
+}
+
+create_testdb() {
+    execute "$CREATEDBSQL" "$RESULTDB"
+    execute "$CREATEDBSQL" "$TESTDB"
+    psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB -f $BASEDIR/pgxlog.sql
+}
+
+init_results() {
+    $RESULTPSQL -f $BASEDIR/init/resultdb.sql
+}
+
+init_test_set() {
+    cd $BASEDIR && ./newset 'Initial Config'
+}
+
+run_tests() {
+    cd $BASEDIR && ./runset
+}
+
+drop_testdb
+create_testdb
+init_results
+init_test_set
+run_tests
+./webreport

@@ -9,31 +9,6 @@ configuration of the postgresql.conf--can be organized into a "set"
 of runs.  The program graphs transaction rate during each test,
 latency, and comparisons between test sets.
 
-Latest Features (as of october 2018)
-================
-* Compatibility for PG v11b4 (oct 2018)
-* Compatibility for PG v 10 (sept 2018)
-* **FILLFACTOR**
-* graphs for **latency** for all reports
-* limited_webreport followed by a comma seperated list of sets
-* rates_webreport in the same manner but **only for fixed tps tests**
-* **cleanups** (singlevalue, all dirty values, from a value till the end) see "Removing Bad Tests"
-* latest_set:  list of tests of the current/latest set (ordered)
-* list_orderbyset : lists sets ordered
-* lowest_latency (and fastest tests with different degrees of compromise)
-* **compromise_params**: allows to see a particular area of scale/client/tps/latency using only sql and no graph
-
-      psql -d results -v lat=15 -v tps=700 -v lscale=900 -v hscale=1000 -v lclients=1 -v hclients=16 -f reports/compromise_params.sql
-
-Latest bug fixes
-=================
-
-* Compatibility with V10 (transition from xlog to wal designation with pg_current_wal_lsn)
-* Compatibility with 9.6+ random series generation
-* log-to-csv_rates otherwise not compatible 
-* fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
-
-
 pgbench-tools setup
 ===================
 
@@ -244,7 +219,7 @@ improving upon a single worker on common dual-core systems.  The worst
 choices would be 13 or 17 clients, which are prime and therefore cannot
 be usefully allocated more than one worker on common hardware.
 
-Removing bad tests (UPDATED)
+Removing bad tests
 ==================
 
 If you abort a test in the middle of running, you will end up with a
@@ -258,7 +233,20 @@ at a shell prompt like this::
     ./webreport 
 
 To cleanup a single value use `./cleanup_singlevalue <testvaluenumber>`
-To cleanup all values from a perticular starting point use `./cleanup_fromvalue <startingvalue>`
+To cleanup all values from a particular starting point use `./cleanup_fromvalue <startingvalue>`
+
+Other utilities
+===============
+
+* limited_webreport followed by a comma seperated list of sets
+* rates_webreport in the same manner but **only for fixed tps tests**
+* **cleanups** (singlevalue, all dirty values, from a value till the end) see "Removing Bad Tests"
+* latest_set:  list of tests of the current/latest set (ordered)
+* list_orderbyset : lists sets ordered
+* lowest_latency (and fastest tests with different degrees of compromise)
+* **compromise_params**: allows to see a particular area of scale/client/tps/latency using only sql and no graph
+
+      psql -d results -v lat=15 -v tps=700 -v lscale=900 -v hscale=1000 -v lclients=1 -v hclients=16 -f reports/compromise_params.sql
 
 Known issues
 ============
@@ -266,7 +254,6 @@ Known issues
 * On Solaris, where the benchwarmer script calls tail it may need
   to use `/usr/xpg4/bin/tail` instead
   
-
 TODO: Planned features
 =======================
 
@@ -275,8 +262,6 @@ TODO: Planned features
 * Graphs for buffers/checkpoints throughtout 
 * Fix the static number of scales/clients for rates_webreport
 * Fix zombie files when crash of bench on OS-stats processes
-* TPC-C, TPC-E, TPC-H for more realistic approach
-* Import of real life datebase and full log file
 
 Documentation
 =============
@@ -292,22 +277,28 @@ The original project is hosted at https://github.com/gregs1104/pgbench-tools
 and is also a PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
 or http://git.postgresql.org/gitweb
 
-The current project with the featured upgrades and bug fixes can be found at https://github.com/emerichunter/pgbench-tools
-
 If you have any hints, changes or improvements, please contact:
 
- * Emeric Tabakhoff etabakhoff@gmail.com or e.tabakhoff@loxodata.com
- * Greg Smith gsmith@gregsmith.com
+ * Greg Smith gregs1104@gmail.com
  
+Notable forks
+=============
+ 
+-Future featured upgrades and bug fixes:  https://github.com/emerichunter/pgbench-tools
+-Full bash to Python port adding Windows compatibility:  https://github.com/rugging24/pg_pybench
 
 Credits
 =======
 
-Copyright (c) 2007-2014, Gregory Smith
+Copyright (c) 2007-2019, Gregory Smith
 All rights reserved.
-See COPYRIGHT file for full license details and HISTORY for a list of
-other contributors to the program.
+See COPYRIGHT file for full license details and HISTORY for a full list of
+other contributions to the program.
 
+Major contributors:
+
+-Josh Kupershmidt <schmiddy@gmail.com>
+-Emeric Tabakhoff <etabakhoff@gmail.com> or <e.tabakhoff@loxodata.com>
 
 ******
 References:

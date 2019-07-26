@@ -29,3 +29,12 @@
                Enabled by default vmstat/iostat data collection during tests
                Add newset utility and some reporting scripts
                Track dirty memory on Linux and plot the result
+               Compatibility with V10 (transition from xlog to wal designation with pg_current_wal_lsn) (Emeric)
+               Compatibility with 9.6+ random series generation (Emeric)
+               log-to-csv_rates otherwise not compatible (??? Emeric)
+               Change base plot apperance with font and graph tweaks (Emeric)
+               Extra plots for limited runs (Emeric)
+               Change README from ReST to Markdown markup (Emeric)
+               Add several new latency and other reports (Emeric)
+               Bug fix for rates not producing 90th latency (Emeric)
+               Add FILLFACTOR and more latency graphs (Emeric)

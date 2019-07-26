@@ -233,7 +233,6 @@ at a shell prompt like this::
     ./webreport 
 
 To cleanup a single value use `./cleanup_singlevalue <testvaluenumber>`
-
 To cleanup all values from a particular starting point use `./cleanup_fromvalue <startingvalue>`
 
 Other utilities
@@ -277,7 +276,6 @@ Contact
 The original project is hosted at https://github.com/gregs1104/pgbench-tools
 and is also a PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
 or http://git.postgresql.org/gitweb
-
 
 If you have any hints, changes or improvements, please contact:
 

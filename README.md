@@ -9,31 +9,6 @@ configuration of the postgresql.conf--can be organized into a "set"
 of runs.  The program graphs transaction rate during each test,
 latency, and comparisons between test sets.
 
-Latest Features (as of october 2018)
-================
-* Compatibility for PG v11b4 (oct 2018)
-* Compatibility for PG v 10 (sept 2018)
-* **FILLFACTOR**
-* graphs for **latency** for all reports
-* limited_webreport followed by a comma seperated list of sets
-* rates_webreport in the same manner but **only for fixed tps tests**
-* **cleanups** (singlevalue, all dirty values, from a value till the end) see "Removing Bad Tests"
-* latest_set:  list of tests of the current/latest set (ordered)
-* list_orderbyset : lists sets ordered
-* lowest_latency (and fastest tests with different degrees of compromise)
-* **compromise_params**: allows to see a particular area of scale/client/tps/latency using only sql and no graph
-
-      psql -d results -v lat=15 -v tps=700 -v lscale=900 -v hscale=1000 -v lclients=1 -v hclients=16 -f reports/compromise_params.sql
-
-Latest bug fixes
-=================
-
-* Compatibility with V10 (transition from xlog to wal designation with pg_current_wal_lsn)
-* Compatibility with 9.6+ random series generation
-* log-to-csv_rates otherwise not compatible 
-* fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
-
-
 pgbench-tools setup
 ===================
 
@@ -266,6 +241,31 @@ Known issues
 * On Solaris, where the benchwarmer script calls tail it may need
   to use `/usr/xpg4/bin/tail` instead
   
+
+
+Latest Features (as of october 2018)
+================
+* Compatibility for PG v11b4 (oct 2018)
+* Compatibility for PG v 10 (sept 2018)
+* **FILLFACTOR**
+* graphs for **latency** for all reports
+* limited_webreport followed by a comma seperated list of sets
+* rates_webreport in the same manner but **only for fixed tps tests**
+* **cleanups** (singlevalue, all dirty values, from a value till the end) see "Removing Bad Tests"
+* latest_set:  list of tests of the current/latest set (ordered)
+* list_orderbyset : lists sets ordered
+* lowest_latency (and fastest tests with different degrees of compromise)
+* **compromise_params**: allows to see a particular area of scale/client/tps/latency using only sql and no graph
+
+      psql -d results -v lat=15 -v tps=700 -v lscale=900 -v hscale=1000 -v lclients=1 -v hclients=16 -f reports/compromise_params.sql
+
+Latest bug fixes
+=================
+
+* Compatibility with V10 (transition from xlog to wal designation with pg_current_wal_lsn)
+* Compatibility with 9.6+ random series generation
+* log-to-csv_rates otherwise not compatible 
+* fix of p90_latency not working for fixed tps rates in some cases : it generated NULL values which in turn displayed no value for latency
 
 TODO: Planned features
 =======================

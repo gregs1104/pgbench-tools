@@ -8,11 +8,11 @@ BASEDIR=`pwd`
 PGBENCHBIN=`which pgbench`
 GNUPLOT=`which gnuplot`
 
-# These values are for pgbench 8.4 and later
-TESTDIR="tests/tests-9.6"
+# These values are for pgbench 9.6 - 13
+TESTDIR="tests"
 
-# Use these values for pgbench 8.3
-#TESTDIR="tests/tests-8.3"
+# Use this value for pgbench 8.4 - 9.5.  There is also a directory for 8.3.
+# TESTDIR="tests/tests-9.5"
 
 # SKIPINIT should be set to 1 either when simulating a cold cache, or
 # if you are not using the pgbench tables for your test
@@ -45,7 +45,7 @@ MAX_WORKERS="auto"
 # Blank setting, typically used with earlier pgbench versions
 #MAX_WORKERS=""
 
-SCRIPT="tpc-b_96.sql"
+SCRIPT="select.sql"
 SCALES="1 10 100 1000"
 SETCLIENTS="1 2 4 8 16 32"
 SETTIMES=3

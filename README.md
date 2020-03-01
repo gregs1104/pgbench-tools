@@ -148,10 +148,17 @@ Version compatibility
 =====================
 
 The default configuration now aims to support the pgbench that ships with
-PostgreSQL 8.4 and later versions, which uses names such as "pgbench_accounts"
+PostgreSQL 9.6 and later versions, which uses names such as "pgbench_accounts"
 for its tables.  There are commented out settings in the config file that
 show what changes need to be made in order to make the program compatible
 with PostgreSQL 8.3, where the names were like "accounts" instead.
+
+pgbench went through major changes in version 9.6, and the random function
+used in most test scripts was renamed.  The main tests/ directory has the
+current scripts for versions 9.6, 10, 11, 12, and 13 (so far).
+
+To test against versions 8.4 through 9.5, use the tests/tests-9.5 directory
+in the confile file.
 
 Support for PostgreSQL versions before 8.3 is not possible, because a
 change was made to the pgbench client in that version that is needed
@@ -160,14 +167,6 @@ pgbench client against a newer database server, or to copy the pgbench.c
 program from 8.3 into a 8.2 source code build and use it instead (with
 some fixes--it won't compile unless you comment out code that refers to
 optional newer features added in 8.3).
-
-Regarding compatibility with 9.6 and higher, since the syntax for random changed, 
-you can find all the necessary tests in the subfolder test-9.6/ located in the tests/ directory.
-Be sure to check the name of the directory in the config script for your version of Postgres.
-
-The default test directory scripts is `TESTDIR="tests/tests-9.6"`
-
-No test were performed on version 10 as of yet. Please, your feedback is needed.
 
 Multiple worker support
 -----------------------

@@ -38,3 +38,5 @@
                Add several new latency and other reports (Emeric)
                Bug fix for rates not producing 90th latency (Emeric)
                Add FILLFACTOR and more latency graphs (Emeric)
+               Change default test to the 9.6+ select.sql script.  The tests for 8.4-9.5 are now in the tests/tests-9.5 directory.
+               Validate basic compatibility up to PG13.

@@ -239,7 +239,7 @@ def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1
 
     # Now output the file data
     for k, v in sets.items():
-        logger.debug("v=", v)
+        logger.debug("v=%s", v)
         for column, data in enumerate(v):
             logger.debug("column=%s data=%s" % (column, data))
             if len(data) < (ycolumn + 1):
@@ -405,7 +405,7 @@ def main():
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device:")
+                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
                                ylabel="us", filt_text=None, header_signal="cache")

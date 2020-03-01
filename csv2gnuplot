@@ -383,7 +383,8 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
 
     logger.debug("Sets as they come out of the data set parsing")
     logger.debug(sets)
-    ds_gnuplotter(sets, destination=output_file, title=graph_title, ylabel=ylabel)
+    if len(sets)>0:
+        ds_gnuplotter(sets, destination=output_file, title=graph_title, ylabel=ylabel)
 
 def main():
     (options, args) = parse_options()

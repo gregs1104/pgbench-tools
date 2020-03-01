@@ -355,6 +355,10 @@ fi
     # TODO If $GNUPLOT is set to something other than its default value from `which`, there
     # should be a command line option in csv2gnuplot that informs the program of that path.
 
+    # TODO Eliminate the warning messages from the "mv graph.png ..." lines
+    # when the graphing failed.  shell file test if exists first, option to
+    # mv, not sure of the best approach yet
+
     $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s"
     mv graph.png iostat-writeMB.png
 

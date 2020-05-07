@@ -45,7 +45,7 @@ for SCALE in $SCALES; do
     $TESTPSQL -c "vacuum"
 
     echo Creating new pgbench tables
-    $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+    time $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
   fi
   #
   # Run the main test

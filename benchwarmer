@@ -219,6 +219,7 @@ else
 START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 fi
 $RESULTPSQL -c "insert into test_bgwriter(test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
+$TESTPSQL -c 'SELECT pg_stat_reset()' >> /dev/null 2>&1
 
 # Setup test directory tree
 echo This is test $TEST

@@ -1,12 +1,12 @@
 BEGIN;
 
-DROP TABLE IF EXISTS testset;
+DROP TABLE IF EXISTS testset CASCADE;
 CREATE TABLE testset(
   set serial PRIMARY KEY,
   info text
   );
 
-DROP TABLE IF EXISTS tests;
+DROP TABLE IF EXISTS tests CASCADE;
 CREATE TABLE tests(
   test serial PRIMARY KEY,
   set int NOT NULL REFERENCES testset(set) ON DELETE CASCADE,
@@ -50,6 +50,34 @@ CREATE TABLE test_bgwriter(
   buffers_alloc bigint,
   buffers_backend_fsync bigint,
   max_dirty bigint
+);
+
+DROP TABLE IF EXISTS test_stat_database;
+CREATE TABLE test_stat_database(
+  test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
+  collected timestamp,
+  last_reset timestamp,
+  numbackends int,
+  xact_commit bigint, xact_rollback bigint,
+  blks_read bigint, blks_hit bigint,
+  tup_returned bigint, tup_fetched bigint, tup_inserted bigint,
+  tup_updated bigint, tup_deleted bigint,
+  conflicts bigint,
+  temp_files bigint, temp_bytes bigint,
+  deadlocks bigint,
+  blk_read_time double precision, blk_write_time double precision
+  );
+
+DROP TABLE IF EXISTS test_statio;
+CREATE TABLE test_statio(
+  test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
+  collected timestamp,
+  nspname name,
+  tablename name,
+  indexname name,
+  size bigint,
+  rel_blks_read bigint,
+  rel_blks_hit bigint
 );
 
 --

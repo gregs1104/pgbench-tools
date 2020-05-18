@@ -274,6 +274,14 @@ $RESULTPSQL -c "update test_bgwriter set \
   max_dirty=1024 * '$max_dirty' \
   where test='$TEST'"
 
+# Export database statistics from pgbench into results database
+
+$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp, stats_reset, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conflicts, temp_files, temp_bytes, deadlocks, blk_read_time, blk_write_time FROM pg_stat_database WHERE datname=current_database()) TO 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy test_stat_database FROM 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
+
+$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, indexrelname AS indexname, pg_relation_size(indexrelid) AS size, idx_blks_read AS rel_blks_read, idx_blks_hit AS rel_blks_hit FROM pg_statio_user_indexes UNION SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, NULL AS indexname, pg_relation_size(relid) AS size, heap_blks_read AS rel_blks_read, heap_blks_hit AS relk_blks_hit FROM pg_statio_user_tables) TO 'statio.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy test_statio FROM 'statio.csv' WITH DELIMITER ',' CSV HEADER"
+
 # WAL values are initially saved as text because they're pulled from the test
 # database--but the functions to turn them into numeric types is available
 # only in the results one.

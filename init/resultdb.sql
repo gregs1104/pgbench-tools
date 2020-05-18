@@ -70,7 +70,7 @@ CREATE TABLE test_stat_database(
 
 DROP TABLE IF EXISTS test_statio;
 CREATE TABLE test_statio(
-  test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
+  test int REFERENCES tests(test) ON DELETE CASCADE,
   collected timestamp,
   nspname name,
   tablename name,

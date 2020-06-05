@@ -40,3 +40,7 @@
                Add FILLFACTOR and more latency graphs (Emeric)
                Change default test to the 9.6+ select.sql script.  The tests for 8.4-9.5 are now in the tests/tests-9.5 directory.
                Validate basic compatibility up to PG13.
+               Collect test database and relation stats
+               Add database level stats to web report
+               Convert all the report buffer counts to average bytes per sec
+

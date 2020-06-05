@@ -1,0 +1,12 @@
+#!/bin/bash
+
+
+#Cleaning results from a range of test numbers
+
+START=$1
+END=$2
+
+pushd results
+psql -d results -At -c "SELECT test FROM tests WHERE test>=$START AND test<=$END" | xargs rm -rf
+psql -d results -At -c "DELETE FROM tests WHERE test>=$START AND test<=$END"
+popd

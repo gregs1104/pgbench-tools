@@ -37,6 +37,7 @@ CREATE TABLE timing(
   );
 
 CREATE INDEX idx_timing_test on timing(test,ts);
+CREATE INDEX idx_test_latency ON timing (test,latency);
 
 DROP TABLE IF EXISTS test_bgwriter;
 CREATE TABLE test_bgwriter(

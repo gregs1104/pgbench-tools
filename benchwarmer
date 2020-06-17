@@ -353,6 +353,7 @@ else
 fi
 # Save high level summary of latency broken into equal sized buckets of transactions
 # 20 5% buckets
+$RESULTPSQL -c "DROP TABLE buckets" >> /dev/null 2>&1
 $RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.05 as bucket_size,0.0 as bucket_left,0.05*generate_series(1,20) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE test=$TEST"
 $RESULTPSQL -c "UPDATE buckets SET bucket_left=bucket_right - bucket_size;"
 $RESULTPSQL -c "UPDATE buckets SET offset_left=round(trans * bucket_left), offset_right=round(trans * bucket_right) - 1";
@@ -377,7 +378,7 @@ $RESULTPSQL -c "\copy (SELECT * FROM buckets) TO 'latency-100.csv' WITH DELIMITE
 $RESULTPSQL -c "DROP TABLE buckets"
 
 # Save second resolution transaction summary
-$RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, avg(latency) AS avg_latency, max(latency) AS max_latency FROM timing WHERE test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, round(1000*avg(latency))/1000 AS avg_latency, max(latency) AS max_latency FROM timing WHERE test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"
 
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Plot result graphs

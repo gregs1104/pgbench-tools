@@ -367,6 +367,7 @@ $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN bucket_size"
 $RESULTPSQL -c "\copy (SELECT * FROM buckets) TO 'latency-20.csv' WITH DELIMITER ',' CSV HEADER"
 
 # 100 1% buckets
+if [ "$LARGEBUCKETS" -eq "1" ] ; then
 $RESULTPSQL -c "DROP TABLE buckets"
 $RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.01 as bucket_size,0.0 as bucket_left,0.01*generate_series(1,100) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE tests.test=$TEST"
 $RESULTPSQL -c "UPDATE buckets SET bucket_left=bucket_right - bucket_size;"
@@ -376,6 +377,7 @@ $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN trans"
 $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN bucket_size"
 $RESULTPSQL -c "\copy (SELECT * FROM buckets) TO 'latency-100.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "DROP TABLE buckets"
+fi
 
 # Save second resolution transaction summary
 $RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, round(1000*avg(latency))/1000 AS avg_latency, max(latency) AS max_latency FROM timing WHERE test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"

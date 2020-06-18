@@ -478,3 +478,6 @@ rm -f timing.csv # DEBUG
 rm -f tpsdata.txt
 rm -f latency.txt
 rm -f dirtydata.txt
+
+echo runset complete
+date

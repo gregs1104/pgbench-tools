@@ -70,7 +70,7 @@ fi
 # Pass through prepared statements option
 PREPAREDOPT=""
 if [ -n "$PREPARED" ] ; then
-  PREPAREDOPT="-M"
+  PREPAREDOPT="-M prepared"
 fi
 
 # Set MAX_WORKERS automatically on platforms that have the nproc

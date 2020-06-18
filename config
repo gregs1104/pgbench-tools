@@ -72,6 +72,9 @@ SETRATES=""
 # Set to 1 to compute a lot of latency buckets at 1% intervals
 LARGEBUCKETS=0
 
+# Set to 1 to use prepared statements (pgbench -M)
+PREPARED=0
+
 #
 # Parameters for system monitoring code
 #

@@ -67,6 +67,12 @@ else
   TESTLEN="-t $TRANS"
 fi
 
+# Pass through prepared statements option
+PREPAREDOPT=""
+if [ -n "$PREPARED" ] ; then
+  PREPAREDOPT="-M"
+fi
+
 # Set MAX_WORKERS automatically on platforms that have the nproc
 # utility.  OS X is an example platform where it's not available.
 if [ "$MAX_WORKERS" == "auto" ] ; then
@@ -240,7 +246,7 @@ cd results/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
 
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $TESTDB > results.txt 2>&1 &
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"

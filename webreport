@@ -133,8 +133,7 @@ for SET in $SETS ; do
     checkpoints_timed+checkpoints_req as chkpts,
     maxwritten_clean as max_clean,
     pg_size_pretty(max_dirty) as max_dirty,
-    pg_size_pretty(round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as wal_written_per_sec,
-    #cleanup 
+    pg_size_pretty(round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as wal_written_per_sec
     FROM test_bgwriter
       RIGHT JOIN tests ON tests.test=test_bgwriter.test
       RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test

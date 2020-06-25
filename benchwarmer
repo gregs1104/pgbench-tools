@@ -30,6 +30,41 @@ else
   LATOPT=""
 fi
 
+function detect_cpus {
+  # getconf should work on Linux and more recent Macs.  Try the "online" processor
+  # count first.
+  if [ -z "$CPUS" ]; then
+    CPUS=`getconf _NPROCESSORS_ONLN 2>/dev/null`
+  fi
+
+  # This will work on older Macs and possibly other BSD systems, but is expected
+  # to fail on Linux.
+  CPUS=`sysctl -n hw.ncpu 2>/dev/null`
+
+  # Newer Macs dropped ncpu sysctl to break out logical and physical cores
+  if [ -z "$CPUS" ]; then
+    CPUS=`sysctl -n hw.logicalcpu 2>/dev/null`
+  fi
+
+  # Try the gnu coreutils getconf, available on newer Linux and Homebrew.
+  if [ -z "$CPUS" ]; then
+    CPUS=`nproc 2>/dev/null`
+  fi
+
+  # Fallback to the getconf total number if it's not available.  That's not
+  # always what we want, but we shouldn't even reach this point.
+  if [ -z "$CPUS" ]; then
+    CPUS=`getconf _NPROCESSORS_CONF 2>/dev/null`
+  fi
+
+  # TODO Test whether any of these CPU counters work on FreeBSD and Solaris
+
+  if [ -z "$CPUS" ]; then
+    # If there's no more accurate guess, running make with 4 processes works
+    # well enough on typical hardware circa 2020.  
+    CPUS=4
+  fi
+}
 
 # Query the test database and put its background writer statistics into
 # a set of environment variables, probably for use inserting stats into
@@ -73,10 +108,14 @@ if [ -n "$PREPARED" ] ; then
   PREPAREDOPT="-M prepared"
 fi
 
-# Set MAX_WORKERS automatically on platforms that have the nproc
-# utility.  OS X is an example platform where it's not available.
+# Set MAX_WORKERS automatically on Linux, OS X, and maybe other platforms
 if [ "$MAX_WORKERS" == "auto" ] ; then
-  MAX_WORKERS=`nproc` 2>&1 >>/dev/null
+  detect_cpus
+  if [ -z "$CPUS" ] ; then
+    error 16 "Bug in detect_cpus function, returned a null value"
+  fi
+  MAX_WORKERS="$CPUS"
+  echo Workers using $MAX_WORKERS CPUs
 fi
 
 # Set WORKERS string so that the largest possible worker count

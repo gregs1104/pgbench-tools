@@ -45,20 +45,16 @@ except:
     # see http://groups.google.com/groups?hl=en&lr=&client=firefox-a&threadm=b%25B_8.3255%24Dj6.2964%40nwrddc04.gnilink.net&rnum=2&prev=/groups%3Fhl%3Den%26lr%3D%26client%3Dfirefox-a%26q%3DHARDWARE%255CRESOURCEMAP%255CSystem%2BResources%255CPhysical%2BMemory%26btnG%3DSearch
     pass
 
-# Memory constants
-KB = 1024
-MB = 1024 * KB
-GB = 1024 * MB
-KB_PER_MB = MB / KB
-KB_PER_GB = GB / KB
-
 def total_mem():
+    """
+    Determine total memory on Windows, Mac OS Darwin, and UNIX-ish systems
+    """
     try:
         if platform.system() == "Windows":
             mem = Win32Memory()
         elif platform.system() == "Darwin":
-            # Least ugly way to find the amount of RAM on OS X, tested on
-            # 10.6
+            # Least ugly way to find the amount of RAM on OS X, first tested
+            # on 10.6 and stll working on 10.15
             cmd = 'sysctl hw.memsize'
             p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
                       close_fds=True)
@@ -74,21 +70,6 @@ def total_mem():
         return mem
     except:
         return None
-
-def binaryround(value):
-    """
-    Keeps the 4 most significant binary bits, truncates the rest so
-    that SHOW will be likely to use a larger divisor
-    >>> binaryround(22)
-    22
-    >>> binaryround(1234567)
-    1179648
-    """
-    multiplier = 1
-    while value > 16:
-        value = int(value / 2)
-        multiplier = multiplier * 2
-    return multiplier * value
 
 def arch_bits(arch):
     """
@@ -106,48 +87,54 @@ def arch_bits(arch):
         return 64
     return 64
 
-def local_cpu_count():
-  try:
+def cpu_count():
+    """
+    Estimate CPU count from various probes
+    """
     try:
-      import multiprocessing
-      return multiprocessing.cpu_count()
-    except NotImplementedError:  # pylint: disable=W0702
-      # (UNIX) Query 'os.sysconf'.
-      # pylint: disable=E1101
-      if hasattr(os, 'sysconf') and 'SC_NPROCESSORS_ONLN' in os.sysconf_names:
-        return int(os.sysconf('SC_NPROCESSORS_ONLN'))
-
-      # Windows ENV 'NUMBER_OF_PROCESSORS'
-      if 'NUMBER_OF_PROCESSORS' in os.environ:
-        return int(os.environ['NUMBER_OF_PROCESSORS'])
-  except Exception as e:
-    logging.exception("Exception raised while probing CPU count: %s", e)
-
-  logging.debug('Failed to get CPU count. Defaulting to 1.')
-  return None
+        # Prefer online processor count sysconf if that's available
+        if hasattr(os, 'sysconf') and 'SC_NPROCESSORS_ONLN' in os.sysconf_names:
+            return int(os.sysconf('SC_NPROCESSORS_ONLN'))
+        try:
+            # All but ancient Python have multiprocessing
+            import multiprocessing
+            return multiprocessing.cpu_count()
+        except:
+            # Windows may (should?) have 'NUMBER_OF_PROCESSORS
+            #  environment variable
+            if 'NUMBER_OF_PROCESSORS' in os.environ:
+                return int(os.environ['NUMBER_OF_PROCESSORS'])
+    except Exception as e:
+        print "Exception detecting CPU count:", e
+    return None
 
 def machine_summary():
-    # Estimate memory on this system via parameter or system lookup
-    total_memory = None
-    if total_memory is None:
-        total_memory = total_mem()
+    """
+    Estimate memory on this system via parameter or system lookup.
+    """
+    total_memory = total_mem()
     if total_memory is None:
         print "Error:  total memory not specified and unable to detect"
         sys.exit(1)
-
     print "Memory", total_memory
+
+    cpus=cpu_count()
+    if cpus is None:
+        print "Error:  CPU count not specified and unable to detect"
+        sys.exit(1)
+    print "CPU Count",cpus
+
     arch=platform.machine()
     print "Arch bits",arch_bits(arch)
-    print "Local CPU Count",local_cpu_count()
 
-#
-# Parse a PostgreSQL version number text into a float with one fractional digit.
-# This supports any mix of ".-_" characters as delimiters.
-# Typical input will take "V12_5" and return the number 12.5
-# Any PG version over 50 is assumed to be junk.
-# That avoids problems like "100" turning into 100.0 when it should be 10.0
-# 
 def version_parse(version):
+    """
+    Parse a PostgreSQL version number text into a float with one fractional digit.
+    This supports any mix of ".-_" characters as delimiters.
+    Typical input will take "V12_5" and return the number 12.5
+    Any PG version over 50 is assumed to be junk.
+    That avoids problems like "100" turning into 100.0 when it should be 10.0
+    """
     max_pg=50
     v=version
 
@@ -179,10 +166,12 @@ def version_parse(version):
     # Give up...for now
     return None
 
-# Non standard unit testing
 def test_parsing():
-    # List a bunch of version strings and what they should be parsed as.
-    # None results mean the version is rejected by the code.
+    """
+    Homemade unit testing
+    List a bunch of version strings and what they should be parsed as.
+    None results mean the version is rejected by the code.
+    """
     test_versions = dict([
         ("9.6" , 9.6),
         ("96" , 9.6),
@@ -218,9 +207,12 @@ def test_parsing():
     failed=0
     for v in test_versions.keys():
         out=version_parse(v)
-        print out==test_versions[v],v,out,test_versions[v]
-        if out!=test_versions[v]:  failed=failed+1
-    print "Failed tests",failed
+        if out!=test_versions[v]:
+            failed=failed+1
+            print "Failure",out==test_versions[v],v,out,test_versions[v]
+    if failed>0:
+        print "Failed version parsing tests:",failed
+        print
 
 def main(program_args):
     test_parsing()

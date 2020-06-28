@@ -116,16 +116,16 @@ def machine_summary():
     if total_memory is None:
         print "Error:  total memory not specified and unable to detect"
         sys.exit(1)
-    print "Memory", total_memory
+    print "# Memory", total_memory
 
     cpus=cpu_count()
     if cpus is None:
         print "Error:  CPU count not specified and unable to detect"
         sys.exit(1)
-    print "CPU Count",cpus
+    print "# CPU Count",cpus
 
     arch=platform.machine()
-    print "Arch bits",arch_bits(arch)
+    print "# Arch bits",arch_bits(arch)
 
 def version_parse(version):
     """
@@ -209,14 +209,49 @@ def test_parsing():
         out=version_parse(v)
         if out!=test_versions[v]:
             failed=failed+1
-            print "Failure",out==test_versions[v],v,out,test_versions[v]
+            print "# Failure",out==test_versions[v],v,out,test_versions[v]
     if failed>0:
-        print "Failed version parsing tests:",failed
+        print "# Failed version parsing tests:",failed
         print
+
+def test_sizing():
+    """
+    Provide recommended sizing for performance testing of this system
+    """
+    arch=platform.machine()
+
+    total_memory = total_mem()
+    if total_memory is None:
+        print "Error:  total memory not specified and unable to detect"
+        sys.exit(1)
+
+    cpus=cpu_count()
+    if cpus is None:
+        print "Error:  CPU count not specified and unable to detect"
+        sys.exit(1)
+
+    max_clients=cpus * 4
+    if max_clients < 32:
+        max_clients = 32
+    max_memory=total_memory * 4
+    max_memory_mb = max_memory / 1024 / 1024
+
+    # Turn the system config into recommended pgbench-tools limits.
+
+    # Each pgbench scale unit is just over 16MB.
+    # Oversize the test a little by assuming it's only 16.
+    max_scale = max_memory_mb / 16
+    # Round upward to closest 100
+    max_scale = int(100*round((max_scale + 50.0)/100.0))
+
+    print 'SETCLIENTS="1 %s" # Stress %s processors' % (max_clients,cpus)
+    print 'SCALES="100 %s" # Max database %s MB' % (max_scale,max_memory_mb)
 
 def main(program_args):
     test_parsing()
     machine_summary()
+    print
+    test_sizing()
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

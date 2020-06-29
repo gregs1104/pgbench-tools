@@ -47,15 +47,31 @@ except:
     pass
 
 def spawn_read(cmd):
-    # TODO Catch errors running the command and returned error codes
+    """
+    Basic wrapper to spawn programs like psql and consume a line of output.
+    If there's an error, None is returned.
+    """
     p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
               close_fds=True)
-    return p.stdout.read()
+    out=p.communicate()[0]
+    if p.returncode > 0:
+        return None
+    return out
 
 def pg_version():
-    # TODO Read this via 'show server_version' when bindings like psycopg2 are around
-    v=spawn_read('psql --version')
-    if False:  print "PostgreSQL version:",v
+    """
+    Try connecting to the database to find out its version.
+    If that fails try checking the version of psql.
+
+    Prefer querying because it give a nice clean version number,
+    and it can ask a remote database server--assuming the right PG*
+    enviroment variables.
+    """
+
+    # TODO Wwhen bindings like psycopg2 are around, use them for this query
+    v=spawn_read('psql -Atc "show server_version"')
+    if v is None:
+        v=spawn_read('psql --version')
     return v
 
 def total_mem():
@@ -66,14 +82,14 @@ def total_mem():
         if platform.system() == "Windows":
             mem = Win32Memory()
         elif platform.system() == "Darwin":
-            # Least ugly way to find the amount of RAM on OS X, first tested
+            # One ugly way to find the amount of RAM on OS X, first tested
             # on 10.6 and stll working on 10.15
             output = spawn_read('sysctl hw.memsize')
             m = re.match(r'^hw.memsize[:=]\s*(\d+)$', output.strip())
             if m and m.groups():
                 mem = int(m.groups()[0])
         else:
-            # Should work on other, more UNIX-ish platforms
+            # Should work on Linux and other UNIX-ish platforms
             physPages = os.sysconf("SC_PHYS_PAGES")
             pageSize = os.sysconf("SC_PAGE_SIZE")
             mem = physPages * pageSize
@@ -84,8 +100,8 @@ def total_mem():
 def arch_bits(arch):
     """
     Decode the usual strings for processor architecture, i386 and x86_64,
-    into how many bits the platform has.  Defaults to 64 if the input value is
-    not one of those.
+    into how many bits the platform has.  Iff the input value is not one
+    of those, make a guess based on Python's maximum pointer size.
     >>> arch_bits('i386')
     32
     >>> arch_bits('x86_64')
@@ -95,7 +111,10 @@ def arch_bits(arch):
         return 32
     if arch=='x86_64':
         return 64
-    return 64
+    if sys.maxsize > 2**32:
+        return 64
+    else:
+        return 32
 
 def cpu_count():
     """
@@ -123,25 +142,6 @@ def cpu_count():
     except Exception as e:
         print "Exception detecting CPU count:", e
     return None
-
-def machine_summary():
-    """
-    Estimate memory on this system via parameter or system lookup.
-    """
-    total_memory = total_mem()
-    if total_memory is None:
-        print "Error:  total memory not specified and unable to detect"
-        sys.exit(1)
-    print "# Memory", total_memory
-
-    cpus=cpu_count()
-    if cpus is None:
-        print "Error:  CPU count not specified and unable to detect"
-        sys.exit(1)
-    print "# CPU Count",cpus
-
-    arch=platform.machine()
-    print "# Arch bits",arch_bits(arch)
 
 def version_parse(version):
     """
@@ -238,6 +238,25 @@ def test_parsing():
     if failed>0:
         print "# Failed version parsing tests:",failed
         print
+
+def machine_summary():
+    """
+    Estimate memory on this system via parameter or system lookup.
+    """
+    total_memory = total_mem()
+    if total_memory is None:
+        print "Error:  total memory not specified and unable to detect"
+        sys.exit(1)
+    print "# Memory", total_memory
+
+    cpus=cpu_count()
+    if cpus is None:
+        print "Error:  CPU count not specified and unable to detect"
+        sys.exit(1)
+    print "# CPU Count",cpus
+
+    arch=platform.machine()
+    print "# Arch bits",arch_bits(arch)
 
 def test_sizing():
     """

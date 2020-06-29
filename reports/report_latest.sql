@@ -4,7 +4,7 @@ SELECT max(set) as lastset from tests
 
 
 SELECT
-  set,scale,test,script,clients,workers,
+  set,script,scale,test,clients,workers,
   rate_limit AS limit,
   round(tps) AS tps,
   round(1000*avg_latency)/1000 AS avg_latency,
@@ -13,4 +13,4 @@ SELECT
   trans
 FROM tests
 WHERE set = (SELECT lastset FROM lastset)
-ORDER BY set,scale,test,script,clients,rate_limit; 
+ORDER BY set,script,scale,test,clients,rate_limit; 

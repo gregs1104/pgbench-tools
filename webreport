@@ -122,7 +122,7 @@ for SET in $SETS ; do
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  
   $RESULTPSQL -H -c "SELECT set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,
-    scale,clients,rate_limit,
+    script,scale,clients,rate_limit,
     round(tps) as tps, round(tps / clients) as per_client, max_latency, 
     pg_size_pretty(round(blks_hit           * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as hit_per_sec,
     pg_size_pretty(round(blks_read          * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as read_per_sec,
@@ -138,7 +138,7 @@ for SET in $SETS ; do
       RIGHT JOIN tests ON tests.test=test_bgwriter.test
       RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test
       WHERE tests.set='$SET'
-      ORDER BY set,scale,clients,rate_limit,tests.test;" > temp.txt
+      ORDER BY set,script,scale,clients,rate_limit,tests.test;" > temp.txt
 
   # Now we need to fix lines like this
   # <td align="left">&lt;a href=&quot;results/201/&quot;&gt;201&lt;/a&gt;</td>

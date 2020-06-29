@@ -10,6 +10,7 @@ import os
 import platform
 import re
 import sys
+import string
 from string import maketrans
 from subprocess import Popen, PIPE, STDOUT
 
@@ -45,6 +46,18 @@ except:
     # see http://groups.google.com/groups?hl=en&lr=&client=firefox-a&threadm=b%25B_8.3255%24Dj6.2964%40nwrddc04.gnilink.net&rnum=2&prev=/groups%3Fhl%3Den%26lr%3D%26client%3Dfirefox-a%26q%3DHARDWARE%255CRESOURCEMAP%255CSystem%2BResources%255CPhysical%2BMemory%26btnG%3DSearch
     pass
 
+def spawn_read(cmd):
+    # TODO Catch errors running the command and returned error codes
+    p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
+              close_fds=True)
+    return p.stdout.read()
+
+def pg_version():
+    # TODO Read this via 'show server_version' when bindings like psycopg2 are around
+    v=spawn_read('psql --version')
+    if False:  print "PostgreSQL version:",v
+    return v
+
 def total_mem():
     """
     Determine total memory on Windows, Mac OS Darwin, and UNIX-ish systems
@@ -55,10 +68,7 @@ def total_mem():
         elif platform.system() == "Darwin":
             # Least ugly way to find the amount of RAM on OS X, first tested
             # on 10.6 and stll working on 10.15
-            cmd = 'sysctl hw.memsize'
-            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-                      close_fds=True)
-            output = p.stdout.read()
+            output = spawn_read('sysctl hw.memsize')
             m = re.match(r'^hw.memsize[:=]\s*(\d+)$', output.strip())
             if m and m.groups():
                 mem = int(m.groups()[0])
@@ -140,14 +150,21 @@ def version_parse(version):
     Typical input will take "V12_5" and return the number 12.5
     Any PG version over 50 is assumed to be junk.
     That avoids problems like "100" turning into 100.0 when it should be 10.0
+    Multi-word input is fine, it takes the first word that seems like
+    a version number--either starting with a digit or "V".
     """
     max_pg=50
-    v=version
+    v=None
 
-    # Remove any non-digit junk from start
-    v=v.lstrip()
-    v=v.lstrip('v')
-    v=v.lstrip('V')
+    # Loop over words looking for a digit or "V" then a digit
+    for word in version.split():
+        word=word.lstrip('v')
+        word=word.lstrip('V')
+        if word[0].isdigit():
+            v=word
+            break
+
+    if v is None:  return v
 
     # Replace acceptable delimiters with "." and split
     trans=maketrans("_-","..")
@@ -155,7 +172,7 @@ def version_parse(version):
     digits=v.split('.')
 
     # If there's one giant version number, like "96" or "120", assume it's just
-    # missing a dot.  
+    # missing a dot, and they should be 9.6 or 12.0.
     if len(digits)==1:
         if float(digits[0]) > max_pg:
             f=float(v) / 10
@@ -166,7 +183,7 @@ def version_parse(version):
 
     # Normal major.minor number set
     if len(digits)>=2:
-        f=float(digits[0]) + float(digits[1]) / 10
+        f=float(digits[0]) + float(digits[1]) / pow(10,len(digits[1]))
         if f > max_pg:  return None
         return f
     # Give up...for now
@@ -194,9 +211,9 @@ def test_parsing():
         ("100" , 10.0),
         ("v10.0" , 10.0),
         ("V100" , 10.0),
-        ("v10_0" , 10.0),
+        ("v10_15" , 10.15),
         ("V10.0.0" , 10.0),
-        ("V10.0.21" , 10.0),
+        ("V10.15.21" , 10.15),
         ("v9.6.0.0" , 9.6),
         ("9_6_0_0" , 9.6),
         ("9600" , None),
@@ -207,7 +224,9 @@ def test_parsing():
         ("10_1_0_0" , 10.1),
         ("1000" , None),
         ("10.0_0" , 10),
-        ("10_1.1" , 10.1)
+        ("10_1.1" , 10.1),
+        ("10.12" , 10.12),
+        ("V10_12" , 10.12)
         ])
 
     failed=0
@@ -255,8 +274,12 @@ def test_sizing():
 
 def main(program_args):
     test_parsing()
+    pg_ver=version_parse(pg_version())
+    print "# PostgreSQL version",pg_ver
+
     machine_summary()
     print
+
     test_sizing()
 
 if __name__ == '__main__':

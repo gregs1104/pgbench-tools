@@ -67,3 +67,6 @@ for SCALE in $SCALES; do
 done
 
 ./webreport
+
+echo runset complete
+date

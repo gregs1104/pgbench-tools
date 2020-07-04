@@ -104,8 +104,11 @@ fi
 
 # Pass through prepared statements option
 PREPAREDOPT=""
-if [ -n "$PREPARED" ] ; then
-  PREPAREDOPT="-M prepared"
+if [ -z "$PREPARED"]; then
+  PREPARED=0
+fi
+if [ "$PREPARED" -gt 0 ] ; then
+    PREPAREDOPT="-M prepared"
 fi
 
 # Set MAX_WORKERS automatically on Linux, OS X, and maybe other platforms

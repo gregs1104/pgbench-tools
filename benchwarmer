@@ -104,7 +104,7 @@ fi
 
 # Pass through prepared statements option
 PREPAREDOPT=""
-if [ -z "$PREPARED"]; then
+if [ -z "$PREPARED" ] ; then
   PREPARED=0
 fi
 if [ "$PREPARED" -gt 0 ] ; then

@@ -2,14 +2,16 @@ BEGIN;
 
 DROP TABLE IF EXISTS testset CASCADE;
 CREATE TABLE testset(
-  set serial PRIMARY KEY,
+  server text,
+  set serial,
   info text
   );
 
 DROP TABLE IF EXISTS tests CASCADE;
 CREATE TABLE tests(
-  test serial PRIMARY KEY,
-  set int NOT NULL REFERENCES testset(set) ON DELETE CASCADE,
+  server text,
+  test serial,
+  set int NOT NULL,
   scale int,
   dbsize int8,
   start_time timestamp default now(),
@@ -33,7 +35,8 @@ CREATE TABLE timing(
   ts timestamp,
   filenum int, 
   latency numeric(9,3),
-  test int NOT NULL REFERENCES tests(test)
+  test int NOT NULL,
+  server text
   );
 
 CREATE INDEX idx_timing_test on timing(test,ts);
@@ -41,7 +44,8 @@ CREATE INDEX idx_test_latency ON timing (test,latency);
 
 DROP TABLE IF EXISTS test_bgwriter;
 CREATE TABLE test_bgwriter(
-  test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
+  server text,
+  test int,
   checkpoints_timed bigint,
   checkpoints_req bigint,
   buffers_checkpoint bigint,
@@ -55,7 +59,8 @@ CREATE TABLE test_bgwriter(
 
 DROP TABLE IF EXISTS test_stat_database;
 CREATE TABLE test_stat_database(
-  test int PRIMARY KEY REFERENCES tests(test) ON DELETE CASCADE,
+  server text,
+  test int,
   collected timestamp,
   last_reset timestamp,
   numbackends int,
@@ -71,7 +76,8 @@ CREATE TABLE test_stat_database(
 
 DROP TABLE IF EXISTS test_statio;
 CREATE TABLE test_statio(
-  test int REFERENCES tests(test) ON DELETE CASCADE,
+  server text,
+  test int,
   collected timestamp,
   nspname name,
   tablename name,
@@ -80,6 +86,25 @@ CREATE TABLE test_statio(
   rel_blks_read bigint,
   rel_blks_hit bigint
 );
+
+CREATE UNIQUE INDEX idx_server_set on testset(server,set);
+ALTER TABLE testset ADD UNIQUE USING INDEX idx_server_set;
+
+CREATE UNIQUE INDEX idx_server_test on tests(server,test);
+ALTER TABLE tests ADD UNIQUE USING INDEX idx_server_test;
+
+CREATE UNIQUE INDEX idx_server_test_2 on test_bgwriter(server,test);
+ALTER TABLE test_bgwriter ADD UNIQUE USING INDEX idx_server_test_2;
+
+CREATE UNIQUE INDEX idx_server_test_3 on test_stat_database(server,test);
+ALTER TABLE test_stat_database ADD UNIQUE USING INDEX idx_server_test_3;
+
+CREATE INDEX idx_test on test_statio(server,test);
+
+ALTER TABLE test_bgwriter ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
+ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
+ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
+ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
 --
 -- Convert hex value to a decimal one.  It's possible to do this using

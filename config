@@ -35,6 +35,9 @@ RESULTUSER="$TESTUSER"
 RESULTPORT="$TESTPORT"
 RESULTDB=results
 
+# What server name to use when saving the results.  It's just a label,
+SERVERNAME=`hostname`
+
 #
 # Main test run customization
 #

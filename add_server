@@ -4,8 +4,8 @@
 source ./config
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-mkdir -p results/$SERVERNAME/$TEST
-mv results/$TEST results/$SERVERNAME/$TEST
+mkdir -p results/$SERVERNAME
+mv results/* results/$SERVERNAME/
 
 $RESULTPSQL -f prequel.sql
 

@@ -21,7 +21,7 @@ source ./config
 OUTFILE="results/$SERVERNAME/index.htm"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-pg_dump -a -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT $RESULTDB" > results/$SERVERNAME/$SERVERNAME-results.sql
+pg_dump -a -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT $RESULTDB > results/$SERVERNAME/$SERVERNAME-results.sql
 
 # Emulate 'sed -i' behavior from GNU sed with standard sed instead.
 # Needed on platforms like Solaris.
@@ -124,7 +124,7 @@ for SET in $SETS ; do
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  
   $RESULTPSQL -H -c "SELECT set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,
-    server,script,scale,clients,rate_limit,
+    tests.server,script,scale,clients,rate_limit,
     round(tps) as tps, round(tps / clients) as per_client, max_latency, 
     pg_size_pretty(round(blks_hit           * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as hit_per_sec,
     pg_size_pretty(round(blks_read          * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as read_per_sec,

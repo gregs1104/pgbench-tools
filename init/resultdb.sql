@@ -44,7 +44,6 @@ CREATE INDEX idx_test_latency ON timing (test,latency);
 
 DROP TABLE IF EXISTS test_bgwriter;
 CREATE TABLE test_bgwriter(
-  server text,
   test int,
   checkpoints_timed bigint,
   checkpoints_req bigint,
@@ -54,12 +53,12 @@ CREATE TABLE test_bgwriter(
   buffers_backend bigint,
   buffers_alloc bigint,
   buffers_backend_fsync bigint,
-  max_dirty bigint
+  max_dirty bigint,
+  server text,
 );
 
 DROP TABLE IF EXISTS test_stat_database;
 CREATE TABLE test_stat_database(
-  server text,
   test int,
   collected timestamp,
   last_reset timestamp,
@@ -71,12 +70,12 @@ CREATE TABLE test_stat_database(
   conflicts bigint,
   temp_files bigint, temp_bytes bigint,
   deadlocks bigint,
-  blk_read_time double precision, blk_write_time double precision
+  blk_read_time double precision, blk_write_time double precision,
+  server text
   );
 
 DROP TABLE IF EXISTS test_statio;
 CREATE TABLE test_statio(
-  server text,
   test int,
   collected timestamp,
   nspname name,
@@ -84,7 +83,8 @@ CREATE TABLE test_statio(
   indexname name,
   size bigint,
   rel_blks_read bigint,
-  rel_blks_hit bigint
+  rel_blks_hit bigint,
+  server text
 );
 
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);

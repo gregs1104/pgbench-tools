@@ -18,7 +18,7 @@
 # than the internal font, and LiberationSans looks terrible.
 
 source ./config
-OUTFILE="results/index.htm"
+OUTFILE="results/$SERVERNAME/index.htm"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
 # Emulate 'sed -i' behavior from GNU sed with standard sed instead.
@@ -36,17 +36,17 @@ else
   # Produce combined report, averaged across all test sets
   $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests group by scale order by scale" > scaling.txt
   gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
-  mv scaling.png results/
+  mv scaling.png results/$SERVERNAME/
   rm scaling.txt
 
   $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests group by clients order by clients" > clients.txt
   gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
-  mv clients.png results/
+  mv clients.png results/$SERVERNAME/
   rm clients.txt
 
   $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests group by scale,clients order by scale,clients" > 3d.txt
   gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
-  mv 3d.png results/
+  mv 3d.png results/$SERVERNAME/
   rm 3d.txt
 fi
 
@@ -122,7 +122,7 @@ for SET in $SETS ; do
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  
   $RESULTPSQL -H -c "SELECT set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,
-    script,scale,clients,rate_limit,
+    server,script,scale,clients,rate_limit,
     round(tps) as tps, round(tps / clients) as per_client, max_latency, 
     pg_size_pretty(round(blks_hit           * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as hit_per_sec,
     pg_size_pretty(round(blks_read          * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as read_per_sec,
@@ -191,8 +191,8 @@ done
 if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   gnuplot multi-scale.plot 2>&1 | grep -v "Warning: empty"
   gnuplot multi-client.plot 2>&1 | grep -v "Warning: empty"
-  mv clients-sets.png results/
-  mv scaling-sets.png results/
+  mv clients-sets.png results/$SERVERNAME/
+  mv scaling-sets.png results/$SERVERNAME/
   rm multi-scale.plot
   rm multi-client.plot
 fi

@@ -1,21 +1,21 @@
 #!/bin/bash -ex
 # Temporary migration script for breaking down server level results
 
-SERVER=`hostname`
-
 source ./config
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
+mkdir -p results/$SERVERNAME/$TEST
+mv results/$TEST results/$SERVERNAME/$TEST
+
 $RESULTPSQL -f prequel.sql
 
-$RESULTPSQL -c "UPDATE tests set server='${SERVER}';"
-$RESULTPSQL -c "UPDATE test_bgwriter set server='${SERVER}';"
-$RESULTPSQL -c "UPDATE test_statio set server='${SERVER}';"
-$RESULTPSQL -c "UPDATE timing set server='${SERVER}';"
+$RESULTPSQL -c "UPDATE tests set server='${SERVERNAME}';"
+$RESULTPSQL -c "UPDATE test_bgwriter set server='${SERVERNAME}';"
+$RESULTPSQL -c "UPDATE test_statio set server='${SERVERNAME}';"
+$RESULTPSQL -c "UPDATE timing set server='${SERVERNAME}';"
 
 $RESULTPSQL -c "ALTER TABLE test_bgwriter ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;"
 $RESULTPSQL -c "ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;"
 $RESULTPSQL -c "ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;"
 $RESULTPSQL -c "ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;"
-
 

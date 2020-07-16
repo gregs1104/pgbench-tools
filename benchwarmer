@@ -236,7 +236,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (script,clients,workers,set,scale,dbsize,rate_limit) values('$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE)"
+$RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit) values('$SERVERNAME',$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
@@ -271,20 +271,20 @@ $TESTPSQL -c 'SELECT pg_stat_reset()' >> /dev/null 2>&1
 
 # Setup test directory tree
 echo This is test $TEST
-mkdir -p results/$TEST
+mkdir -p results/$SERVERNAME/$TEST
 
 # Start background daemon collectors
 if [ "$OSDATA" -eq "1" ]; then
-  ./timed-os-stats vmstat > results/$TEST/vmstat.log &
+  ./timed-os-stats vmstat > results/$SERVERNAME/$TEST/vmstat.log &
   VMSTAT=$!
-  ./timed-os-stats iostat > results/$TEST/iostat.log &
+  ./timed-os-stats iostat > results/$SERVERNAME/$TEST/iostat.log &
   IOSTAT=$!
-  ./timed-os-stats meminfo > results/$TEST/meminfo.log &
+  ./timed-os-stats meminfo > results/$SERVERNAME/$TEST/meminfo.log &
   MEMINFO=$!
 fi
 
 # Run the main pgbench test
-cd results/$TEST
+cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
 

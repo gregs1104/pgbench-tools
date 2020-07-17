@@ -91,17 +91,17 @@ for SET in $SETS ; do
     # Generate graphs for just this test set
     $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests where set='$SET' group by scale order by scale" > scaling.txt
     gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
-    mv scaling.png results/scaling-$SET.png
+    mv scaling.png results/${SERVERNAME}/scaling-$SET.png
     mv scaling.txt scaling-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests where set='$SET' group by clients order by clients" > clients.txt
     gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
-    mv clients.png results/clients-$SET.png
+    mv clients.png results/${SERVERNAME}/clients-$SET.png
     mv clients.txt clients-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests where set='$SET' group by scale,clients order by scale,clients" > 3d.txt
     gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
-    mv 3d.png results/3d-$SET.png
+    mv 3d.png results/${SERVERNAME}/3d-$SET.png
     rm 3d.txt
   fi
 

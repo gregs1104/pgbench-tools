@@ -5,9 +5,8 @@ source ./config
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
 mkdir -p results/$SERVERNAME
-mv results/* results/$SERVERNAME/
 
-$RESULTPSQL -f prequel.sql
+$RESULTPSQL -ef prequel.sql
 
 $RESULTPSQL -c "UPDATE tests set server='${SERVERNAME}';"
 $RESULTPSQL -c "UPDATE test_bgwriter set server='${SERVERNAME}';"
@@ -19,3 +18,6 @@ $RESULTPSQL -c "ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY
 $RESULTPSQL -c "ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;"
 $RESULTPSQL -c "ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;"
 
+# This goes at the end because it's expected to return an error code,
+# for trying to move a directory into itself
+mv results/* results/$SERVERNAME/

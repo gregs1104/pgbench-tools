@@ -1,3 +1,13 @@
-cd results
-psql -d results -At -c "SELECT test FROM tests WHERE tps=0" | xargs rm -rf
-psql -d results -At -c "DELETE FROM tests WHERE tps=0"
+#!/bin/bash
+
+#Cleaning results from incomplete tests
+
+source ./config
+TEST=$1
+
+pushd "results/${SERVERNAME}"
+psql -d results -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND tps=0 | xargs rm -rf
+psql -d results -At -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND tps=0"
+popd
+
+# TODO This won't cascade out to hit dependent tables anymore.  See cleanup_singlevalue

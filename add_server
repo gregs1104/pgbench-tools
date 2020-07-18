@@ -8,6 +8,7 @@ mkdir -p results/$SERVERNAME
 
 $RESULTPSQL -ef prequel.sql
 
+$RESULTPSQL -c "UPDATE testset set server='${SERVERNAME}';"
 $RESULTPSQL -c "UPDATE tests set server='${SERVERNAME}';"
 $RESULTPSQL -c "UPDATE test_bgwriter set server='${SERVERNAME}';"
 $RESULTPSQL -c "UPDATE test_statio set server='${SERVERNAME}';"

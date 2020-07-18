@@ -5,6 +5,8 @@ import datetime
 import csv
 
 test=sys.argv[1]
+server=sys.argv[2]
+
 out=csv.writer(sys.stdout,delimiter=',')
 for l in sys.stdin:
   l=l.strip()
@@ -12,6 +14,6 @@ for l in sys.stdin:
   latency=float(latency) / 1000
   timestamp=float(sec)+float(usec) / 1000000
   d=datetime.datetime.fromtimestamp(timestamp)
-  r=[d.isoformat(" "),filenum,latency,test]
+  r=[d.isoformat(" "),filenum,latency,test,server]
   out.writerow(r)
 

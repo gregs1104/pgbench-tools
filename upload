@@ -1,0 +1,16 @@
+#!/bin/bash -ex
+# Temporary migration script for packaging server level results
+
+source ./config
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+
+DEST="gsmith@grace:results/"
+
+NOW=`date "+%Y%m%d-%H%M%S"`
+TARBALL="$SERVERNAME-$NOW.tar.gz"
+
+pushd results
+pg_dump -a -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT $RESULTDB > $SERVERNAME/$SERVERNAME-results.sql
+tar cvf $TARBALL $SERVERNAME
+rsync -av --progress $TARBALL $DEST
+popd

@@ -21,8 +21,6 @@ source ./config
 OUTFILE="results/$SERVERNAME/index.htm"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-pg_dump -a -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT $RESULTDB > results/$SERVERNAME/$SERVERNAME-results.sql
-
 # Emulate 'sed -i' behavior from GNU sed with standard sed instead.
 # Needed on platforms like Solaris.
 function sed-i {

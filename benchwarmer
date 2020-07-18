@@ -212,7 +212,7 @@ if [ "$SKIPINIT" -ne "1" ]; then
   # databases sizes where the vacuum time is very long, its actually less
   # likely that the results log is large.  Tests against large database
   # tend to run slowly.
-  CLEANED=`$RESULTPSQL -A -t -c "SELECT EXISTS(SELECT 1 FROM tests WHERE cleanup IS NOT NULL AND ((now() - end_time) + cleanup) < '100 seconds'::interval ORDER BY test DESC LIMIT 1)"`
+  CLEANED=`$RESULTPSQL -A -t -c "SELECT EXISTS(SELECT 1 FROM tests WHERE server='${SERVERNAME}' AND cleanup IS NOT NULL AND ((now() - end_time) + cleanup) < '100 seconds'::interval ORDER BY test DESC LIMIT 1)"`
   if [ "$CLEANED" = 'f' ] ; then
     $TESTPSQL -c "vacuum analyze"
   else
@@ -237,7 +237,7 @@ fi
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
 $RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit) values('$SERVERNAME',$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE)"
-TEST=`$RESULTPSQL -A -t -c "select max(test) from tests"`
+TEST=`$RESULTPSQL -A -t -c "select max(test) from tests WHERE server='${SERVERNAME}'"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
   exit
@@ -291,7 +291,7 @@ echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 $PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
-$RESULTPSQL -q -c "update tests set end_time=now() where test=$TEST"
+$RESULTPSQL -q -c "update tests set end_time=now() WHERE server='${SERVERNAME}' AND test=${TEST}"
 
 if [ "$OSDATA" -eq "1" ]; then
   # The PIDs we have will be the process ID of the Python timed-os-stats
@@ -320,7 +320,7 @@ $RESULTPSQL -c "update test_bgwriter set \
   buffers_alloc=$buffers_alloc - buffers_alloc,\
   buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync, \
   max_dirty=1024 * '$max_dirty' \
-  where test='$TEST'"
+  WHERE server='${SERVERNAME}' AND test='$TEST'"
 
 # Export database statistics from pgbench into results database
 
@@ -338,7 +338,7 @@ END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_wal_lsn()"`
 else
 END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 fi
-$RESULTPSQL -q -c "UPDATE tests SET wal_written=wal_lsn('$END_WAL') - wal_lsn('$START_WAL') WHERE test=$TEST"
+$RESULTPSQL -q -c "UPDATE tests SET wal_written=wal_lsn('$END_WAL') - wal_lsn('$START_WAL') WHERE server='${SERVERNAME}' AND test=$TEST"
 
 cat results.txt
 
@@ -353,7 +353,7 @@ if [ "$SKIPINIT" -ne "1" ]; then
   VACUUMSTART=`$RESULTPSQL -A -t -c "SELECT now()"`
   $TESTPSQL -c "vacuum"
   $TESTPSQL -c "checkpoint"
-  $RESULTPSQL -q -c "UPDATE tests SET cleanup=now() - '$VACUUMSTART'::timestamp WHERE test=$TEST"
+  $RESULTPSQL -q -c "UPDATE tests SET cleanup=now() - '$VACUUMSTART'::timestamp WHERE server='${SERVERNAME}' AND test=$TEST"
 fi
 
 # Save pgbench log
@@ -367,7 +367,7 @@ cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
 
 tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
-$RESULTPSQL -q -c "update tests set tps='$tps',trans='$trans' where test=$TEST"
+$RESULTPSQL -q -c "update tests set tps='$tps',trans='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
 
 # Confirm we have an patched version of pgbench that has timestamps
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
@@ -387,22 +387,20 @@ if [ -n "$2" ]; then
   $BASEDIR/log-to-csv_rates $TEST < pgbench.log > timing.csv
   #$RESULTPSQL -c " truncate table timing; " # DEBUG
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-  #$RESULTPSQL -c "create table timing_temp as select * from timing " # DEBUG 
-  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) where tests.test='$TEST'"
+  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
-
 else
   # Import timestamp information
   $BASEDIR/log-to-csv $TEST < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) where tests.test='$TEST'"
+  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
-
 fi
+
 # Save high level summary of latency broken into equal sized buckets of transactions
 # 20 5% buckets
 $RESULTPSQL -c "DROP TABLE buckets" >> /dev/null 2>&1
-$RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.05 as bucket_size,0.0 as bucket_left,0.05*generate_series(1,20) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE test=$TEST"
+$RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.05 as bucket_size,0.0 as bucket_left,0.05*generate_series(1,20) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE server='${SERVERNAME}' AND test=$TEST"
 $RESULTPSQL -c "UPDATE buckets SET bucket_left=bucket_right - bucket_size;"
 $RESULTPSQL -c "UPDATE buckets SET offset_left=round(trans * bucket_left), offset_right=round(trans * bucket_right) - 1";
 
@@ -428,14 +426,14 @@ $RESULTPSQL -c "DROP TABLE buckets"
 fi
 
 # Save second resolution transaction summary
-$RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, round(1000*avg(latency))/1000 AS avg_latency, max(latency) AS max_latency FROM timing WHERE test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, round(1000*avg(latency))/1000 AS avg_latency, max(latency) AS max_latency FROM timing WHERE server='${SERVERNAME}' AND test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"
 
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Plot result graphs
-    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
+    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where server='${SERVERNAME}' AND test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
     $GNUPLOT $BASEDIR/plots/tps.plot
 
-    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing where test=$TEST" > latency.txt
+    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing WHERE server='${SERVERNAME}' AND test=$TEST" > latency.txt
     $GNUPLOT $BASEDIR/plots/latency.plot
 
     $GNUPLOT $BASEDIR/plots/dirty.plot
@@ -481,7 +479,7 @@ SETTINGS="pg_settings.txt"
 
 # Write out system and PostgreSQL installation
 echo Test results: > $SETTINGS
-$RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where test=$TEST" | grep -v " row)" >> $SETTINGS
+$RESULTPSQL -c "select script,clients,round(tps) as tps,1000*round(avg_latency)/1000 as avg_latency,1000*round(max_latency)/1000 as max_latency from tests where server='${SERVERNAME}' AND test=$TEST" | grep -v " row)" >> $SETTINGS
 echo Server $SERVERHOST, client $CLIENTHOST >> $SETTINGS
 echo >> $SETTINGS
 echo "Server info and settings in postgresql.conf:" >> $SETTINGS

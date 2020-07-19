@@ -1,5 +1,5 @@
 SELECT
-  set,script,scale,test,clients,workers,
+  server,set,script,scale,test,clients,workers,
   rate_limit AS limit,
   round(tps) AS tps,
   round(1000*avg_latency)/1000 AS avg_latency,
@@ -7,4 +7,4 @@ SELECT
   1000*round(max_latency)/1000 AS max_latency,
   trans
 FROM tests
-ORDER BY set,script,scale,test,clients,rate_limit; 
+ORDER BY server,set,script,scale,test,clients,rate_limit; 

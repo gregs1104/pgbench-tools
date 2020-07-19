@@ -1,5 +1,5 @@
 SELECT
-  set,script,scale,
+  server,set,script,scale,
   pg_size_pretty(avg(dbsize)::int8) AS db_size,
   clients,
   rate_limit,
@@ -9,5 +9,5 @@ SELECT
 --  round(1000 * avg(percentile_90_latency))/1000 AS "90%<"
 --  to_char(avg(end_time -  start_time),'HH24:MI:SS') AS runtime
 FROM tests 
-GROUP BY set,script,scale,clients,rate_limit 
-ORDER BY set,script,scale,clients,rate_limit; 
+GROUP BY server,set,script,scale,clients,rate_limit 
+ORDER BY server,set,script,scale,clients,rate_limit; 

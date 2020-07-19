@@ -1,7 +1,7 @@
 -- Advanced report of background write effectiveness
 
 SELECT
-  set,script,scale,clients,rate_limit as "limit",tps,max_latency,
+  server,set,script,scale,clients,rate_limit as "limit",tps,max_latency,
 --  cast(date_trunc('minute',start_time) AS timestamp) AS start,
   date_trunc('second',elapsed) AS elapsed,
   (checkpoints_timed + checkpoints_req) as ckpt,
@@ -20,7 +20,7 @@ SELECT
 FROM
   (
   select 
-  set,script,scale,tests.test,clients,rate_limit,round(tps) as tps,
+  tests.server as server,set,script,scale,tests.test,clients,rate_limit,round(tps) as tps,
   max_latency,
   start_time,
   end_time -  start_time as elapsed,  
@@ -33,8 +33,8 @@ FROM
   buffers_backend_fsync,
   max_dirty,
   (SELECT cast(current_setting('block_size') AS int8)) AS block_size
-from test_bgwriter right join tests on tests.test=test_bgwriter.test WHERE NOT end_time is NULL
+from test_bgwriter right join tests on (tests.server=test_bgwriter.server AND tests.test=test_bgwriter.test) WHERE NOT end_time is NULL
 ) raw
 WHERE (checkpoints_timed + checkpoints_req)>0
-order by set,script,scale,clients,rate_limit,test;
+order by server,set,script,scale,clients,rate_limit,test;
 

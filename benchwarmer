@@ -102,6 +102,10 @@ else
   TESTLEN="-t $TRANS"
 fi
 
+if [ -z "$TRIM" ] ; then
+  TRIM=0
+fi
+
 # Pass through prepared statements option
 PREPAREDOPT=""
 if [ -z "$PREPARED" ] ; then
@@ -380,22 +384,26 @@ if [ -z "$TESTFORTS" ]; then
 
 else
 
-#Import format of csv file changes when --rates is used
-if [ -n "$2" ]; then
 # Import timestamp information
-  echo "log-to-csv_rates for --rates option" # DEBUG
+# Format of csv file changes when --rates is used
+if [ -n "$2" ]; then
   $BASEDIR/log-to-csv_rates $TEST "${SERVERNAME}" < pgbench.log > timing.csv
-  #$RESULTPSQL -c " truncate table timing; " # DEBUG
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
-  $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+  if [ "$TRIM" -gt 0 ] ; then
+    $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
+  fi
+  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=timing.test and latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 else
-  # Import timestamp information
   $BASEDIR/log-to-csv $TEST "${SERVERNAME}" < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
+  if [ "$TRIM" -gt 0 ] ; then
+    $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
+  fi
+
   $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
-  $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
 fi
+
+$BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
 
 # Save high level summary of latency broken into equal sized buckets of transactions
 # 20 5% buckets

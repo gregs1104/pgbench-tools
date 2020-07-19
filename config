@@ -78,6 +78,9 @@ LARGEBUCKETS=0
 # Set to 1 to use prepared statements (pgbench -M)
 PREPARED=0
 
+# Set to 1 to trim 10% off the start and end of the test
+TRIM=1
+
 #
 # Parameters for system monitoring code
 #

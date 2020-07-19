@@ -8,4 +8,4 @@ select
   buffers_backend_fsync as backend_sync,
   max_dirty
 from test_bgwriter right join tests on tests.server=test_bgwriter.server AND tests.test=test_bgwriter.test
-order by server,set,script,scale,clients,test;
+order by server,script,set,scale,clients,test;

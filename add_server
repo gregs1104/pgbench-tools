@@ -22,6 +22,8 @@ $RESULTPSQL -c "ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,tes
 $RESULTPSQL -c "ALTER TABLE tests ADD COLUMN start_latency timestamp default null;"
 $RESULTPSQL -c "ALTER TABLE tests ADD COLUMN end_latency timestamp default null;"
 $RESULTPSQL -c "UPDATE tests SET start_latency=start_time, end_latency=end_time;"
+$RESULTPSQL -c "ALTER TABLE tests ADD COLUMN trans_latency int default null;"
+$RESULTPSQL -c "UPDATE tests SET trans_latency=trans;"
 
 # This goes at the end because it's expected to return an error code,
 # for trying to move a directory into itself

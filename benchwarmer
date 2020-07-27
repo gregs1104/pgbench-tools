@@ -295,7 +295,7 @@ echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 $PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
-$RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test=${TEST}"
+$RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"
 $RESULTPSQL -q -c "UPDATE tests SET start_latency=start_time, end_latency=end_time WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
 
 if [ "$OSDATA" -eq "1" ]; then
@@ -372,7 +372,7 @@ cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
 
 tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
-$RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
+$RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans', trans_latency='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
 
 # Confirm we have an patched version of pgbench that has timestamps
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
@@ -393,17 +393,19 @@ if [ -n "$2" ]; then
   if [ "$TRIM" -gt 0 ] ; then
     $RESULTPSQL -c "UPDATE tests SET start_latency=start_time + (end_time - start_time)/10, end_latency=end_time - (end_time - start_time)/10 WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
     $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
+    $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
   fi
-  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=timing.test and latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+  $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=timing.test and latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 else
   $BASEDIR/log-to-csv $TEST "${SERVERNAME}" < pgbench.log > timing.csv
   $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
   if [ "$TRIM" -gt 0 ] ; then
     $RESULTPSQL -c "UPDATE tests SET start_latency=start_time + (end_time - start_time)/10, end_latency=end_time - (end_time - start_time)/10 WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
     $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
+    $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
   fi
-  $RESULTPSQL -q -c "update tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 fi
+$RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans_latency)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 
 $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
 

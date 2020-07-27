@@ -26,7 +26,9 @@ CREATE TABLE tests(
   percentile_90_latency float,
   wal_written numeric,
   cleanup interval default null,
-  rate_limit numeric default null
+  rate_limit numeric default null,
+  start_latency timestamp default null,
+  end_latency timestamp default null
   );
 
 DROP TABLE IF EXISTS timing;

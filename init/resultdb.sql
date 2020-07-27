@@ -109,6 +109,22 @@ ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) R
 ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
+DROP VIEW test_stats;
+CREATE VIEW test_stats AS
+SELECT
+  set, tests.server,script,scale,clients,tests.test,
+  round(tps) as tps, max_latency,
+  round(blks_hit           * 8192 / extract(epoch FROM (collected - tests.start_time)))::bigint AS hit_Bps,
+  round(blks_read          * 8192 / extract(epoch FROM (collected - tests.start_time)))::bigint AS read_Bps,
+  round(buffers_checkpoint * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS check_Bps,
+  round(buffers_clean      * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS clean_Bps,
+  round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,
+  round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
+  max_dirty
+FROM test_bgwriter
+  RIGHT JOIN tests ON tests.test=test_bgwriter.test
+  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test;
+
 --
 -- Convert hex value to a decimal one.  It's possible to do this using
 -- undocumented features of the bit type, such as:

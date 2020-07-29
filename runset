@@ -26,8 +26,8 @@ else
 fi
 
 # Make sure the configured test script actually exists
-if [ ! -f "${TESTDIR}/${SCRIPT}" ]; then
-  echo "ERROR: cannot find test script ${TESTDIR}/${SCRIPT}, aborting"
+if [ ! -f "${TESTDIR}/${SCRIPT}.sql" ]; then
+  echo "ERROR: cannot find test script ${TESTDIR}/${SCRIPT}.sql, aborting"
   exit
 fi
 

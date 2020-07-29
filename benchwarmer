@@ -291,8 +291,7 @@ fi
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
-
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT $TESTDB > results.txt 2>&1 &
+$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT.sql -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"

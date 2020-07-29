@@ -39,7 +39,7 @@ RESULTDB=results
 SERVERNAME=`hostname`
 
 #
-# Main test run customization
+# Main test run customization.  Test scripts add a .sql extension for you.
 #
 
 # Set this to a number only when using pgbench 9.0 or later.  This will set
@@ -48,7 +48,7 @@ MAX_WORKERS="auto"
 # Blank setting, typically used with earlier pgbench versions
 #MAX_WORKERS=""
 
-SCRIPT="select.sql"
+SCRIPT="select"
 SCALES="1 10 100 1000"
 SETCLIENTS="1 2 4 8 16 32"
 SETTIMES=3

@@ -112,7 +112,7 @@ ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES te
 DROP VIEW test_stats;
 CREATE VIEW test_stats AS
 SELECT
-  set, tests.server,script,scale,clients,tests.test,
+  set, tests.server,UPPER(script) AS script,scale,clients,tests.test,
   round(tps) as tps, max_latency,
   round(blks_hit           * 8192 / extract(epoch FROM (collected - tests.start_time)))::bigint AS hit_Bps,
   round(blks_read          * 8192 / extract(epoch FROM (collected - tests.start_time)))::bigint AS read_Bps,

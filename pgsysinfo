@@ -278,7 +278,7 @@ def scale_sweep(biggest):
     List scales from 20% to 100% of maximum, plus tiny 100 size
     """
     steps=5
-    scales=[100] + [biggest * i / steps for i in range(1, steps)]
+    scales=[100] + [biggest * i / steps for i in range(1, steps + 1)]
     return scales
 
 def test_sizing():
@@ -300,10 +300,10 @@ def test_sizing():
     max_memory=total_memory * 4
     max_memory_mb = max_memory / 1024 / 1024
 
-    # Each pgbench scale unit is just over 16MB.
-    max_scale = max_memory_mb / 16.5
+    # Each pgbench scale unit is just over 15MB.
+    max_scale = max_memory_mb / 15
     # Round to nearest multiple of 250
-    max_scale = int(250*round((max_scale + 125.0)/250.0))
+    max_scale = 250*int((max_scale + 125.0)/250.0)
 
     # Turn the system config into recommended pgbench-tools limits.
     test_cpus=' '.join(map(str, core_sweep(cpus)))

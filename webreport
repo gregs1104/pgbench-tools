@@ -153,9 +153,15 @@ for SET in $SETS ; do
   echo "</div>" >> $OUTFILE
 done
 
+# Workaround for pngcairo bug in MacOS/Homebrew gnuplot stack
+PNGTERM="set terminal pngcairo size 640,480 enhanced font 'Verdana,10'"
+if [[ `uname` = "Darwin" ]] ; then
+  PNGTERM="set terminal png"
+  fi
+
 # Plot set comparison
-cat > multi-client.plot << "ENDING"
-set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
+echo "${PNGTERM}" > multi-client.plot 
+cat >> multi-client.plot << "ENDING"
 set output "clients-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
@@ -164,8 +170,8 @@ set ylabel "TPS"
 plot \
 ENDING
 
-cat > multi-scale.plot << "ENDING"
-set terminal pngcairo size 640,480 enhanced font 'Verdana,10'
+echo "${PNGTERM}" > multi-scale.plot 
+cat >> multi-scale.plot << "ENDING"
 set output "scaling-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics

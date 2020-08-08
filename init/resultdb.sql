@@ -57,7 +57,7 @@ CREATE TABLE test_bgwriter(
   buffers_alloc bigint,
   buffers_backend_fsync bigint,
   max_dirty bigint,
-  server text,
+  server text
 );
 
 DROP TABLE IF EXISTS test_stat_database;
@@ -109,7 +109,7 @@ ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) R
 ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
-DROP VIEW test_stats;
+DROP VIEW IF EXISTS test_stats;
 CREATE VIEW test_stats AS
 SELECT
   set, tests.server,UPPER(script) AS script,scale,clients,tests.test,

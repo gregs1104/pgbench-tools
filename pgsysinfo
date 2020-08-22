@@ -14,6 +14,10 @@ import string
 from string import maketrans
 from subprocess import Popen, PIPE, STDOUT
 
+# dateutil not really used.  It's just here so this script will catch
+# that it's missing before users run a bad set.
+import dateutil.parser
+
 # Windows specific routines
 try:
     # ctypes is only available starting in Python 2.5

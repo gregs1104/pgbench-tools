@@ -32,7 +32,7 @@ CREATE INDEX idx_test on test_statio(server,test);
 DROP VIEW test_stats;
 CREATE VIEW test_stats AS
 SELECT
-  set, tests.server,UPPER(script) AS script,scale,clients,tests.test,
+  set, tests.server,script,scale,clients,tests.test,
   round(tps) as tps, max_latency,
   round(blks_hit           * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS hit_Bps,
   round(blks_read          * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS read_Bps,
@@ -40,7 +40,8 @@ SELECT
   round(buffers_clean      * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS clean_Bps,
   round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,
   round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
-  max_dirty
+  max_dirty,
+  round(dbsize / (1024 * 1024)) as dbsize_mb
 FROM test_bgwriter
   RIGHT JOIN tests ON tests.test=test_bgwriter.test
   RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test;

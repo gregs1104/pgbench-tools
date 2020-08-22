@@ -114,8 +114,8 @@ CREATE VIEW test_stats AS
 SELECT
   set, tests.server,UPPER(script) AS script,scale,clients,tests.test,
   round(tps) as tps, max_latency,
-  round(blks_hit           * 8192 / extract(epoch FROM (collected - tests.start_time)))::bigint AS hit_Bps,
-  round(blks_read          * 8192 / extract(epoch FROM (collected - tests.start_time)))::bigint AS read_Bps,
+  round(blks_hit           * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS hit_Bps,
+  round(blks_read          * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS read_Bps,
   round(buffers_checkpoint * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS check_Bps,
   round(buffers_clean      * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS clean_Bps,
   round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,

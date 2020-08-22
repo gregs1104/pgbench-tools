@@ -12,8 +12,8 @@ SELECT
   tablename,
   indexname,
   pg_size_pretty(size) as size,
-  pg_size_pretty(round(rel_blks_hit * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as hit_bytes_per_sec,
-  pg_size_pretty(round(rel_blks_read * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as read_bytes_per_sec
+  pg_size_pretty(round(rel_blks_hit * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as hit_bytes_per_sec,
+  pg_size_pretty(round(rel_blks_read * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as read_bytes_per_sec
 FROM tests RIGHT JOIN test_statio ON (tests.test=test_statio.test)
 WHERE size>100000 and rel_blks_hit > 0
 ORDER BY tablename,indexname,scale,clients,tests.test
@@ -24,8 +24,8 @@ SELECT
   tests.test,
   set,clients,scale,
   xact_commit, xact_rollback, 
-  pg_size_pretty(round(blks_hit * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as hit_bytes_per_sec,
-  pg_size_pretty(round(blks_read * 8192 / extract(epoch from (collected - tests.start_time)))::bigint) as read_bytes_per_sec,
+  pg_size_pretty(round(blks_hit * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as hit_bytes_per_sec,
+  pg_size_pretty(round(blks_read * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as read_bytes_per_sec,
   tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted
 FROM tests RIGHT JOIN test_stat_database ON (tests.test=test_stat_database.test)
 ORDER BY set,scale,clients,tests.test

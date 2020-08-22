@@ -111,12 +111,12 @@ if __name__=='__main__':
 
     if sys.platform.startswith('linux'):
         if cmd=='vmstat':
-            capture("vmstat 5")
+            capture("vmstat 1")
         elif cmd=='iostat':
             # Originally collection only added a timestamp per output set
             # using this call:
             #
-            #   capture("iostat -mx 5",False,"avg-cpu:")
+            #   capture("iostat -mx 1",False,"avg-cpu:")
             #
             # While the most accurate approach, that result requires a
             # non-trivial parser to insert the time stamps later.
@@ -133,17 +133,17 @@ if __name__=='__main__':
             # exactly where we'd want them to be.  No need for this Python
             # program to get them.  vmstat also has a timestamp option with
             # "-t", which puts them at the end of each line.
-            capture("iostat -mx 5")
+            capture("iostat -mx 1")
         elif cmd=='meminfo':
-            linux_meminfo(5)
+            linux_meminfo(1)
         else:
             usage()
 
     elif sys.platform.startswith('darwin'):
         if cmd=='vmstat':
-            capture("vm_stat 5")
+            capture("vm_stat 1")
         elif cmd=='iostat':
-            capture("iostat -d -C -K 5")
+            capture("iostat -d -C -K 1")
         elif cmd=='meminfo':
             print >> sys.stderr, "meminfo unavailable on OS X, skipping"
         else:
@@ -151,9 +151,9 @@ if __name__=='__main__':
     # TODO Test this section actually works
     elif sys.platform.startswith('freebsd'):
         if cmd=='vmstat':
-            capture("vmstat 5")
+            capture("vmstat 1")
         elif cmd=='iostat':
-            capture("iostat -Kx 5")
+            capture("iostat -Kx 1")
         else:
             usage()
     else:

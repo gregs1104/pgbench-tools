@@ -2,14 +2,14 @@ BEGIN;
 
 DROP TABLE IF EXISTS testset CASCADE;
 CREATE TABLE testset(
-  server text,
-  set serial,
+  server text NOT NULL,
+  set serial NOT NULL,
   info text
   );
 
 DROP TABLE IF EXISTS tests CASCADE;
 CREATE TABLE tests(
-  server text,
+  server text NOT NULL,
   test serial,
   set int NOT NULL,
   scale int,
@@ -47,7 +47,7 @@ CREATE INDEX idx_test_latency ON timing (test,latency);
 
 DROP TABLE IF EXISTS test_bgwriter;
 CREATE TABLE test_bgwriter(
-  test int,
+  test int NOT NULL,
   checkpoints_timed bigint,
   checkpoints_req bigint,
   buffers_checkpoint bigint,
@@ -57,12 +57,12 @@ CREATE TABLE test_bgwriter(
   buffers_alloc bigint,
   buffers_backend_fsync bigint,
   max_dirty bigint,
-  server text
+  server text NOT NULL
 );
 
 DROP TABLE IF EXISTS test_stat_database;
 CREATE TABLE test_stat_database(
-  test int,
+  test int NOT NULL,
   collected timestamp,
   last_reset timestamp,
   numbackends int,
@@ -74,12 +74,12 @@ CREATE TABLE test_stat_database(
   temp_files bigint, temp_bytes bigint,
   deadlocks bigint,
   blk_read_time double precision, blk_write_time double precision,
-  server text
+  server text NOT NULL
   );
 
 DROP TABLE IF EXISTS test_statio;
 CREATE TABLE test_statio(
-  test int,
+  test int NOT NULL,
   collected timestamp,
   nspname name,
   tablename name,
@@ -87,7 +87,7 @@ CREATE TABLE test_statio(
   size bigint,
   rel_blks_read bigint,
   rel_blks_hit bigint,
-  server text
+  server text NOT NULL
 );
 
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);
@@ -123,8 +123,9 @@ SELECT
   max_dirty,
   round(dbsize / (1024 * 1024)) as dbsize_mb
 FROM test_bgwriter
-  RIGHT JOIN tests ON tests.test=test_bgwriter.test
-  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test;
+  RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
+  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server
+;
 
 --
 -- Convert hex value to a decimal one.  It's possible to do this using

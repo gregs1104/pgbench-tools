@@ -43,5 +43,6 @@ SELECT
   max_dirty,
   round(dbsize / (1024 * 1024)) as dbsize_mb
 FROM test_bgwriter
-  RIGHT JOIN tests ON tests.test=test_bgwriter.test
-  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test;
+  RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
+  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server
+;

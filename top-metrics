@@ -25,7 +25,7 @@ for METRIC in $METRICS; do
 	  pg_size_pretty(read_bps) as read, pg_size_pretty(check_bps) as check,
 	  pg_size_pretty(clean_Bps) as clean, pg_size_pretty(wal_written_bps) as wal,
 	  pg_size_pretty(backend_Bps) as backend, 
-	  pg_size_pretty(hit_bps+read_bps+check_bps+clean_Bps+wal_written_Bps) AS total_bps
+	  pg_size_pretty(hit_bps+read_bps+check_bps+clean_Bps+wal_written_Bps) AS total
 	FROM test_stats ORDER BY ${METRIC} DESC LIMIT ${LIMIT};
 	"
 

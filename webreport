@@ -155,10 +155,12 @@ for SET in $SETS ; do
   echo "</div>" >> $OUTFILE
 done
 
-# Workaround for pngcairo bug in MacOS/Homebrew gnuplot stack
+# Allow some platform specific customization here.  Verdana looks and
+# substitutes well on Linux, while on the Mac Monaco works when small.
+# (Greg personally prefers Droid Sans Mono Dotted everywhere)
 PNGTERM="set terminal pngcairo size 640,480 enhanced font 'Verdana,10'"
 if [[ `uname` = "Darwin" ]] ; then
-  PNGTERM="set terminal png"
+  PNGTERM="set terminal pngcairo size 640,480 enhanced font 'Monaco,10"
   fi
 
 # Plot set comparison

@@ -1,5 +1,4 @@
-set term png size 640,480
-set terminal png small
+set terminal pngcairo size 640,480 enhanced font ',10'
 set output "3d.png"
 set title "pgbench transactions/sec"
 set ylabel "Scaling factor"

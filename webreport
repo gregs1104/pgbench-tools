@@ -160,7 +160,7 @@ done
 # (Greg personally prefers Droid Sans Mono Dotted everywhere)
 PNGTERM="set terminal pngcairo size 640,480 enhanced font 'Verdana,10'"
 if [[ `uname` = "Darwin" ]] ; then
-  PNGTERM="set terminal pngcairo size 640,480 enhanced font 'Monaco,10"
+  PNGTERM="set terminal pngcairo size 640,480 enhanced font 'Monaco,10'"
   fi
 
 # Plot set comparison

@@ -1,4 +1,4 @@
-set terminal png medium size 640,480
+set terminal pngcairo size 640,480 enhanced font ',10'
 set output "dirty.png"
 set title "Dirty Memory"
 set grid xtics ytics

@@ -95,16 +95,11 @@ def table_gnuplotter(rows, header=True, destination=sys.stdout, title=""):
     gp = os.popen('gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
-    gp.write("set output 'graph.png'; set terminal png;\n")
-    gp.write("set term png size 640,480;\n")
-    gp.write("set terminal png medium;\n")
-
-    # Alternate size code from other versions:
-    # gp.write("set size 0.75,0.75;\n")
+    gp.write("set output 'graph.png';\n")
+    gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
     gp.write("set grid xtics ytics;\n")
     gp.write("set key right bottom;\n")
-
 
     # TODO Add parameters for this text
     gp.write("set xlabel 'Clients'; set ylabel 'Transactions per second'; ")

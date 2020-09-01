@@ -1,5 +1,4 @@
-set term png size 640,480
-set terminal png medium
+set terminal pngcairo size 640,480 enhanced font ',10'
 set output "rates-clients-latency.png"
 set title "pgbench latency for each clients"
 set grid xtics ytics

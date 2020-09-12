@@ -20,6 +20,7 @@
 # than the internal font, and LiberationSans looks terrible.
 
 source ./config
+mkdir -p results/$SERVERNAME # In case name is modified after run
 OUTFILE="results/$SERVERNAME/index.htm"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
@@ -45,11 +46,6 @@ else
   gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
   mv clients.png results/$SERVERNAME/
   rm clients.txt
-
-  $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' group by scale,clients order by scale,clients" > 3d.txt
-  gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
-  mv 3d.png results/$SERVERNAME/
-  rm 3d.txt
 fi
 
 # Copy the header HTML template to our outfile
@@ -63,7 +59,15 @@ echo "<body style="font-family:'Arial'">" >>$OUTFILE
 echo "<h3>Averages across all test sets:</h3>" >> $OUTFILE
 echo "<img src=\"scaling.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients.png\"><p>" >> $OUTFILE
-echo "<img src=\"3d.png\"><p>" >> $OUTFILE
+
+# TODO Consider using tablefunc extension to create a dynamic crosstab instead of psql.
+echo Scale vs. client TPS grid: >> $OUTFILE
+$RESULTPSQL >> $OUTFILE -H -d results <<EOF
+\pset footer off
+SELECT scale,clients,ROUND(AVG(tps)) AS tps FROM tests GROUP BY scale,clients ORDER BY scale,clients
+\crosstabview
+EOF
+
 echo "<h3>Test sets comparison:</h3>" >> $OUTFILE
 echo "<img src=\"scaling-sets.png\"><p>" >> $OUTFILE
 echo "<img src=\"clients-sets.png\"><p>" >> $OUTFILE
@@ -98,18 +102,17 @@ for SET in $SETS ; do
     gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
     mv clients.png results/${SERVERNAME}/clients-$SET.png
     mv clients.txt clients-$SET.txt
-
-    $RESULTPSQL -At -F" " -c "select scale,clients,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' group by scale,clients order by scale,clients" > 3d.txt
-    gnuplot plots/3d.plot 2>&1 | grep -v "Warning: empty"
-    mv 3d.png results/${SERVERNAME}/3d-$SET.png
-    rm 3d.txt
-  fi
+ fi
 
   echo "<img src=\"scaling-$SET.png\"><p>" >> $OUTFILE
   echo "<img src=\"clients-$SET.png\"><p>" >> $OUTFILE
-  # The 3D results set isn't that useful, don't want to repeat it for
-  # every single set, too
-  # echo "<img src=\"3d-$SET.png\"><p>" >> $OUTFILE
+  echo Scale vs. client TPS grid: >> $OUTFILE
+  $RESULTPSQL >> $OUTFILE -H -d results <<EOF
+\pset footer off
+SELECT scale,clients,ROUND(AVG(tps)) AS tps FROM tests WHERE server='${SERVERNAME}' AND set='${SET}' GROUP BY scale,clients ORDER BY scale,clients
+\crosstabview
+EOF
+  echo "<br>" >> $OUTFILE
 
   # Summarize the test set
   echo Averages for test set $SET by scale: >> $OUTFILE

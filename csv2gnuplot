@@ -75,7 +75,7 @@ def table_gnuplotter(rows, header=True, destination="graph.png", title=""):
 
         - rows - list of lists
         - header - if True the first row is treated as a table header
-        - destination - file to write the table to.  Defaults to standard out.
+        - destination - file to write the table to.  Defaults to graph.png
 
     This data format I'm thinking of as a 3D grid input, where one of the dimensions
     can be converted to data sets for easy plotting.  The real distinction here is
@@ -94,7 +94,6 @@ def table_gnuplotter(rows, header=True, destination="graph.png", title=""):
 
     gp = os.popen('gnuplot', 'w')
 
-    # TODO Make the input destination actually get used by the output file here
     gp.write("set output '" + destination + "';\n")
     gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
@@ -177,15 +176,9 @@ def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="R
     gp = os.popen('gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
-    gp.write("set output '" + destination + "'\n")
-    gp.write("set terminal png;\n")
-    gp.write("set term png size 640,480;\n")
-    gp.write("set terminal png medium;\n")
+    gp.write("set output '" + destination + "';\n")
+    gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
     gp.write("set title '%s'; " % title)
-
-    # Alternate size code from other versions:
-    if (False):
-        gp.write("set size 0.75,0.75;\n")
 
     if tsdata:
         gp.write("set xdata time;\n")

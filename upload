@@ -9,6 +9,7 @@ DEST="gsmith@grace:results/"
 NOW=`date "+%Y%m%d-%H%M%S"`
 TARBALL="$SERVERNAME-$NOW.tar.gz"
 
+$RESULTPSQL -c "TRUNCATE TABLE buckets"
 pushd results
 pg_dump -a -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT $RESULTDB > $SERVERNAME/$SERVERNAME-results.sql
 tar cvf $TARBALL $SERVERNAME

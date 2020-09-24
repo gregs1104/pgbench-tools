@@ -43,8 +43,8 @@ def parse_options():
     optparser.add_option('-i', '--input', dest="input_file", default=None,
                          help="File to read from.  Defaults to standard input, except when overwritten by arguments after the regular options.")
 
-    optparser.add_option('-o', '--output', dest="output_file", default=None,
-                         help="File to write output to.  Defaults to standard output, except when overwritten by arguments after the regular options.")
+    optparser.add_option('-o', '--output', dest="output_file", default="graph.png",
+                         help="File to write output to.  Defaults to graph.png")
 
     optparser.add_option('-t', '--title', dest="title", default="PostgreSQL pgbench SELECT-Only Rate",
                          help="Title of graph")
@@ -69,7 +69,7 @@ def parse_options():
 
 # TODO Refactor the common gnuplot setup tasks in table_gnuplotter and ds_gnuplotter into gnuplot wrapper functions
 
-def table_gnuplotter(rows, header=True, destination=sys.stdout, title=""):
+def table_gnuplotter(rows, header=True, destination="graph.png", title=""):
     """
     Outputs a list of lists into gnuplot
 
@@ -95,7 +95,7 @@ def table_gnuplotter(rows, header=True, destination=sys.stdout, title=""):
     gp = os.popen('gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
-    gp.write("set output 'graph.png';\n")
+    gp.write("set output '" + destination + "';\n")
     gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
     gp.write("set grid xtics ytics;\n")
@@ -162,7 +162,7 @@ def table_csv2gnuplot(in_file, out_file, graph_title):
     table_gnuplotter(in_lines, header=True, destination=out_file, title=graph_title)
 
 
-def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
+def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
     """
     Outputs data sets (dictionary of lists) into a gnuplot graph
 
@@ -177,7 +177,8 @@ def ds_gnuplotter(sets, destination=sys.stdout, title="", tsdata=True, ycolumn=1
     gp = os.popen('gnuplot', 'w')
 
     # TODO Make the input destination actually get used by the output file here
-    gp.write("set output 'graph.png'; set terminal png;\n")
+    gp.write("set output '" + destination + "'\n")
+    gp.write("set terminal png;\n")
     gp.write("set term png size 640,480;\n")
     gp.write("set terminal png medium;\n")
     gp.write("set title '%s'; " % title)
@@ -390,10 +391,9 @@ def main():
         file_to_process = open(options.input_file, 'r')
 
     if options.output_file is None:
-        out_file = sys.stdout
+        out_file = "graph.png"
     else:
-        out_file = open(options.output_file, 'w')
-
+        out_file = options.output_file
 
     # TODO Convert remaining fixed values to parameter inputs:  filt_text, ylabel, header_signal
     if options.data_type == "table":

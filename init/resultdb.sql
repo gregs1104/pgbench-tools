@@ -90,6 +90,16 @@ CREATE TABLE test_statio(
   server text NOT NULL
 );
 
+DROP TABLE IF EXISTS buckets;
+CREATE TABLE buckets (
+    bucket_left numeric,
+    bucket_right numeric,
+    offset_left numeric,
+    offset_right numeric,
+    latency_left numeric,
+    latency_right numeric
+);
+
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);
 ALTER TABLE testset ADD UNIQUE USING INDEX idx_server_set;
 

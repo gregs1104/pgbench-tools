@@ -25,6 +25,8 @@ $RESULTPSQL -c "UPDATE tests SET start_latency=start_time, end_latency=end_time;
 $RESULTPSQL -c "ALTER TABLE tests ADD COLUMN trans_latency int default null;"
 $RESULTPSQL -c "UPDATE tests SET trans_latency=trans;"
 
+$RESULTPSQL -c "ALTER TABLE tests ADD COLUMN server_version text default version();"
+
 # This goes at the end because it's expected to return an error code,
 # for trying to move a directory into itself
 mv results/* results/$SERVERNAME/

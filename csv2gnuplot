@@ -16,7 +16,7 @@
   this code will not have those libraries available.  A long-term goal is to provide a functionally similar
   program to this one that's based on a proper scientific Python stack instead.
 
-  Copyright 2011-2014, Greg Smith.
+  Copyright 2011-2020, Greg Smith.
   Part of the pgbench-tools set
 """
 

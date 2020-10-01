@@ -1,0 +1,37 @@
+#!/bin/bash
+
+# Collect Linux server info you can only grab as root, mostly DMI.
+# This is not pretty or robust, it's bootstrapping until I can do better.
+
+CPU=`more /proc/cpuinfo | grep "^model name" | head -n 1 | cut -d: -f 2`
+BOARDVENDOR=`sudo dmidecode | grep -A 1 "Base Board" | grep "Manufacturer:" | cut -d: -f 2`
+BOARD=`sudo dmidecode | grep -A 2 "Base Board" | grep "Product Name:" | cut -d: -f 2`
+MEMVENDOR=`sudo dmidecode -t memory | grep "Manufacturer:" | sort | uniq | head -n 1 | cut -d: -f2`
+MEMTYPE=`sudo dmidecode -t memory | grep "Type:" | cut -d: -f 2 | grep -v "None" | sort | uniq | head -n 1`
+MEMSPEED=`sudo dmidecode -t memory | grep "Speed:" | sort | uniq | head -n 1 | cut -d: -f2`
+DISKMODEL=`sudo smartctl -i /dev/nvme0n1 | grep "^Model Number" | cut -d":" -f2`
+DISKFW=`sudo smartctl -i /dev/nvme0n1 | grep "^Firmware Version" | cut -d":" -f2`
+
+SERVER=`hostname`
+PROCS=`cat /proc/cpuinfo  | grep ^processor | wc -l`
+DISKGB=`df -B1G | grep nvme0n1 | head -n 1 | cut -d" " -f7`
+MEMGB=`free -h | grep "^Mem:" | cut -d: -f 2 | cut -d" " -f 12 | cut -dG -f 1`
+
+psql -h localhost -U postgres -d results -c "DELETE FROM server WHERE server='${SERVER}'"
+
+psql -h localhost -U postgres -d results -c "
+INSERT INTO server
+	(server,server_info,server_cpu,server_mem,server_disk,
+	server_num_proc,server_mem_gb,server_disk_gb)
+VALUES
+(
+	TRIM('${SERVER}'),
+	TRIM('${BOARDVENDOR}') || ' - ' || TRIM('${BOARD}'),
+	TRIM('${CPU}'),
+	TRIM('${MEMVENDOR}') || ' - ' || TRIM('${MEMTYPE}') || '-' || TRIM('${MEMSPEED}'),
+	TRIM('${DISKMODEL}') || ' - ' || TRIM('${DISKFW}'),
+	${PROCS},${MEMGB},${DISKGB}
+);
+"
+
+psql -h localhost -U postgres -d results -x -c "SELECT * FROM server WHERE server='${SERVER}'"

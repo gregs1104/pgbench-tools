@@ -101,6 +101,19 @@ CREATE TABLE buckets (
     latency_right numeric
 );
 
+DROP TABLE IF EXISTS server;
+CREATE TABLE server(
+    server text NOT NULL PRIMARY KEY,
+    server_info text,
+    server_cpu text,
+    server_mem text,
+    server_disk text,
+    server_num_proc int,
+    server_mem_gb int,
+    server_disk_gb int,
+    server_details jsonb
+  );
+
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);
 ALTER TABLE testset ADD UNIQUE USING INDEX idx_server_set;
 

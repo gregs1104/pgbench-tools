@@ -29,6 +29,18 @@ ALTER TABLE test_stat_database ADD UNIQUE USING INDEX idx_server_test_3;
 
 CREATE INDEX idx_test on test_statio(server,test);
 
+CREATE TABLE server(
+  server text NOT NULL PRIMARY KEY,
+  server_info text,
+  server_cpu text,
+  server_mem text,
+  server_disk text,
+  server_num_proc int,
+  server_mem_gb int,
+  server_disk_gb int,
+  server_details jsonb
+  );
+
 DROP VIEW test_stats;
 CREATE VIEW test_stats AS
 SELECT

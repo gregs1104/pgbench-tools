@@ -30,7 +30,8 @@ CREATE TABLE tests(
   start_latency timestamp default null,
   end_latency timestamp default null,
   trans_latency int default null,
-  server_version text default version()
+  server_version text default version(),
+  metrics jsonb
   );
 
 DROP TABLE IF EXISTS timing;
@@ -145,14 +146,18 @@ SELECT
   round(buffers_clean      * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS clean_Bps,
   round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,
   round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
-  max_dirty,  
-  server_version
+  max_dirty,
+  tests.metrics,
+  server_version,
+  server_num_proc,
+  server_mem_gb,
+  server_disk_gb
 FROM test_bgwriter
   RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
   RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server
-  RIGHT JOIN testset ON testset.set=tests.set and tests.server=test_bgwriter.server
-ORDER BY server,set,info,script,scale,clients,tests.test
-;
+  RIGHT JOIN testset ON testset.set=tests.set AND tests.server=test_bgwriter.server
+  FULL OUTER JOIN server ON tests.server=server.server
+ORDER BY server,set,info,script,scale,clients,tests.test;
 
 --
 -- Convert hex value to a decimal one.  It's possible to do this using

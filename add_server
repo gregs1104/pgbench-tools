@@ -26,6 +26,7 @@ $RESULTPSQL -c "ALTER TABLE tests ADD COLUMN trans_latency int default null;"
 $RESULTPSQL -c "UPDATE tests SET trans_latency=trans;"
 
 $RESULTPSQL -c "ALTER TABLE tests ADD COLUMN server_version text default version();"
+$RESULTPSQL -c "ALTER TABLE tests ADD COLUMN metrics jsonb;"
 
 # This goes at the end because it's expected to return an error code,
 # for trying to move a directory into itself

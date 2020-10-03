@@ -147,17 +147,19 @@ SELECT
   round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,
   round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
   max_dirty,
-  tests.metrics,
   server_version,
   server_num_proc,
   server_mem_gb,
-  server_disk_gb
+  server_disk_gb,
+  server_details,
+  tests.metrics
 FROM test_bgwriter
   RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
   RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server
-  RIGHT JOIN testset ON testset.set=tests.set AND tests.server=test_bgwriter.server
-  FULL OUTER JOIN server ON tests.server=server.server
-ORDER BY server,set,info,script,scale,clients,tests.test;
+  RIGHT JOIN testset ON testset.set=tests.set and tests.server=test_bgwriter.server
+  FULL OUTER JOIN server on tests.server=server.server
+ORDER BY server,set,info,script,scale,clients,tests.test
+;
 
 --
 -- Convert hex value to a decimal one.  It's possible to do this using

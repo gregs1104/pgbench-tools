@@ -49,6 +49,12 @@ def parse_options():
     optparser.add_option('-t', '--title', dest="title", default="PostgreSQL pgbench SELECT-Only Rate",
                          help="Title of graph")
 
+    optparser.add_option('-x', '--xlabel', dest="xlabel", default="Clients",
+                         help="X Axis Label")
+
+    optparser.add_option('-y', '--ylabel', dest="ylabel", default="Transactions/second",
+                         help="Y Axis Label")
+
     optparser.add_option('-d', '--data', dest="data_type", default=None,
                          help="Type of data file.  options are 'table', 'iostat' and 'vmstat'")
 
@@ -69,7 +75,7 @@ def parse_options():
 
 # TODO Refactor the common gnuplot setup tasks in table_gnuplotter and ds_gnuplotter into gnuplot wrapper functions
 
-def table_gnuplotter(rows, header=True, destination="graph.png", title=""):
+def table_gnuplotter(rows, header=True, destination="graph.png", title="", xlabel=None,ylabel=None):
     """
     Outputs a list of lists into gnuplot
 
@@ -101,7 +107,8 @@ def table_gnuplotter(rows, header=True, destination="graph.png", title=""):
     gp.write("set key right bottom;\n")
 
     # TODO Add parameters for this text
-    gp.write("set xlabel 'Clients'; set ylabel 'Transactions per second'; ")
+    gp.write("set xlabel 'Clients';\n")
+    gp.write("set ylabel 'Transactions per second';\n")
     gp.write("set title '%s'; " % title)
 
     # Sometimes needed if auto-detection doesn't work right
@@ -250,7 +257,7 @@ def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="R
     gp.close()
 
 
-def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, ycolumn=None, ylabel=None):
+def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, ycolumn=None, ylabel=None,setlabel=None):
     """
     Provides a generic way to derive labels that takes advantage of how some common input
     types--vmstat, iostat--are formatted.
@@ -285,7 +292,11 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
     y_column_index = None
 
     if ycolumn is None and ylabel is None:
-        print "Error:  one of ylabel or ycolumn has to be specified"
+        print ("Error:  one of ylabel or ycolumn has to be specified")
+        return
+
+    if setlabel is None:
+        print ("Error:  setlabel must be a string usable as an index.  It cannot be undefined.")
         return
 
     if ycolumn is not None:
@@ -341,7 +352,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
             matches = True
             # When there isn't really a key to filter data sets, use an empty
             # string.  All useful lines will end up in that set.
-            dataset = ''
+            dataset = setlabel
         else:
             for s in search_for:
                 if row.find(s) >= 0:
@@ -393,12 +404,12 @@ def main():
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device")
+                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device", setlabel="iostat")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel="us", filt_text=None, header_signal="cache")
+                               ylabel="us", filt_text=None, header_signal="cache", setlabel="vmstat")
     else:
-        print "Error:  unknown data file type %s" % options.data_type
+        print("Error:  unknown data file type %s" % options.data_type)
 
 if __name__ == '__main__':
     main()

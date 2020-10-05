@@ -75,7 +75,7 @@ def parse_options():
 
 # TODO Refactor the common gnuplot setup tasks in table_gnuplotter and ds_gnuplotter into gnuplot wrapper functions
 
-def table_gnuplotter(rows, header=True, destination="graph.png", title="", xlabel=None,ylabel=None):
+def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=None,ylabel=None):
     """
     Outputs a list of lists into gnuplot
 
@@ -100,7 +100,7 @@ def table_gnuplotter(rows, header=True, destination="graph.png", title="", xlabe
 
     gp = os.popen('gnuplot', 'w')
 
-    gp.write("set output '" + destination + "';\n")
+    gp.write("set output '" + destination + ".png';\n")
     gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
     gp.write("set grid xtics ytics;\n")
@@ -384,8 +384,8 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
     logger.debug("Sets as they come out of the data set parsing")
     logger.debug(sets)
     if len(sets)>0:
-        ds_gnuplotter(sets, destination=output_file, title=graph_title, ylabel=ylabel)
-        try_pandas(sets,'bamboo.json')
+        ds_gnuplotter(sets, destination=output_file+'.png', title=graph_title, ylabel=ylabel)
+        try_pandas(sets,output_file+'.json')
 
 def try_pandas(s,fn):
     want_pandas = True
@@ -396,7 +396,7 @@ def try_pandas(s,fn):
             return
         df=pd.DataFrame(s)
         df.to_json(fn)
-        logger.warning("pandas saved to '%s'",fn)
+        logger.debug("pandas saved to '%s'",fn)
 
 def main():
     (options, args) = parse_options()
@@ -407,7 +407,7 @@ def main():
         file_to_process = open(options.input_file, 'r')
 
     if options.output_file is None:
-        out_file = "graph.png"
+        out_file = "graph"
     else:
         out_file = options.output_file
 

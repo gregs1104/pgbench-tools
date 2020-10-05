@@ -73,6 +73,18 @@ def parse_options():
 
     return options, args
 
+def try_pandas(s,fn):
+    # TODO Make this a command line option
+    want_pandas = True
+    if want_pandas:
+        try:
+            import pandas as pd
+        except:
+            return
+        df=pd.DataFrame(s)
+        df.to_json(fn)
+        logger.debug("pandas saved to '%s'",fn)
+
 # TODO Refactor the common gnuplot setup tasks in table_gnuplotter and ds_gnuplotter into gnuplot wrapper functions
 
 def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=None,ylabel=None):
@@ -100,7 +112,7 @@ def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=No
 
     gp = os.popen('gnuplot', 'w')
 
-    gp.write("set output '" + destination + ".png';\n")
+    gp.write("set output '" + destination + ".pngcairo';\n")
     gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
     gp.write("set grid xtics ytics;\n")
@@ -170,7 +182,7 @@ def table_csv2gnuplot(in_file, out_file, graph_title):
 
 def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
     """
-    Outputs data sets (dictionary of lists) into a gnuplot graph
+    Outputs data sets (dictionary of dictionary of lists) into a gnuplot graph
 
         - sets - dictionary (with data set as key) of lists
         - header - if True the first row is treated as a table header
@@ -282,33 +294,28 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
     headers by parsing the right line.
 
     You're expected to set either ycolumn or ylabel, and the program tries to figure the
-    other one out when there's a header_signal match.
+    other one out when there's a header_signal match.  Most callers give a label rather
+    than know the number.
     """
 
     search_for = None
     if filt_text is not None:
         search_for = filt_text.split(",")
     header_labels = None
-    y_column_index = None
 
-    if ycolumn is None and ylabel is None:
-        print ("Error:  one of ylabel or ycolumn has to be specified")
+    if ylabel is None:
+        print ("Error:  ylabel has to be specified")
         return
 
     if setlabel is None:
         print ("Error:  setlabel must be a string usable as an index.  It cannot be undefined.")
         return
 
-    if ycolumn is not None:
-        # Convert y column number as a person counts columns into an array offset,
-        # knowing that there will be 2 timestamp columns before then too.
-        y_column_index = ycolumn + 1
-
     sets = {}
     for row in in_file:
         columns = row.split()
 
-        # Look for a header label row and convert column labels to offsets.
+        # Look for a header label row.
         # Stop processing once one is found, since programs like vmstat
         # republish the header every screen.
         if header_signal is not None:
@@ -316,35 +323,11 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                 if header_labels is None:
                     header_labels = columns[2:]
                     logger.debug("Header labels:  %s" % header_labels)
-
-                    if ylabel is None:
-                        if len(header_labels) >= (ycolumn - 1):
-                            ylabel = header_labels[ycolumn]
-                            logger.debug("Label for column %s is %s" % (ycolumn, ylabel))
                 continue
 
-        # When we don't know the column number yet, look for the ylabel the first
-        # time a header line is seen.
-        if ycolumn is None and (header_labels is not None):
-            logger.debug("Looking for ycolumn text %s in '%s'" % (ylabel, row))
-            for i, l in enumerate(header_labels):
-                if l == ylabel:
-                    # Set ycolumn using the same starting at 1 index as the
-                    # function input, while using an offset column index
-                    # internally.
-                    ycolumn = i + 1
-                    y_column_index = ycolumn + 1
-                    logger.debug("Matched column %s in header '%s'" % (ycolumn, header_labels))
-
         # Can't proceed if we haven't figured out which column to graph yet
-        if y_column_index is None:
-            logger.debug("No y column index yet, skipping row %s" % row)
-            continue
-
-        # TODO Should this use ycolumnindex instead?
-        # It may only matter when trying to graph the rightmost columns
-        if len(columns) < ycolumn:
-            logger.debug("not enough columns - rejecting row %s" % row)
+        if header_labels is None:
+            logger.debug("No header labels yet, skipping row %s" % row)
             continue
 
         matches = False
@@ -371,32 +354,28 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
         # They get truncated to second resolution anyway by later code.
         ts = parser.parse(tstext)
         epoch = time.mktime(ts.timetuple())
-        val = columns[y_column_index]
-        formatted = (str(epoch), str(val))
-        logger.debug(formatted)
-        if dataset not in sets:
-            sets[str(dataset)] = []
-        sets[str(dataset)].append(formatted)
 
-        logger.debug("%s %s %s" % (dataset, epoch, val))
-        logger.debug(row)
+        for pos, label in enumerate(header_labels):
+            val = columns[pos + 2]
+            formatted = (str(epoch), str(val))
+
+            if dataset not in sets:
+                sets[str(dataset)] = {}
+            if label not in sets[str(dataset)]:
+                sets[str(dataset)][label] = []
+
+            sets[str(dataset)][label].append(formatted)
+
+            logger.debug("%s %s %s %s" % (dataset, label, epoch, val))
+            logger.debug(row)
 
     logger.debug("Sets as they come out of the data set parsing")
     logger.debug(sets)
     if len(sets)>0:
-        ds_gnuplotter(sets, destination=output_file+'.png', title=graph_title, ylabel=ylabel)
+        # TODO This was broken by the pandas dictionary/list changes
+        if (False):
+            ds_gnuplotter(sets, destination=output_file+'.png', title=graph_title, ylabel=ylabel)
         try_pandas(sets,output_file+'.json')
-
-def try_pandas(s,fn):
-    want_pandas = True
-    if want_pandas:
-        try:
-            import pandas as pd
-        except:
-            return
-        df=pd.DataFrame(s)
-        df.to_json(fn)
-        logger.debug("pandas saved to '%s'",fn)
 
 def main():
     (options, args) = parse_options()

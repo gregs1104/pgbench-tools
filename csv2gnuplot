@@ -269,7 +269,7 @@ def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="R
     gp.close()
 
 
-def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, ycolumn=None, ylabel=None,setlabel=None):
+def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, ycolumn=None, ylabel=None,setlabel=None,fake_signals=0):
     """
     Provides a generic way to derive labels that takes advantage of how some common input
     types--vmstat, iostat--are formatted.
@@ -312,6 +312,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
         return
 
     sets = {}
+    signals = 0
     for row in in_file:
         columns = row.split()
 
@@ -320,14 +321,18 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
         # republish the header every screen.
         if header_signal is not None:
             if row.find(header_signal) >= 0:
+                signals=signals + 1
                 if header_labels is None:
                     header_labels = columns[2:]
                     logger.debug("Header labels:  %s" % header_labels)
-                continue
 
         # Can't proceed if we haven't figured out which column to graph yet
         if header_labels is None:
             logger.debug("No header labels yet, skipping row %s" % row)
+            continue
+
+        if signals <= fake_signals:
+            logger.debug("fake signal section, rejecting row %s" % row)
             continue
 
         matches = False
@@ -395,7 +400,8 @@ def main():
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device", setlabel="iostat")
+                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device", fake_signals=1,
+                               setlabel="iostat")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
                                ylabel="us", filt_text=None, header_signal="cache", setlabel="vmstat")

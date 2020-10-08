@@ -1,6 +1,7 @@
 #!/bin/bash -e
 # Test csv2gnuplot script
+rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt
 ../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison" -o disks
-../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="sdc" --diskstats="%util" -o iostat-util
+../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk" --disks="sdc" -o iostat
 ../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
 ../dirty-plot < meminfo.log > dirtydata.txt

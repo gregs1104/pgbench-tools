@@ -29,10 +29,8 @@ import time
 from dateutil import parser
 
 import logging
-
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
 
 def parse_options():
     optparser = optparse.OptionParser(
@@ -60,9 +58,6 @@ def parse_options():
 
     optparser.add_option('--disks', dest="disk_list", default='sda',
                          help="Comma separated list of disks to include in iostat format")
-
-    optparser.add_option('--diskstats', dest="disk_stats", default='wMB/s',
-                         help="Column to plot from iostat disk statistics")
 
     options, args = optparser.parse_args()
 
@@ -180,11 +175,11 @@ def table_csv2gnuplot(in_file, out_file, graph_title):
     table_gnuplotter(in_lines, header=True, destination=out_file, title=graph_title)
 
 
-def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
+def ds_gnuplotter(set_container, destination, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
     """
     Outputs data sets (dictionary of dictionary of lists) into a gnuplot graph
 
-        - sets - dictionary (with data set as key) of lists
+        - sets - dictionary of dictionary (with data set as key) of lists
         - header - if True the first row is treated as a table header
         - destination - file to write the table to.  Defaults to standard out.
 
@@ -220,6 +215,14 @@ def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="R
 
     gp.write("plot ")
 
+    # Due to the JSON structure, the outer dictionary here will have a
+    # key name like "iostat" or "vmstat".  This code only handles one
+    # value there, so just dereference that with the first entry found.
+    logger.debug(set_container)
+    for outer in set_container.keys():
+        sets=set_container[outer]
+        break
+
     # Each key here is a new gnuplot data set file.  Iterate over the
     # list once to describe all of them.
     logger.debug(sets)
@@ -232,7 +235,6 @@ def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="R
     keys = []
     for key, rows in sets.items():
         keys.append(key)
-
     logger.debug("Data set list: %s\n" % keys)
 
     # List the data sets.  They all have to be defined before any of their data is written.
@@ -269,7 +271,7 @@ def ds_gnuplotter(sets, destination, title="", tsdata=True, ycolumn=1, ylabel="R
     gp.close()
 
 
-def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, ycolumn=None, ylabel=None,setlabel=None,fake_signals=0):
+def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, setlabel=None,fake_signals=0):
     """
     Provides a generic way to derive labels that takes advantage of how some common input
     types--vmstat, iostat--are formatted.
@@ -285,33 +287,24 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
     This assumes that the first 2 columns are a timestamp that's the X axis, which is the format
     output by the matching timed-os-stats program that feeds into this one
 
-    Column numbers are numbered 1,2,3,... starting *after* the two timestamp columns
-
     Filters based on matching one of the entries in the filt_text
 
     header_signal is text that you'll find in a header line.  Useful for
-    iostat and vmstat style data, where the you can find out all of the column
+    iostat and vmstat style data, where you can find out all of the column
     headers by parsing the right line.
-
-    You're expected to set either ycolumn or ylabel, and the program tries to figure the
-    other one out when there's a header_signal match.  Most callers give a label rather
-    than know the number.
     """
 
     search_for = None
     if filt_text is not None:
         search_for = filt_text.split(",")
-    header_labels = None
-
-    if ylabel is None:
-        print ("Error:  ylabel has to be specified")
-        return
+    logger.debug("search_for: '%s' - filt_text '%s'" % (search_for,filt_text))
 
     if setlabel is None:
         print ("Error:  setlabel must be a string usable as an index.  It cannot be undefined.")
         return
 
     sets = {}
+    header_labels = None
     signals = 0
     for row in in_file:
         columns = row.split()
@@ -348,6 +341,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     dataset = str(s)
         if not matches:
             logger.debug("no match - rejecting row %s" % row)
+            logger.debug("search_for:  %s" % row)
             continue
 
         tstext = "%s %s" % (columns[0], columns[1])
@@ -362,6 +356,15 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
 
         for pos, label in enumerate(header_labels):
             val = columns[pos + 2]
+            logger.debug("Considering %s %s %s %s" % (dataset, label, epoch, val))
+
+            # Device columns will have the name of the device, skip those and other junk
+            try:
+                float(val)
+            except:
+                logger.debug("Rejecting as not numeric:  '%s'",val)
+                continue
+
             formatted = (str(epoch), str(val))
 
             if dataset not in sets:
@@ -370,17 +373,13 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                 sets[str(dataset)][label] = []
 
             sets[str(dataset)][label].append(formatted)
-
-            logger.debug("%s %s %s %s" % (dataset, label, epoch, val))
-            logger.debug(row)
+            logger.debug("Appended %s %s %s %s" % (dataset, label, epoch, val))
 
     logger.debug("Sets as they come out of the data set parsing")
     logger.debug(sets)
     if len(sets)>0:
-        # TODO This was broken by the pandas dictionary/list changes
-        if (False):
-            ds_gnuplotter(sets, destination=output_file+'.png', title=graph_title, ylabel=ylabel)
         try_pandas(sets,output_file+'.json')
+        ds_gnuplotter(sets, destination=output_file+'.png', title=graph_title)
 
 def main():
     (options, args) = parse_options()
@@ -400,11 +399,11 @@ def main():
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel=options.disk_stats, filt_text=options.disk_list, header_signal="Device", fake_signals=1,
+                               filt_text=options.disk_list, header_signal="Device", fake_signals=1,
                                setlabel="iostat")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               ylabel="us", filt_text=None, header_signal="cache", setlabel="vmstat")
+                               filt_text=None, header_signal="cache", setlabel="vmstat")
     else:
         print("Error:  unknown data file type %s" % options.data_type)
 

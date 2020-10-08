@@ -107,7 +107,7 @@ def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=No
 
     gp = os.popen('gnuplot', 'w')
 
-    gp.write("set output '" + destination + ".pngcairo';\n")
+    gp.write("set output '" + destination + ".png';\n")
     gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
     gp.write("set grid xtics ytics;\n")

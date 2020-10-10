@@ -70,7 +70,7 @@ def capture(cmd,tag_all=True,tag_when=None):
 
     retcode = p.returncode
 
-def linux_meminfo(interval=5):
+def linux_meminfo(interval=1):
     """
     Read /proc/meminfo on a Linux system and output its
     values with a timestamp.  That file has a mix of lines

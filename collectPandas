@@ -1,0 +1,36 @@
+#!/usr/local/bin/python3
+
+import pandas as pd
+import csv
+
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def json_pandas(fn):
+        df=pd.read_json(fn)
+        logger.warning("pandas loaded from '%s'",fn)
+        return df
+
+def csv_in(in_file):
+	df = pd.read_csv(in_file,index_col='collected')
+	return df
+ 
+def main():
+	io=json_pandas("regress/iostat.json")
+	vm=json_pandas("regress/vmstat.json")
+	me=json_pandas("regress/meminfo.json")
+	tps_stats=csv_in("regress/latency_1s.csv")
+
+	t=io.append(vm)
+	t=t.append(me)
+	t=t.append(tps_stats)
+
+	print(t)
+
+	fn="combined.json"
+	t.to_json(fn)
+	logger.warning("json saved to '%s'",fn)
+
+if __name__ == '__main__':
+    main()

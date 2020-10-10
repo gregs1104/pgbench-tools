@@ -355,6 +355,10 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
         epoch = time.mktime(ts.timetuple())
 
         for pos, label in enumerate(header_labels):
+            if len(columns) <= (pos + 2):
+                logger.debug("No match for column %s in '%s'" % (label, row ))
+                continue
+
             val = columns[pos + 2]
             logger.debug("Considering %s %s %s %s" % (dataset, label, epoch, val))
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 sysinfo
 Testing harness to make sure machine info etc. parse correctly.
@@ -11,7 +11,6 @@ import platform
 import re
 import sys
 import string
-from string import maketrans
 from subprocess import Popen, PIPE, STDOUT
 
 # dateutil not really used.  It's just here so this script will catch
@@ -56,7 +55,8 @@ def spawn_read(cmd):
     If there's an error, None is returned.
     """
     p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
-              close_fds=True)
+              close_fds=True, encoding='utf-8')
+
     out=p.communicate()[0]
     if p.returncode > 0:
         return None
@@ -72,7 +72,7 @@ def pg_version():
     enviroment variables.
     """
 
-    # TODO Wwhen bindings like psycopg2 are around, use them for this query
+    # TODO When bindings like psycopg2 are around, use them for this query
     v=spawn_read('psql -Atc "show server_version"')
     if v is None:
         v=spawn_read('psql --version')
@@ -144,7 +144,7 @@ def cpu_count():
             if 'NUMBER_OF_PROCESSORS' in os.environ:
                 return int(os.environ['NUMBER_OF_PROCESSORS'])
     except Exception as e:
-        print "Exception detecting CPU count:", e
+        print("Exception detecting CPU count: %s", e)
     return None
 
 def version_parse(version):
@@ -161,7 +161,7 @@ def version_parse(version):
     v=None
 
     # Loop over words looking for a digit or "V" then a digit
-    for word in version.split():
+    for word in str.split(version):
         word=word.lstrip('v')
         word=word.lstrip('V')
         if word[0].isdigit():
@@ -171,7 +171,7 @@ def version_parse(version):
     if v is None:  return v
 
     # Replace acceptable delimiters with "." and split
-    trans=maketrans("_-","..")
+    trans=str.maketrans("_-","..")
     v=v.translate(trans)
     digits=v.split('.')
 
@@ -238,10 +238,10 @@ def test_parsing():
         out=version_parse(v)
         if out!=test_versions[v]:
             failed=failed+1
-            print "# Failure",out==test_versions[v],v,out,test_versions[v]
+            print("# Failure",out==test_versions[v],v,out,test_versions[v])
     if failed>0:
-        print "# Failed version parsing tests:",failed
-        print
+        print("# Failed version parsing tests:",failed)
+        print()
 
 def machine_summary():
     """
@@ -249,18 +249,18 @@ def machine_summary():
     """
     total_memory = total_mem()
     if total_memory is None:
-        print "Error:  total memory not specified and unable to detect"
+        print("Error:  total memory not specified and unable to detect")
         sys.exit(1)
-    print "# Memory", total_memory
+    print("# Memory", total_memory)
 
     cpus=cpu_count()
     if cpus is None:
-        print "Error:  CPU count not specified and unable to detect"
+        print("Error:  CPU count not specified and unable to detect")
         sys.exit(1)
-    print "# CPU Count",cpus
+    print("# CPU Count",cpus)
 
     arch=platform.machine()
-    print "# Arch bits",arch_bits(arch)
+    print("# Arch bits",arch_bits(arch))
 
 def core_sweep(cores):
     """
@@ -293,12 +293,12 @@ def test_sizing():
 
     total_memory = total_mem()
     if total_memory is None:
-        print "Error:  total memory not specified and unable to detect"
+        print("Error:  total memory not specified and unable to detect")
         sys.exit(1)
 
     cpus=cpu_count()
     if cpus is None:
-        print "Error:  CPU count not specified and unable to detect"
+        print("Error:  CPU count not specified and unable to detect")
         sys.exit(1)
 
     max_memory=total_memory * 4
@@ -313,16 +313,16 @@ def test_sizing():
     test_cpus=' '.join(map(str, core_sweep(cpus)))
     test_scales=' '.join(map(str, scale_sweep(max_scale)))
 
-    print 'SETCLIENTS="%s" # Stress %s processors' % (test_cpus,cpus)
-    print 'SCALES="%s" # Max database %s MB' % (test_scales,max_memory_mb)
+    print('SETCLIENTS="%s" # Stress %s processors' % (test_cpus,cpus))
+    print('SCALES="%s" # Max database %s MB' % (test_scales,max_memory_mb))
 
 def main(program_args):
     test_parsing()
     pg_ver=version_parse(pg_version())
-    print "# PostgreSQL version",pg_ver
+    print("# PostgreSQL version",pg_ver)
 
     machine_summary()
-    print
+    print()
 
     test_sizing()
 

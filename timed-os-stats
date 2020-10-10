@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # timed-os-stats
-# Copyright 2012-2014 Greg Smith gsmith@gregsmith.com
+# Copyright 2012-2020 Greg Smith gregs1104@gmail.com
 #
 # Runs a command that produces regularly timed output and adds time
 # stamps for each line when appropriate.  Typical commands it might
@@ -21,14 +21,17 @@ import sys
 import datetime
 import time
 
-class FlushFile(object):
+def to_utf8(s):
+    return s if isinstance(s, str) else s.decode('utf-8')
+
+class FlushFile:
     """Write-only flushing wrapper for file-type objects."""
     def __init__(self, f):
         self.f = f
+        self.flush = f.flush;
     def write(self, x):
-        self.f.write(x)
+        self.f.write(to_utf8(x))
         self.f.flush()
-
 # Replace stdout with an automatically flushing version
 sys.stdout = FlushFile(sys.__stdout__)
 
@@ -44,8 +47,7 @@ def capture(cmd,tag_all=True,tag_when=None):
         # benchwarmer to kill itself as well.
         os.setsid()
     except OSError:
-        print >> sys.stderr, \
-                 "Unable to setsid(). Already process group leader?"
+        sys.stderr.write("Unable to setsid(). Already process group leader?")
 
     p = subprocess.Popen(cmd, shell = True,
                          stdout = subprocess.PIPE,
@@ -79,8 +81,7 @@ def linux_meminfo(interval=5):
     try:
         os.setsid()
     except OSError:
-        print >> sys.stderr, \
-                 "Unable to setsid(). Already process group leader?"
+        sys.stderr.write("Unable to setsid(). Already process group leader?")
 
     while True:
         meminfo="/proc/meminfo"
@@ -98,9 +99,9 @@ def linux_meminfo(interval=5):
         time.sleep(interval)
 
 def usage():
-    print >> sys.stderr, "Usage:  %s [vmstat | iostat | meminfo]" % sys.argv[0]
-    print >> sys.stderr, "Supported platforms are linux and darwin"
-    print >> sys.stderr, "meminfo is only available on linux"
+    sys.stderr.write("Usage:  %s [vmstat | iostat | meminfo]\n" % sys.argv[0])
+    sys.stderr.write("Supported platforms are linux and darwin\n")
+    sys.stderr.write("meminfo is only available on linux\n")
     sys.exit(1)
 
 if __name__=='__main__':
@@ -145,7 +146,7 @@ if __name__=='__main__':
         elif cmd=='iostat':
             capture("iostat -d -C -K 1")
         elif cmd=='meminfo':
-            print >> sys.stderr, "meminfo unavailable on OS X, skipping"
+            sys.stderr.write("meminfo unavailable on OS X, skipping\n")
         else:
             usage()
     # TODO Test this section actually works
@@ -157,4 +158,4 @@ if __name__=='__main__':
         else:
             usage()
     else:
-        print >> sys.stderr, 'Unsupported platform', sys.platform
+        sys.stderr.write("Unsupported platform %s\n" % sys.platform)

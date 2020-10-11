@@ -4,8 +4,6 @@ import time
 import dateutil.parser
 import logging
 import fileinput
-import pandas as pd
-import matplotlib.pyplot as plt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,38 +16,36 @@ def try_pandas(s,fn):
         except:
             return
 
-        df=pd.DataFrame(s)
-        df.to_json(fn)
-        logger.debug("pandas saved to '%s'",fn)
-
+    df=pd.DataFrame(s)
     combined={}
+
     for section, metrics in df.items():
         for metric,rows in metrics.items():
-            list_metric=[]
             list_ts=[]
             list_val=[]
 
             for row in rows:
                 for ts in row.keys():
                     val=row[ts]
-                    list_metric.append(metric)
                     list_ts.append(ts)
                     list_val.append(val)
-                    #print(metric,ts,val)
 
             ts_series=pd.to_datetime(list_ts)
             val_series=pd.to_numeric(list_val)
-            metric_series=pd.Series(list_metric)
 
             ts_df=pd.DataFrame(ts_series,columns=["Time"])
             val_df=pd.DataFrame(val_series,columns=[metric])
-            metric_df=pd.DataFrame(metric_series,columns=["Metric"])
 
-            all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
+            all_df=pd.concat([ts_df,val_df],axis=1)
             all_df.set_index('Time',inplace=True)
             combined[metric]=all_df
 
-        # This will return after processing only one section; all there is so far.
+        # This part will return after processing only one section; all there is so far.
+
+#        fulldf=pd.DataFrame(combined)
+#        fulldf.to_json(fn)
+#        logger.debug("pandas saved to '%s'",fn)
+
         return combined
 
 def main():
@@ -66,6 +62,7 @@ def main():
         # Backward compatible output
         if key=="Dirty":
             if (False):  print (formatted)
+
         value=float(val)
         if key not in sets[section]:
             sets[section][key] = []

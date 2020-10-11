@@ -1,11 +1,11 @@
 #!/usr/local/bin/python3
 
-import sys
-import datetime
-import string
 import time
 import dateutil.parser
 import logging
+import fileinput
+import pandas as pd
+import matplotlib.pyplot as plt
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -22,11 +22,41 @@ def try_pandas(s,fn):
         df.to_json(fn)
         logger.debug("pandas saved to '%s'",fn)
 
+    for section, metrics in df.items():
+        list_metric=[]
+        list_ts=[]
+        list_val=[]
+        for metric,rows in metrics.items():
+            for row in rows:
+                for ts in row.keys():
+                    val=row[ts]
+                    list_metric.append(metric)
+                    list_ts.append(ts)
+                    list_val.append(val)
+                    #print(metric,ts,val)
+
+        ts_series=pd.to_datetime(list_ts)
+        val_series=pd.to_numeric(list_val)
+        metric_series=pd.Series(list_metric)
+
+        ts_df=pd.DataFrame(ts_series,columns=["Time"])
+        val_df=pd.DataFrame(val_series,columns=["Value"])
+        metric_df=pd.DataFrame(metric_series,columns=["Metric"])
+
+        all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
+        all_df.set_index('Time',inplace=True)
+
+        all_df.info()
+        all_df.plot()
+        plt.show()
+        # This will return after processing only one section; all there is so far.
+        return all_df
+
 def main():
     section="meminfo"
     sets={section:{}}
 
-    for l in sys.stdin:
+    for l in fileinput.input():
         l=l.strip()
         (ts,key,val)=str.split(l,"\t",2)
         t=dateutil.parser.parse(ts)
@@ -35,13 +65,19 @@ def main():
 
         # Backward compatible output
         if key=="Dirty":
-            print (formatted)
-
+            if (False):  print (formatted)
+        value=float(val)
         if key not in sets[section]:
             sets[section][key] = []
-        sets[section][key].append(formatted)
+        sets[section][key].append({t:value})
 
-    try_pandas(sets,'%s.json' % section)
+    return try_pandas(sets,'%s.json' % section)
 
 if __name__ == '__main__':
-    main()
+    df=main()
+
+    dirty = df[df["Metric"] == "Dirty"]
+    dirty = dirty.rename(columns={'Value': 'Dirty'})
+    dirty.plot()
+    plt.show()
+    

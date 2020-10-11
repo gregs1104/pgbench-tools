@@ -33,6 +33,8 @@ def main():
 	fn="combined.json"
 	t.to_json(fn)
 	logger.warning("json saved to '%s'",fn)
+	return t
 
 if __name__ == '__main__':
-    main()
+    df=main()
+    print(df)

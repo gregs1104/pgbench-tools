@@ -17,35 +17,36 @@ def try_pandas(s,fn):
             return
 
     df=pd.DataFrame(s)
-    combined={}
+    df.to_json(fn)
+    logger.debug("pandas saved to '%s'",fn)
 
+    combined={}
     for section, metrics in df.items():
         for metric,rows in metrics.items():
             list_ts=[]
             list_val=[]
+            list_metric=[]
 
             for row in rows:
                 for ts in row.keys():
                     val=row[ts]
                     list_ts.append(ts)
                     list_val.append(val)
+                    list_metric.append(metric)
 
             ts_series=pd.to_datetime(list_ts)
             val_series=pd.to_numeric(list_val)
+            metric_series=pd.Series(list_metric)
 
             ts_df=pd.DataFrame(ts_series,columns=["Time"])
             val_df=pd.DataFrame(val_series,columns=[metric])
+            metric_df=pd.DataFrame(metric_series,columns=["Metric"])
 
-            all_df=pd.concat([ts_df,val_df],axis=1)
+            all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
             all_df.set_index('Time',inplace=True)
             combined[metric]=all_df
 
         # This part will return after processing only one section; all there is so far.
-
-#        fulldf=pd.DataFrame(combined)
-#        fulldf.to_json(fn)
-#        logger.debug("pandas saved to '%s'",fn)
-
         return combined
 
 def main():

@@ -22,11 +22,13 @@ def try_pandas(s,fn):
         df.to_json(fn)
         logger.debug("pandas saved to '%s'",fn)
 
+    combined={}
     for section, metrics in df.items():
-        list_metric=[]
-        list_ts=[]
-        list_val=[]
         for metric,rows in metrics.items():
+            list_metric=[]
+            list_ts=[]
+            list_val=[]
+
             for row in rows:
                 for ts in row.keys():
                     val=row[ts]
@@ -35,22 +37,20 @@ def try_pandas(s,fn):
                     list_val.append(val)
                     #print(metric,ts,val)
 
-        ts_series=pd.to_datetime(list_ts)
-        val_series=pd.to_numeric(list_val)
-        metric_series=pd.Series(list_metric)
+            ts_series=pd.to_datetime(list_ts)
+            val_series=pd.to_numeric(list_val)
+            metric_series=pd.Series(list_metric)
 
-        ts_df=pd.DataFrame(ts_series,columns=["Time"])
-        val_df=pd.DataFrame(val_series,columns=["Value"])
-        metric_df=pd.DataFrame(metric_series,columns=["Metric"])
+            ts_df=pd.DataFrame(ts_series,columns=["Time"])
+            val_df=pd.DataFrame(val_series,columns=[metric])
+            metric_df=pd.DataFrame(metric_series,columns=["Metric"])
 
-        all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
-        all_df.set_index('Time',inplace=True)
+            all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
+            all_df.set_index('Time',inplace=True)
+            combined[metric]=all_df
 
-        all_df.info()
-        all_df.plot()
-        plt.show()
         # This will return after processing only one section; all there is so far.
-        return all_df
+        return combined
 
 def main():
     section="meminfo"
@@ -76,8 +76,4 @@ def main():
 if __name__ == '__main__':
     df=main()
 
-    dirty = df[df["Metric"] == "Dirty"]
-    dirty = dirty.rename(columns={'Value': 'Dirty'})
-    dirty.plot()
-    plt.show()
     

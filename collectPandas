@@ -1,7 +1,6 @@
 #!/usr/local/bin/python3
 
 import pandas as pd
-import csv
 import os
 
 import logging
@@ -14,26 +13,37 @@ def json_pandas(fn):
         return df
 
 def csv_in(fn,index_col):
-	df = pd.read_csv(fn,index_col=index_col)
-	return df
+    df = pd.read_csv(fn,index_col=index_col)
+    logger.info("CSV loaded from '%s'",fn)
+    return df
  
 def main():
-	base="regress/480/"
-	io=json_pandas(os.path.join(base,"iostat.json"))
-	vm=json_pandas(os.path.join(base,"vmstat.json"))
-	me=json_pandas(os.path.join(base,"meminfo.json"))
-	tps_stats=csv_in(os.path.join(base,"latency_1s.csv"),'collected')
+    base="regress/480/"
+    if False:
+        io=json_pandas(os.path.join(base,"iostat.json"))
+        vm=json_pandas(os.path.join(base,"vmstat.json"))
+        me=json_pandas(os.path.join(base,"meminfo.json"))
 
-	t=io.append(vm)
-	t=t.append(me)
-	t=t.append(tps_stats)
+    tps_stats=csv_in(os.path.join(base,"latency_metric.csv"),'collected')
+    iostat_stats=csv_in(os.path.join(base,"iostat.csv"),'collected')
+    vmstat_stats=csv_in(os.path.join(base,"vmstat.csv"),'collected')
+    meminfo_stats=csv_in(os.path.join(base,"meminfo.csv"),'collected')
 
-	print(t)
+    t=tps_stats
+    t=t.append(iostat_stats)
+    t=t.append(vmstat_stats)
+    t=t.append(meminfo_stats)
 
-	fn="combined.json"
-	t.to_json(fn)
-	logger.warning("json saved to '%s'",fn)
-	return t
+    fn=os.path.join(base,"combined.csv")
+    t.to_csv(fn)
+    logger.warning("csv saved to '%s'",fn)
+
+    if (False):  # Broken by CSV changes above
+        fn=os.path.join(base,"combined.json")
+        t.to_json()
+        logger.warning("json saved to '%s'",fn)
+
+    return t
 
 if __name__ == '__main__':
     df=main()

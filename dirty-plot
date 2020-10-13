@@ -46,12 +46,13 @@ def try_pandas(s,fn):
 
             all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
             all_df.set_index('Time',inplace=True)
-            if (False):  all_df.to_csv("%s.csv" % fn)  # Disabled right now
-            # TODO This is saving one metric worth of data to a CSV.
-            # Needs to run against a list of all the metrics
-            # Maybe build a combined frame here instead of the
-            # dictionary of metrics I have right now?
-            #logger.info("metrics saved to '%s.csv'",fn)
+            if (False):  # Disabled right now
+                all_df.to_csv("%s.csv" % fn)
+                # TODO This is saving one metric worth of data to a CSV.
+                # Needs to run against a list of all the metrics
+                # Maybe build a combined frame here instead of the
+                # dictionary of metrics I have right now?
+                logger.info("metrics saved to '%s.csv'",fn)
 
             combined[metric]=all_df
 

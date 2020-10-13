@@ -4,21 +4,23 @@ import time
 import dateutil.parser
 import logging
 import fileinput
+import csv
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def try_pandas(s,fn):
-    want_pandas = True
+    want_pandas = False
     if want_pandas:
         try:
-            import pandas as pd
+            import pandas
         except:
             return
 
+    import pandas as pd
     df=pd.DataFrame(s)
-    df.to_json(fn)
-    logger.debug("pandas saved to '%s'",fn)
+    df.to_json(("%s.json" % fn))
+    logger.debug("pandas saved to '%s.json'",fn)
 
     combined={}
     for section, metrics in df.items():
@@ -44,6 +46,13 @@ def try_pandas(s,fn):
 
             all_df=pd.concat([ts_df,val_df,metric_df],axis=1)
             all_df.set_index('Time',inplace=True)
+            if (False):  all_df.to_csv("%s.csv" % fn)  # Disabled right now
+            # TODO This is saving one metric worth of data to a CSV.
+            # Needs to run against a list of all the metrics
+            # Maybe build a combined frame here instead of the
+            # dictionary of metrics I have right now?
+            #logger.info("metrics saved to '%s.csv'",fn)
+
             combined[metric]=all_df
 
         # This part will return after processing only one section; all there is so far.
@@ -52,6 +61,8 @@ def try_pandas(s,fn):
 def main():
     section="meminfo"
     sets={section:{}}
+    rows=[]
+    fields = ['collected','value','metric']
 
     for l in fileinput.input():
         l=l.strip()
@@ -62,16 +73,27 @@ def main():
 
         # Backward compatible output
         if key=="Dirty":
-            if (False):  print (formatted)
-
+            print (formatted)
         value=float(val)
+
+        metric_row=[ts,val,key]
+        rows.append(metric_row)
+
         if key not in sets[section]:
             sets[section][key] = []
         sets[section][key].append({t:value})
 
-    return try_pandas(sets,'%s.json' % section)
+    csvfn="%s.csv" % section
+    with open(csvfn, 'w') as csvfile:
+        csvwriter = csv.writer(csvfile)
+        csvwriter.writerow(fields)
+        csvwriter.writerows(rows)
+        logger.info("metrics saved to '%s.csv'",section)
+
+    # TODO Switch these to logger
+    if (False):  print(rows)
+
+    return try_pandas(sets,section)
 
 if __name__ == '__main__':
     df=main()
-
-    

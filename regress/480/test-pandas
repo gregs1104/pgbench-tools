@@ -1,5 +1,5 @@
 #!/bin/bash -ex
-rm -f iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt
+rm -f iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt iostat.csv meminfo.csv vmstat.csv
 ../../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
 ../../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk" --disks="nvme2n1" -o iostat
 ../../dirty-plot < meminfo.log > dirtydata.txt

@@ -304,6 +304,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
         return
 
     sets = {}
+    csv_rows=[]
     header_labels = None
     signals = 0
     for row in in_file:
@@ -328,6 +329,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
             logger.debug("fake signal section, rejecting row %s" % row)
             continue
 
+        match_prefix=""
         matches = False
         if search_for is None:
             matches = True
@@ -339,6 +341,12 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                 if row.find(s) >= 0:
                     matches = True
                     dataset = str(s)
+                    # Right now the only use case for this code is filtering
+                    # disk_list iostat rows.  Without that, iostat data
+                    # will overflow with loopback and other unimportant disk
+                    # traffic.  The disk entry that matched is then used
+                    # as a prefix , giving labels like "sdb_rMB/s".
+                    match_prefix=dataset + "_"
         if not matches:
             logger.debug("no match - rejecting row %s" % row)
             logger.debug("search_for:  %s" % row)
@@ -378,6 +386,19 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
 
             sets[str(dataset)][label].append(formatted)
             logger.debug("Appended %s %s %s %s" % (dataset, label, epoch, val))
+            metric_row=[ts,val,match_prefix + label]
+            csv_rows.append(metric_row)
+
+# The CSV data has to be saved in an array and written at the end.
+# TODO Consider opening the CSV early and writing to the CSV line at a time
+    if len(csv_rows)>0:
+        csvfn="%s.csv" % output_file
+        with open(csvfn, 'w') as csvfile:
+            fields = ['collected','value','metric']
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(fields)
+            csvwriter.writerows(csv_rows)
+            logger.info("metrics saved to '%s.csv'",output_file)
 
     logger.debug("Sets as they come out of the data set parsing")
     logger.debug(sets)

@@ -13,7 +13,7 @@ def json_pandas(fn):
         return df
 
 def csv_in(fn,index_col):
-    df = pd.read_csv(fn,index_col=index_col)
+    df = pd.read_csv(fn,index_col=index_col,parse_dates=True)
     logger.info("CSV loaded from '%s'",fn)
     return df
  
@@ -36,6 +36,28 @@ def main():
 
     fn=os.path.join(base,"combined.csv")
     t.to_csv(fn)
+    logger.warning("csv saved to '%s'",fn)
+
+    # Round here to make the Pandas merge give less NaN values
+    t.index=t.index.round('S')
+
+    combined=pd.DataFrame()
+    grouped = t.groupby('metric')
+    for metric,group in grouped:
+        logger.debug(metric)
+
+        metric_data=group['value']
+        logger.debug(metric_data)
+
+        # Rename the new column to have the metric name
+        renamed=pd.DataFrame(metric_data)
+        renamed.rename(columns={'value':metric},inplace=True)
+        logger.debug(renamed.info)
+
+        combined=combined.merge(renamed,how="outer",left_index=True,right_index=True)
+
+    fn=os.path.join(base,"combined-wide.csv")
+    combined.to_csv(fn)
     logger.warning("csv saved to '%s'",fn)
 
     if (False):  # Broken by CSV changes above

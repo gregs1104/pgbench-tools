@@ -115,6 +115,20 @@ CREATE TABLE server(
     server_details jsonb
   );
 
+CREATE TABLE tmp_metric_import (
+    collected timestamp,
+    value float,
+    metric text NOT NULL
+);
+
+CREATE TABLE test_metrics_data (
+    collected TIMESTAMP,
+    value float,
+    metric text NOT NULL,
+    test integer NOT NULL,
+    server text NOT NULL
+);
+
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);
 ALTER TABLE testset ADD UNIQUE USING INDEX idx_server_set;
 

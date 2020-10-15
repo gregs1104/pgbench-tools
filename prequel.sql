@@ -68,3 +68,16 @@ FROM test_bgwriter
 ORDER BY server,set,info,script,scale,clients,tests.test
 ;
 
+CREATE TABLE tmp_metric_import (
+    collected timestamp,
+    value float,
+    metric text NOT NULL
+);
+
+CREATE TABLE test_metrics_data (
+    collected TIMESTAMP,
+    value float,
+    metric text NOT NULL,
+    test integer NOT NULL,
+    server text NOT NULL
+);

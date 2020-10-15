@@ -1,0 +1,102 @@
+#
+# Basic setup options.  If you are running as the postgres user and
+# are using PostgreSQL 8.4 or later, you normally don't need to
+# change any of these.
+#
+
+BASEDIR=`pwd`
+PGBENCHBIN=`which pgbench`
+GNUPLOT=`which gnuplot`
+
+# These values are for pgbench 9.6 - 13
+TESTDIR="tests"
+
+# Use this value for pgbench 8.4 - 9.5.  There is also a directory for 8.3.
+# TESTDIR="tests/tests-9.5"
+
+# SKIPINIT should be set to 1 either when simulating a cold cache, or
+# if you are not using the pgbench tables for your test
+SKIPINIT=0
+
+# Set TABBED to 1 to use Javascript for a multi-tabbed display format
+TABBED=0
+
+# Set OSDATA to 1 to collect OS data using vmstat and iostat
+OSDATA=1
+
+# Test/result database connection
+TESTHOST=localhost
+TESTUSER=`whoami`
+TESTPORT=5432
+TESTDB=pgbench
+
+RESULTHOST="$TESTHOST"
+RESULTUSER="$TESTUSER"
+RESULTPORT="$TESTPORT"
+RESULTDB=results
+
+# What server name to use when saving the results.  It's just a label,
+SERVERNAME="rising"
+
+#
+# Main test run customization.  Test scripts add a .sql extension for you.
+#
+
+# Set this to a number only when using pgbench 9.0 or later.  This will set
+# the number of worker threads up to this maximum for each client count
+MAX_WORKERS="auto"
+# Blank setting, typically used with earlier pgbench versions
+#MAX_WORKERS=""
+
+SCRIPT="select"
+SCALES="1 10 100 1000"
+SETCLIENTS="1 2 4 8 16 32"
+SETTIMES=3
+
+# FILLFACTOR option
+# uses fillfactor option from pgbench
+# default is 100
+FILLFACTOR="100"
+
+# RUNTIME is in seconds.  If it is specified, then TOTTRANS is ignored.
+# Setting a time instead of a transaction account is only available
+# in 8.4 and later.
+RUNTIME=60
+TOTTRANS=""
+
+# Use a transaction count instead for 8.3 or earlier
+#RUNTIME=""
+#TOTTRANS=100000
+
+# Starting in the 9.4 pgbench, you can limit the maximum rate.
+# This takes a list like scale and clients
+SETRATES=""
+
+# Set to 1 to compute a lot of latency buckets at 1% intervals
+LARGEBUCKETS=0
+
+# Set to 1 to use prepared statements (pgbench -M)
+PREPARED=0
+
+# Set to 1 to trim 10% off the start and end of the test
+TRIM=1
+
+#
+# Parameters for system monitoring code
+#
+#
+# Parameters for system monitoring code.
+# Uses the last one if set more than once.
+DISKLIST="nvme2n1" # Intel 750 1.2TB
+#DISKLIST="nvme1n1" # Inland 2TB
+# PostgreSQL version 10.14
+# Memory 67528052736
+# CPU Count 24
+# Arch bits 64
+SETCLIENTS="1 2 4 6 12 24 32 48 96" # Stress 24 processors
+SCALES="100 3450 6900 10350 13800 17250" # Max database 257599 MB
+
+#SCALES="100"
+#SCRIPT="insert"
+SCRIPT="nobranch"
+RUNTIME=600

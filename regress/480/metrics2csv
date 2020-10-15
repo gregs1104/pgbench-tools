@@ -19,6 +19,8 @@ psql -d results -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
 
-psql -d results -c "TRUNCATE TABLE test_metrics_data;"
+# Only for re-testing the import code
+# psql -d results -c "TRUNCATE TABLE test_metrics_data;"
+
 psql -d results -c "INSERT INTO test_metrics_data SELECT collected,value,metric,${TEST},'${SERVERNAME}'  FROM tmp_metric_import;"
 psql -d results -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"

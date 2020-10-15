@@ -81,3 +81,12 @@ CREATE TABLE test_metrics_data (
     test integer NOT NULL,
     server text NOT NULL
 );
+
+DROP VIEW test_metrics;
+CREATE VIEW test_metrics AS
+  SELECT tests.test,tests.server,script,scale,clients,
+    tps,dbsize,wal_written,collected,value,metric
+  FROM test_metrics_data,tests
+  WHERE tests.test=test_metrics_data.test AND
+    tests.server=test_metrics_data.server
+;

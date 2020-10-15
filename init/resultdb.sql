@@ -175,6 +175,15 @@ FROM test_bgwriter
 ORDER BY server,set,info,script,scale,clients,tests.test
 ;
 
+DROP VIEW test_metrics;
+CREATE VIEW test_metrics AS
+  SELECT tests.test,tests.server,script,scale,clients,
+    tps,dbsize,wal_written,collected,value,metric
+  FROM test_metrics_data,tests
+  WHERE tests.test=test_metrics_data.test AND
+    tests.server=test_metrics_data.server
+;
+
 --
 -- Convert hex value to a decimal one.  It's possible to do this using
 -- undocumented features of the bit type, such as:

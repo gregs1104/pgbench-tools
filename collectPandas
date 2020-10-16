@@ -75,9 +75,13 @@ if __name__ == '__main__':
 
     base="regress/480/metrics"
     for c in df.columns:
-       # TODO Wipe out old plot data each time
-       df[c].plot()
+       ax=df[c].plot(grid=True,title=c,figsize=(8,6),legend=True)
+       ax.xaxis.grid(True, which="minor")
+
        # TODO Need to escape "/" characters in filename, e.g. "r/s"
-       fn=os.path.join(base,c)
-       plt.savefig(fn)
-       logger.info("saved to '%s'",fn)
+       unslashed=c.replace("/","-")
+       fn=os.path.join(base,unslashed)
+
+       plt.savefig(fn,dpi=80)  # gives 640x480 figures
+       plt.close()
+       logger.info("saved to '%s.png'",fn)

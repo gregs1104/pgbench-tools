@@ -1,6 +1,7 @@
 #!/usr/local/bin/python3
 
 import pandas as pd
+import matplotlib.pyplot as plt
 import os
 
 import logging
@@ -60,13 +61,23 @@ def main():
     combined.to_csv(fn)
     logger.warning("csv saved to '%s'",fn)
 
-    if (False):  # Broken by CSV changes above
+    # Broken by CSV changes, "DataFrame index must be unique for orient='columns'."
+    if (False):
         fn=os.path.join(base,"combined.json")
         t.to_json()
         logger.warning("json saved to '%s'",fn)
 
-    return t
+    return combined
 
 if __name__ == '__main__':
     df=main()
     print(df)
+
+    base="regress/480/metrics"
+    for c in df.columns:
+       # TODO Wipe out old plot data each time
+       df[c].plot()
+       # TODO Need to escape "/" characters in filename, e.g. "r/s"
+       fn=os.path.join(base,c)
+       plt.savefig(fn)
+       logger.info("saved to '%s'",fn)

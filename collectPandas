@@ -78,7 +78,6 @@ if __name__ == '__main__':
        ax=df[c].plot(grid=True,title=c,figsize=(8,6),legend=True)
        ax.xaxis.grid(True, which="minor")
 
-       # TODO Need to escape "/" characters in filename, e.g. "r/s"
        unslashed=c.replace("/","-")
        fn=os.path.join(base,unslashed)
 

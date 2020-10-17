@@ -14,9 +14,19 @@ source ./config
 TEST=$1
 echo Server ${SERVERNAME} test ${TEST}
 
-../../../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
-../../../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk" --disks=${DISKLIST} -o iostat
-../../../dirty-plot < meminfo.log > dirtydata.txt
+if [ -f "meminfo.log" ] ; then
+    # Linux
+    echo Linux formatted log files
+    ../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
+    ../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
+    ../dirty-plot < meminfo.log > dirtydata.txt
+else
+    # Darwin
+    echo Darwin formatted log files
+    ../csv2gnuplot -i iostat-darwin.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat-darwin
+    ../csv2gnuplot -i vmstat-darwin.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat-darwin
+fi
+
 psql -d results -f ../../../export-latency-metric.sql
 
 psql -d results -c "TRUNCATE TABLE tmp_metric_import;"

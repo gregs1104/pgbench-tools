@@ -23,13 +23,12 @@
 import csv
 import optparse
 import sys
-import string
 import os
 import time
 from dateutil import parser
 
 import logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 def parse_options():
@@ -56,7 +55,7 @@ def parse_options():
     optparser.add_option('-d', '--data', dest="data_type", default=None,
                          help="Type of data file.  options are 'table', 'iostat' and 'vmstat'")
 
-    optparser.add_option('--disks', dest="disk_list", default='sda',
+    optparser.add_option('--disks', dest="disk_list", default='',
                          help="Comma separated list of disks to include in iostat format")
 
     options, args = optparser.parse_args()
@@ -306,7 +305,9 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
     sets = {}
     csv_rows=[]
     header_labels = None
+    prev_line = None
     signals = 0
+    darwin_format=False
     for row in in_file:
         columns = row.split()
 
@@ -317,8 +318,27 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
             if row.find(header_signal) >= 0:
                 signals=signals + 1
                 if header_labels is None:
+                    logger.debug("Previous line to header:  %s" % prev_line)
+                    prev_columns=prev_line.split()
+                    logger.debug("Previous line columns:  %s" % prev_columns)
                     header_labels = columns[2:]
                     logger.debug("Header labels:  %s" % header_labels)
+                    logger.debug(prev_columns[3])
+
+                    # Darwin:  previous line will have the disk device then "cpu"
+                    # Use that sketchy set of facts to figure out the disk.
+                    try:
+                        if prev_columns[3]=="cpu":
+                            darwin_format=True
+                            disk=prev_columns[2]
+                            logger.debug("Disk %s" % disk)
+                            header_labels[0]=disk+"_"+header_labels[0]
+                            header_labels[1]=disk+"_"+header_labels[1]
+                            header_labels[2]=disk+"_"+header_labels[2]
+                    except:
+                        logger.debug("Failed to process previous row")
+
+        prev_line=row
 
         # Can't proceed if we haven't figured out which column to graph yet
         if header_labels is None:
@@ -327,6 +347,10 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
 
         if signals <= fake_signals:
             logger.debug("fake signal section, rejecting row %s" % row)
+            # Fake signal on Darwin is a single line; processing anything to
+            # this point means it's over
+            if darwin_format:
+                signals=signals + 1
             continue
 
         match_prefix=""
@@ -342,11 +366,12 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     matches = True
                     dataset = str(s)
                     # Right now the only use case for this code is filtering
-                    # disk_list iostat rows.  Without that, iostat data
+                    # disk_list iostat rows.  Without that, Linux iostat data
                     # will overflow with loopback and other unimportant disk
                     # traffic.  The disk entry that matched is then used
                     # as a prefix , giving labels like "sdb_rMB/s".
                     match_prefix=dataset + "_"
+
         if not matches:
             logger.debug("no match - rejecting row %s" % row)
             logger.debug("search_for:  %s" % row)
@@ -419,16 +444,28 @@ def main():
     else:
         out_file = options.output_file
 
-    # TODO Convert remaining fixed values to parameter inputs:  filt_text, ylabel, header_signal
+    # TODO Convert header_signal to CLI option to remove this stanza
+    # Linux
+    vmheader="cache"
+    ioheader="Device"
+    # Darwin
+    vmheader="wired"
+    ioheader="KB/t"
+
+    # TODO Convert remaining fixed values to parameter inputs:  filt_text, ylabel
     if options.data_type == "table":
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               filt_text=options.disk_list, header_signal="Device", fake_signals=1,
+                               filt_text=options.disk_list, 
+                               header_signal=ioheader,
+                               fake_signals=1,
                                setlabel="iostat")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
-                               filt_text=None, header_signal="cache", setlabel="vmstat")
+                               filt_text=None, 
+                               header_signal=vmheader,
+                               setlabel="vmstat")
     else:
         print("Error:  unknown data file type %s" % options.data_type)
 

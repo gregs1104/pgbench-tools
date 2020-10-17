@@ -1,10 +1,26 @@
 #!/bin/bash -e
 # Test csv2gnuplot script
-rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt
+
+if [ -f "meminfo.log" ] ; then
+    # Linux
+    vmheader="cache"
+    ioheader="Device"
+else
+    # Darwin
+    vmheader="wired"
+    ioheader="KB/t"
+fi
+
+rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt iostat-darwin.json iostat-darwin.csv vmstat-darwin.csv vmstat-darwin.json
 ../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison" -o disks
+
+vmheader="cache"
+ioheader="Device"
 ../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk" --disks="sdc" -o iostat
 ../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
 ../dirty-plot < meminfo.log > dirtydata.txt
 
+vmheader="wired"
+ioheader="KB/t"
 ../csv2gnuplot -i iostat-darwin.log -d iostat -t "pgbench disk" --disks="disk0" -o iostat-darwin
 ../csv2gnuplot -i vmstat-darwin.log -d vmstat -t "pgbench vmstat" -o vmstat-darwin

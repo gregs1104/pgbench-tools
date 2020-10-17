@@ -28,7 +28,7 @@ import time
 from dateutil import parser
 
 import logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def parse_options():
@@ -51,6 +51,9 @@ def parse_options():
 
     optparser.add_option('-y', '--ylabel', dest="ylabel", default="Transactions/second",
                          help="Y Axis Label")
+
+    optparser.add_option('-s', '--signal', dest="header_signal", default=None,
+                         help="Header signal")
 
     optparser.add_option('-d', '--data', dest="data_type", default=None,
                          help="Type of data file.  options are 'table', 'iostat' and 'vmstat'")
@@ -444,27 +447,19 @@ def main():
     else:
         out_file = options.output_file
 
-    # TODO Convert header_signal to CLI option to remove this stanza
-    # Linux
-    vmheader="cache"
-    ioheader="Device"
-    # Darwin
-    vmheader="wired"
-    ioheader="KB/t"
-
     # TODO Convert remaining fixed values to parameter inputs:  filt_text, ylabel
     if options.data_type == "table":
         return table_csv2gnuplot(file_to_process,out_file,options.title)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
                                filt_text=options.disk_list, 
-                               header_signal=ioheader,
+                               header_signal=options.header_signal,
                                fake_signals=1,
                                setlabel="iostat")
     elif options.data_type == "vmstat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
                                filt_text=None, 
-                               header_signal=vmheader,
+                               header_signal=options.header_signal,
                                setlabel="vmstat")
     else:
         print("Error:  unknown data file type %s" % options.data_type)

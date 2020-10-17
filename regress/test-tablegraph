@@ -14,13 +14,11 @@ fi
 rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt iostat-darwin.json iostat-darwin.csv vmstat-darwin.csv vmstat-darwin.json
 ../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison" -o disks
 
-vmheader="cache"
-ioheader="Device"
-../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk" --disks="sdc" -o iostat
-../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
+# Linux samples
+../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks="sdc" -o iostat
+../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
 ../dirty-plot < meminfo.log > dirtydata.txt
 
-vmheader="wired"
-ioheader="KB/t"
-../csv2gnuplot -i iostat-darwin.log -d iostat -t "pgbench disk" --disks="disk0" -o iostat-darwin
-../csv2gnuplot -i vmstat-darwin.log -d vmstat -t "pgbench vmstat" -o vmstat-darwin
+# Mac samples
+../csv2gnuplot -i iostat-darwin.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat-darwin
+../csv2gnuplot -i vmstat-darwin.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat-darwin

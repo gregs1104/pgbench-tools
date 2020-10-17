@@ -1,12 +1,16 @@
 #!/bin/bash -ex
 
-source ./config
-
 # Only for re-testing the import code
 #psql -d results -c "TRUNCATE TABLE test_metrics_data;"
 # -------------
 
 function process {
+
+if [ ! -f config ] ; then
+  echo Not a test result directory, skipping
+fi
+source ./config
+
 TEST=$1
 echo Server ${SERVERNAME} test ${TEST}
 
@@ -21,17 +25,16 @@ psql -d results -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
 
-psql -d results -c "INSERT INTO test_metrics_data SELECT collected,value,metric,${TEST},'${SERVERNAME}'  FROM tmp_metric_import;"
-psql -d results -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
+psql -d results -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TEST},'${SERVERNAME}'  FROM tmp_metric_import;"
+#psql -d results -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
 }
 
 #
 # Recurse import
 #
 
-pushd results
-
 shopt -s nullglob
+pushd results
 
 for d in *
 do

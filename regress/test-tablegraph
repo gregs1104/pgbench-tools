@@ -5,3 +5,6 @@ rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtyda
 ../csv2gnuplot -i iostat.log -d iostat -t "pgbench disk" --disks="sdc" -o iostat
 ../csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
 ../dirty-plot < meminfo.log > dirtydata.txt
+
+../csv2gnuplot -i iostat-darwin.log -d iostat -t "pgbench disk" --disks="disk0" -o iostat-darwin
+../csv2gnuplot -i vmstat-darwin.log -d vmstat -t "pgbench vmstat" -o vmstat-darwin

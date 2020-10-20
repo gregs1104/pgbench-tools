@@ -172,6 +172,7 @@ cat >> multi-client.plot << "ENDING"
 set output "clients-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
+set key bottom right
 set xlabel "Clients"
 set ylabel "TPS"
 plot \
@@ -182,6 +183,7 @@ cat >> multi-scale.plot << "ENDING"
 set output "scaling-sets.png"
 set title "pgbench transactions/sec"
 set grid xtics ytics
+set key top right
 set xlabel "Scaling factor"
 set ylabel "TPS"
 plot \

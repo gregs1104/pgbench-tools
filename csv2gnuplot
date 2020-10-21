@@ -326,11 +326,11 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     logger.debug("Previous line columns:  %s" % prev_columns)
                     header_labels = columns[2:]
                     logger.debug("Header labels:  %s" % header_labels)
-                    logger.debug(prev_columns[3])
 
                     # Darwin:  previous line will have the disk device then "cpu"
                     # Use that sketchy set of facts to figure out the disk.
                     try:
+                        logger.debug(prev_columns[3])
                         if prev_columns[3]=="cpu":
                             darwin_format=True
                             disk=prev_columns[2]

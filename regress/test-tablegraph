@@ -12,7 +12,6 @@ else
 fi
 
 rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt iostat-darwin.json iostat-darwin.csv vmstat-darwin.csv vmstat-darwin.json
-../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison" -o disks
 
 # Linux samples
 ../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks="sdc" -o iostat
@@ -22,3 +21,6 @@ rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtyda
 # Mac samples
 ../csv2gnuplot -i iostat-darwin.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat-darwin
 ../csv2gnuplot -i vmstat-darwin.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat-darwin
+
+# Generic table
+../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison" -o disks

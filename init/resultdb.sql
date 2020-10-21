@@ -148,7 +148,7 @@ ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) R
 ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
-DROP VIEW test_stats;
+DROP VIEW IF EXISTS test_stats;
 CREATE VIEW test_stats AS
 SELECT
   tests.set, testset.info, tests.server,script,scale,clients,tests.test,
@@ -175,7 +175,7 @@ FROM test_bgwriter
 ORDER BY server,set,info,script,scale,clients,tests.test
 ;
 
-DROP VIEW test_metrics;
+DROP VIEW IF EXISTS test_metrics;
 CREATE VIEW test_metrics AS
   SELECT tests.test,tests.server,script,scale,clients,
     tps,dbsize,wal_written,collected,value,metric

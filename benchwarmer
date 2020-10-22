@@ -380,6 +380,7 @@ $RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans', trans_latency='$t
 
 cp $BASEDIR/config config
 cp $BASEDIR/templates/test-index.html index.html
+echo Importing and processing latency information
 
 # Confirm we have an patched version of pgbench that has timestamps
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`

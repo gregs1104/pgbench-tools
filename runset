@@ -66,6 +66,7 @@ for SCALE in $SCALES; do
   done
 done
 
+echo Generating web report
 ./webreport
 
 echo runset complete

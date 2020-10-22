@@ -29,6 +29,8 @@ ALTER TABLE test_stat_database ADD UNIQUE USING INDEX idx_server_test_3;
 
 CREATE INDEX idx_test on test_statio(server,test);
 
+ALTER TABLE tests ADD COLUMN server_version text default version();
+
 CREATE TABLE server(
   server text NOT NULL PRIMARY KEY,
   server_info text,
@@ -40,8 +42,6 @@ CREATE TABLE server(
   server_disk_gb int,
   server_details jsonb
   );
-
-ALTER TABLE tests ADD COLUMN server_version text default version();
 
 DROP VIEW IF EXISTS test_stats;
 CREATE VIEW test_stats AS
@@ -60,8 +60,7 @@ SELECT
   server_num_proc,
   server_mem_gb,
   server_disk_gb,
-  server_details,
-  tests.metrics
+  server_details
 FROM test_bgwriter
   RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
   RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server

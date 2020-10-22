@@ -166,8 +166,7 @@ SELECT
   server_num_proc,
   server_mem_gb,
   server_disk_gb,
-  server_details,
-  tests.metrics
+  server_details
 FROM test_bgwriter
   RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
   RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server

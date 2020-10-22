@@ -72,7 +72,7 @@ def parse_options():
 
 def try_pandas(s,fn):
     # TODO Make this a command line option
-    want_pandas = True
+    want_pandas = False
     if want_pandas:
         try:
             import pandas as pd
@@ -217,7 +217,7 @@ def ds_gnuplotter(set_container, destination, title="", tsdata=True, ycolumn=1, 
 
     gp.write("plot ")
 
-    # Due to the JSON structure, the outer dictionary here will have a
+    # To keep the structure orthogonal, the outer dictionary here will have a
     # key name like "iostat" or "vmstat".  This code only handles one
     # value there, so just dereference that with the first entry found.
     logger.debug(set_container)

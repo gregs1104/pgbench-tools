@@ -15,19 +15,17 @@ if [ ! -f config ] ; then
   echo Not a test result directory, skipping
 fi
 source ./config
-
 TEST=$1
-echo Server ${SERVERNAME} test ${TEST}
 
 if [ -f "meminfo.log" ] ; then
     # Linux
-    echo Linux formatted log files
+    echo Processing Linux formatted log files
     ../../../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
     ../../../dirty-plot < meminfo.log > dirtydata.txt
 else
-    # Darwin
-    echo Darwin formatted log files
+    # Assume Darwin for now, eventually others?
+    echo Processing Darwin formatted log files
     ../../../csv2gnuplot -i iostat.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat
 fi

@@ -373,7 +373,9 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     # will overflow with loopback and other unimportant disk
                     # traffic.  The disk entry that matched is then used
                     # as a prefix , giving labels like "sdb_rMB/s".
-                    match_prefix=dataset + "_"
+                    if len(s)>0:
+                        match_prefix=dataset + "_"
+                    logger.debug("Searching for '%s' dataset '%s' using match_prefix '%s'",s,dataset,match_prefix)
 
         if not matches:
             logger.debug("no match - rejecting row %s" % row)

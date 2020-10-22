@@ -37,7 +37,7 @@ def main():
 
     fn=os.path.join(base,"combined.csv")
     t.to_csv(fn)
-    logger.warning("csv saved to '%s'",fn)
+    logger.info("csv saved to '%s'",fn)
 
     # Round here to make the Pandas merge give less NaN values
     t.index=t.index.round('S')
@@ -45,21 +45,19 @@ def main():
     combined=pd.DataFrame()
     grouped = t.groupby('metric')
     for metric,group in grouped:
-        logger.debug(metric)
-
+        logger.info(metric)
         metric_data=group['value']
         logger.debug(metric_data)
 
         # Rename the new column to have the metric name
         renamed=pd.DataFrame(metric_data)
         renamed.rename(columns={'value':metric},inplace=True)
-        logger.debug(renamed.info)
 
         combined=combined.merge(renamed,how="outer",left_index=True,right_index=True)
 
     fn=os.path.join(base,"combined-wide.csv")
     combined.to_csv(fn)
-    logger.warning("csv saved to '%s'",fn)
+    logger.info("csv saved to '%s'",fn)
 
     # Broken by CSV changes, "DataFrame index must be unique for orient='columns'."
     if (False):
@@ -75,12 +73,13 @@ if __name__ == '__main__':
 
     base="regress/480/metrics"
     for c in df.columns:
-       ax=df[c].plot(grid=True,title=c,figsize=(8,6),legend=True)
-       ax.xaxis.grid(True, which="minor")
+        print("Processing",c)
+        ax=df[c].plot(grid=True,title=c,figsize=(8,6),legend=True)  # c='red'
+        ax.xaxis.grid(True, which="minor")
 
-       unslashed=c.replace("/","-")
-       fn=os.path.join(base,unslashed)
+        unslashed=c.replace("/","-")
+        fn=os.path.join(base,unslashed)
 
-       plt.savefig(fn,dpi=80)  # gives 640x480 figures
-       plt.close()
-       logger.info("saved to '%s.png'",fn)
+        plt.savefig(fn,dpi=80)  # gives 640x480 figures
+        plt.close()
+        logger.info("saved to '%s.png'",fn)

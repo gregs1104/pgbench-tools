@@ -1,11 +1,16 @@
 #!/bin/bash -ex
+# Usage:
+#
+#   metrics2csv server test
+#
+# Recursive re-processing of an entire directory tree coded but not callable yet
 
 # Only for re-testing the import code
-#psql -d results -c "TRUNCATE TABLE test_metrics_data;"
-# -------------
+function clear {
+psql -d results -c "TRUNCATE TABLE test_metrics_data;"
+}
 
 function process {
-
 if [ ! -f config ] ; then
   echo Not a test result directory, skipping
 fi
@@ -17,14 +22,14 @@ echo Server ${SERVERNAME} test ${TEST}
 if [ -f "meminfo.log" ] ; then
     # Linux
     echo Linux formatted log files
-    ../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
-    ../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
-    ../dirty-plot < meminfo.log > dirtydata.txt
+    ../../../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
+    ../../../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
+    ../../../dirty-plot < meminfo.log > dirtydata.txt
 else
     # Darwin
     echo Darwin formatted log files
-    ../csv2gnuplot -i iostat-darwin.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat-darwin
-    ../csv2gnuplot -i vmstat-darwin.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat-darwin
+    ../../../csv2gnuplot -i iostat.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat
+    ../../../csv2gnuplot -i vmstat.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat
 fi
 
 psql -d results -f ../../../export-latency-metric.sql
@@ -33,16 +38,20 @@ psql -d results -c "TRUNCATE TABLE tmp_metric_import;"
 psql -d results -c "\copy tmp_metric_import FROM 'latency_metric.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
-psql -d results -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
-
+if [ -f "meminfo.csv" ] ; then
+  psql -d results -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
+fi
 psql -d results -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TEST},'${SERVERNAME}'  FROM tmp_metric_import;"
-#psql -d results -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
+}
+
+function show {
+psql -d results -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
 }
 
 #
-# Recurse import
+# Recurse import an entire directory tree
 #
-
+function reprocess {
 shopt -s nullglob
 pushd results
 
@@ -65,3 +74,12 @@ do
     popd
   fi
 done
+}
+
+#
+# Main
+#
+if [ -n "$2" ] ; then
+  pushd results/$1/$2
+  process $2
+fi

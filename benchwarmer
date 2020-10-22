@@ -278,13 +278,16 @@ echo This is test $TEST
 mkdir -p results/$SERVERNAME/$TEST
 
 # Start background daemon collectors
+OS=`uname`
 if [ "$OSDATA" -eq "1" ]; then
   ./timed-os-stats vmstat > results/$SERVERNAME/$TEST/vmstat.log &
   VMSTAT=$!
   ./timed-os-stats iostat > results/$SERVERNAME/$TEST/iostat.log &
   IOSTAT=$!
-  ./timed-os-stats meminfo > results/$SERVERNAME/$TEST/meminfo.log &
-  MEMINFO=$!
+  if [ "$OS" = "Linux" ] ; then
+    ./timed-os-stats meminfo > results/$SERVERNAME/$TEST/meminfo.log &
+    MEMINFO=$!
+  fi
 fi
 
 # Run the main pgbench test
@@ -303,11 +306,14 @@ if [ "$OSDATA" -eq "1" ]; then
   # via subprocess.Popen()) so they are not lingering forever.
   ../../../kill_pg "${VMSTAT}"
   ../../../kill_pg "${IOSTAT}"
-  ../../../kill_pg "${MEMINFO}"
+  if [ "$OS" = "Linux" ] ; then
+    ../../../kill_pg "${MEMINFO}"
+    # Find largest dirty memory value (which is in kB)
+    max_dirty=`cat meminfo.log | grep Dirty | awk '{print $4}' | sort -n | tail -n 1`
+  fi
 fi
 
-# Find largest dirty memory value (which is in kB)
-max_dirty=`cat meminfo.log | grep Dirty | awk '{print $4}' | sort -n | tail -n 1`
+# max_dirty has to be a valid integer value
 if [ -z "$max_dirty" ] ; then
  max_dirty=0 
 fi
@@ -406,7 +412,9 @@ else
 fi
 $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans_latency)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 
-$BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+if [ "$OS" = "Linux" ] ; then
+  $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
+fi
 
 # Save high level summary of latency broken into equal sized buckets of transactions
 # 20 5% buckets
@@ -446,15 +454,13 @@ $RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS col
 
     $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing WHERE server='${SERVERNAME}' AND test=$TEST" > latency.txt
     $GNUPLOT $BASEDIR/plots/latency.plot
-
-    $GNUPLOT $BASEDIR/plots/dirty.plot
-
+    if [ -f dirtydata.txt ] ; then
+      $GNUPLOT $BASEDIR/plots/dirty.plot
+    fi
     # TODO If $GNUPLOT is set to something other than its default value from `which`, there
     # should be a command line option in csv2gnuplot that informs the program of that path.
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk writes" --disks="$DISKLIST" --diskstats="wMB/s" -o iostat-writeMB.png
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk reads" --disks="$DISKLIST" --diskstats="rMB/s" -o iostat-readMB.png
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench disk utilization" --disks="$DISKLIST" --diskstats="%util" -o iostat-util.png
-    $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat.png
+    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
+    $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
   else
     echo "gnuplot not found, skipping benchwarmer charts generation"
   fi

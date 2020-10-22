@@ -6,10 +6,10 @@ WITH tps_range AS
   round(max(tps)) as max,
   round(100*(max(tps)-min(tps))/min(tps)) as diff_pct,
   count(*) as samples,
-  script,server,set,scale,clients
+  server,script,set,scale,clients
   FROM tests 
-  GROUP BY script,server,set,scale,clients
-  ORDER BY script,server,set,scale,clients
+  GROUP BY server,script,set,scale,clients
+  ORDER BY server,script,set,scale,clients
 ) 
 SELECT * FROM tps_range WHERE samples>2;
 

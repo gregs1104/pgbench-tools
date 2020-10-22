@@ -379,6 +379,9 @@ tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
 $RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans', trans_latency='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
 
+cp $BASEDIR/config config
+cp $BASEDIR/templates/test-index.html index.html
+
 # Confirm we have an patched version of pgbench that has timestamps
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
 if [ -z "$TESTFORTS" ]; then
@@ -387,7 +390,6 @@ if [ -z "$TESTFORTS" ]; then
   echo timestamps.  No latency information will be imported into
   echo the database, and no plots will be generated.
   echo
-
 else
 
 # Import timestamp information
@@ -461,14 +463,12 @@ $RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS col
     # should be a command line option in csv2gnuplot that informs the program of that path.
     $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
     $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
+    $BASEDIR/metrics2csv $TEST "${SERVERNAME}"
   else
     echo "gnuplot not found, skipping benchwarmer charts generation"
   fi
 
 fi
-
-cp $BASEDIR/templates/test-index.html index.html
-cp $BASEDIR/config config
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore

@@ -1,7 +1,7 @@
-#!/bin/bash -e
+#!/bin/bash
 # Usage:
 #
-#   metrics2csv server test
+#   metrics2csv test server
 #
 # Recursive re-processing of an entire directory tree coded but not callable yet
 
@@ -80,6 +80,12 @@ done
 # Main
 #
 if [ -n "$2" ] ; then
-  pushd results/$1/$2
-  process $2
+  # Try to handle being called from test results directory or from
+  # toolkit base directory
+  if [ ! -f "iostat.log" ] ; then
+    pushd results/$2/$1
+  fi
+  process $1
+else
+  echo "Usage:  metrics2csv test server"
 fi

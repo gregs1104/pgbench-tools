@@ -129,6 +129,8 @@ CREATE TABLE test_metrics_data (
     server text NOT NULL
 );
 
+CREATE INDEX idx_test_metrics_test on test_metrics_data(server,test);
+
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);
 ALTER TABLE testset ADD UNIQUE USING INDEX idx_server_set;
 

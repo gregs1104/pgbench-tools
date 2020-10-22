@@ -59,7 +59,7 @@ def main():
     combined.to_csv(fn)
     logger.info("csv saved to '%s'",fn)
 
-    # Broken by CSV changes, "DataFrame index must be unique for orient='columns'."
+    # Redundant and broken by CSV changes, "DataFrame index must be unique for orient='columns'."
     if (False):
         fn=os.path.join(base,"combined.json")
         t.to_json()
@@ -69,12 +69,11 @@ def main():
 
 if __name__ == '__main__':
     df=main()
-    print(df)
 
     base="regress/480/metrics"
     for c in df.columns:
         print("Processing",c)
-        ax=df[c].plot(grid=True,title=c,figsize=(8,6),legend=True)  # c='red'
+        ax=df[c].plot(grid=True,title=c,figsize=(8,6),legend=True,color='m')
         ax.xaxis.grid(True, which="minor")
 
         unslashed=c.replace("/","-")

@@ -82,6 +82,8 @@ CREATE TABLE test_metrics_data (
     server text NOT NULL
 );
 
+CREATE INDEX idx_test_metrics_test on test_metrics_data(server,test);
+
 DROP VIEW test_metrics;
 CREATE VIEW test_metrics AS
   SELECT tests.test,tests.server,script,scale,clients,

@@ -41,7 +41,7 @@ CREATE TABLE server(
   server_details jsonb
   );
 
-DROP VIEW test_stats;
+DROP VIEW IF EXISTS test_stats;
 CREATE VIEW test_stats AS
 SELECT
   tests.set, testset.info, tests.server,script,scale,clients,tests.test,
@@ -84,7 +84,7 @@ CREATE TABLE test_metrics_data (
 
 CREATE INDEX idx_test_metrics_test on test_metrics_data(server,test);
 
-DROP VIEW test_metrics;
+DROP VIEW IF EXISTS test_metrics;
 CREATE VIEW test_metrics AS
   SELECT tests.test,tests.server,script,scale,clients,
     tps,dbsize,wal_written,collected,value,metric

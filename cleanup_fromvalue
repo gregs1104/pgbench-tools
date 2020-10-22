@@ -3,8 +3,7 @@
 #Cleaning results from test number and all higher numbers
 
 source ./config
-START=$1
-END=$2
+TEST=$1
 
 pushd "results/${SERVERNAME}"
 psql -d results -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND test>=$TEST" | xargs rm -rf
@@ -12,4 +11,5 @@ psql -d results -At -c "DELETE FROM test_bgwriter WHERE server='${SERVERNAME}' A
 psql -d results -At -c "DELETE FROM test_stat_database WHERE server='${SERVERNAME}' AND test>=$TEST"
 psql -d results -At -c "DELETE FROM test_statio WHERE server='${SERVERNAME}' AND test>=$TEST"
 psql -d results -At -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND test>=$TEST"
+psql -d results -At -c "DELETE FROM test_metrics_data WHERE server='${SERVERNAME}' AND test>=$TEST"
 popd

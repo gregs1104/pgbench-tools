@@ -30,8 +30,7 @@ CREATE TABLE tests(
   start_latency timestamp default null,
   end_latency timestamp default null,
   trans_latency int default null,
-  server_version text default version(),
-  metrics jsonb
+  server_version text default version()
   );
 
 DROP TABLE IF EXISTS timing;

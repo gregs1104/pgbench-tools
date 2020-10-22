@@ -41,6 +41,8 @@ CREATE TABLE server(
   server_details jsonb
   );
 
+ALTER TABLE tests ADD COLUMN server_version text default version();
+
 DROP VIEW IF EXISTS test_stats;
 CREATE VIEW test_stats AS
 SELECT

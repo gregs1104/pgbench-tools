@@ -107,67 +107,69 @@ def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=No
 
     """
 
-    gp = os.popen('gnuplot', 'w')
+    try:
+        gp = os.popen('gnuplot', 'w')
 
-    gp.write("set output '" + destination + ".png';\n")
-    gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
+        gp.write("set output '" + destination + ".png';\n")
+        gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
 
-    gp.write("set grid xtics ytics;\n")
-    gp.write("set key right bottom;\n")
+        gp.write("set grid xtics ytics;\n")
+        gp.write("set key right bottom;\n")
 
-    # TODO Add parameters for this text
-    gp.write("set xlabel 'Clients';\n")
-    gp.write("set ylabel 'Transactions per second';\n")
-    gp.write("set title '%s'; " % title)
+        # TODO Add parameters for this text
+        gp.write("set xlabel 'Clients';\n")
+        gp.write("set ylabel 'Transactions per second';\n")
+        gp.write("set title '%s'; " % title)
 
-    # Sometimes needed if auto-detection doesn't work right
-    if (False):
-        gp.write("set yrange [0:30];\n")
+        # Sometimes needed if auto-detection doesn't work right
+        if (False):
+            gp.write("set yrange [0:30];\n")
 
-    gp.write("plot ")
+        gp.write("plot ")
 
-    # Each line here is a new gnuplot data set file.  Iterate over the
-    # list once to describe all of them.
-    header = True
-    header_text = None
-    for rownum, row in enumerate(rows):
-        if header:
-            header_text = row
-            header = False
-            continue
-        key = row[0]
-        delimiter = ""
-        if rownum < (len(rows) - 1):
-            delimiter = ", "
-        gp.write("'-' using 1:2 title '%s' with lines%s" % (key, delimiter))
-    gp.write("\n")
-
-    if header_text is not None:
-        logger.debug("header text is" + str(header_text))
-
-    # Now output the file data
-    header = True
-    for row in rows:
-        if header:
-            header = False
-            continue
-
-        # Iterate over the columns.  If not empty, print header for
-        # that position, then the value.
-        for column, value in enumerate(row):
-            logger.debug("column=%s value=%s" % (column, value))
-            if column == 0:
+        # Each line here is a new gnuplot data set file.  Iterate over the
+        # list once to describe all of them.
+        header = True
+        header_text = None
+        for rownum, row in enumerate(rows):
+            if header:
+                header_text = row
+                header = False
                 continue
-            elif value is None or value.strip() == "":
+            key = row[0]
+            delimiter = ""
+            if rownum < (len(rows) - 1):
+                delimiter = ", "
+            gp.write("'-' using 1:2 title '%s' with lines%s" % (key, delimiter))
+        gp.write("\n")
+
+        if header_text is not None:
+            logger.debug("header text is" + str(header_text))
+
+        # Now output the file data
+        header = True
+        for row in rows:
+            if header:
+                header = False
                 continue
-            else:
-                gp.write("%s %s\n" % (header_text[column], value))
 
-        # Write gnuplot file delimiter
-        gp.write("e\n")
+            # Iterate over the columns.  If not empty, print header for
+            # that position, then the value.
+            for column, value in enumerate(row):
+                logger.debug("column=%s value=%s" % (column, value))
+                if column == 0:
+                    continue
+                elif value is None or value.strip() == "":
+                    continue
+                else:
+                    gp.write("%s %s\n" % (header_text[column], value))
 
-    gp.close()
+            # Write gnuplot file delimiter
+            gp.write("e\n")
 
+        gp.close()
+    except:
+        print ("Error while spawning gnuplot")
 
 def table_csv2gnuplot(in_file, out_file, graph_title):
     in_lines = []
@@ -188,90 +190,91 @@ def ds_gnuplotter(set_container, destination, title="", tsdata=True, ycolumn=1, 
     This expects that the first column in all data sets is a timestamp used for
     the X axis values.  The time is in UNIX epoch format.
     """
+    try:
+        gp = os.popen('gnuplot', 'w')
 
-    gp = os.popen('gnuplot', 'w')
+        # TODO Make the input destination actually get used by the output file here
+        gp.write("set output '" + destination + "';\n")
+        gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
+        gp.write("set title '%s'; " % title)
 
-    # TODO Make the input destination actually get used by the output file here
-    gp.write("set output '" + destination + "';\n")
-    gp.write("set terminal pngcairo size 640,480 enhanced font 'sans,10';\n")
-    gp.write("set title '%s'; " % title)
+        if tsdata:
+            gp.write("set xdata time;\n")
+            gp.write("set timefmt \"%s\";\n")
+            gp.write("set format x \"%H:%M:%S\"\n")
+            # When x axis label are in HH:MM::SS format, they will often overlap in common
+            # gnuplot version+font combinations.  The problem seems related to how errors
+            # like "using internal non-scalable font" will show up regularly.
+            # This hard-coded workaround is hackish, but it works well enough for
+            # the fixed 640x480 resolution of this program.
+            gp.write("set xtics 10;\n")
 
-    if tsdata:
-        gp.write("set xdata time;\n")
-        gp.write("set timefmt \"%s\";\n")
-        gp.write("set format x \"%H:%M:%S\"\n")
-        # When x axis label are in HH:MM::SS format, they will often overlap in common
-        # gnuplot version+font combinations.  The problem seems related to how errors
-        # like "using internal non-scalable font" will show up regularly.
-        # This hard-coded workaround is hackish, but it works well enough for
-        # the fixed 640x480 resolution of this program.
-        gp.write("set xtics 10;\n")
+        gp.write("set grid xtics ytics;\n")
+        gp.write("set key right bottom;\n")
+        gp.write("set xlabel 'Time'; set ylabel '%s'; " % ylabel)
 
-    gp.write("set grid xtics ytics;\n")
-    gp.write("set key right bottom;\n")
-    gp.write("set xlabel 'Time'; set ylabel '%s'; " % ylabel)
+        # Sometimes needed if auto-detection doesn't work right
+        if False:
+            gp.write("set yrange [0:30];\n")
 
-    # Sometimes needed if auto-detection doesn't work right
-    if False:
-        gp.write("set yrange [0:30];\n")
+        gp.write("plot ")
 
-    gp.write("plot ")
+        # To keep the structure orthogonal, the outer dictionary here will have a
+        # key name like "iostat" or "vmstat".  This code only handles one
+        # value there, so just dereference that with the first entry found.
+        logger.debug(set_container)
+        for outer in set_container.keys():
+            sets=set_container[outer]
+            break
 
-    # To keep the structure orthogonal, the outer dictionary here will have a
-    # key name like "iostat" or "vmstat".  This code only handles one
-    # value there, so just dereference that with the first entry found.
-    logger.debug(set_container)
-    for outer in set_container.keys():
-        sets=set_container[outer]
-        break
+        # Each key here is a new gnuplot data set file.  Iterate over the
+        # list once to describe all of them.
+        logger.debug(sets)
 
-    # Each key here is a new gnuplot data set file.  Iterate over the
-    # list once to describe all of them.
-    logger.debug(sets)
+        # TODO Convert key building to operate directly on dictionary
+        # Building a list of the keys in this dictionary is done only to
+        # detect when the last one is being processed, so that no "," is added.
+        # There should be a way to do that directly in dictionary form.
+        # enumerate works on dictionaries, but the result doesn't seem iterable.
+        keys = []
+        for key, rows in sets.items():
+            keys.append(key)
+        logger.debug("Data set list: %s\n" % keys)
 
-    # TODO Convert key building to operate directly on dictionary
-    # Building a list of the keys in this dictionary is done only to
-    # detect when the last one is being processed, so that no "," is added.
-    # There should be a way to do that directly in dictionary form.
-    # enumerate works on dictionaries, but the result doesn't seem iterable.
-    keys = []
-    for key, rows in sets.items():
-        keys.append(key)
-    logger.debug("Data set list: %s\n" % keys)
+        # List the data sets.  They all have to be defined before any of their data is written.
+        # TODO Is it possible to define a set in a gnuplot input file and then immediately write its data?
+        # This would be simpler if that's the case.
+        for index, key in enumerate(keys):
+            delimiter = ""
+            if index < (len(keys) - 1):
+                delimiter = ", "
+            gp.write("'-' using 1:2 title '%s' with lines%s" % (key, delimiter))
+        gp.write("\n")
 
-    # List the data sets.  They all have to be defined before any of their data is written.
-    # TODO Is it possible to define a set in a gnuplot input file and then immediately write its data?
-    # This would be simpler if that's the case.
-    for index, key in enumerate(keys):
-        delimiter = ""
-        if index < (len(keys) - 1):
-            delimiter = ", "
-        gp.write("'-' using 1:2 title '%s' with lines%s" % (key, delimiter))
-    gp.write("\n")
+        # Now output the file data
+        for k, v in sets.items():
+            logger.debug("v=%s", v)
+            for column, data in enumerate(v):
+                logger.debug("column=%s data=%s" % (column, data))
+                if len(data) < (ycolumn + 1):
+                    continue
+                x = data[0]
+                # gnuplot expects epoch timestamp data will have no fractional part.
+                # Cope with that given data at this point is still in string form.
+                if tsdata:
+                    x = int(float(x))
+                y = data[ycolumn]
+                if y is None or y.strip() == "":
+                    continue
+                else:
+                    logger.debug("(x,y)=%s %s\n" % (x, y))
+                    gp.write("%s %s\n" % (x, y))
 
-    # Now output the file data
-    for k, v in sets.items():
-        logger.debug("v=%s", v)
-        for column, data in enumerate(v):
-            logger.debug("column=%s data=%s" % (column, data))
-            if len(data) < (ycolumn + 1):
-                continue
-            x = data[0]
-            # gnuplot expects epoch timestamp data will have no fractional part.
-            # Cope with that given data at this point is still in string form.
-            if tsdata:
-                x = int(float(x))
-            y = data[ycolumn]
-            if y is None or y.strip() == "":
-                continue
-            else:
-                logger.debug("(x,y)=%s %s\n" % (x, y))
-                gp.write("%s %s\n" % (x, y))
-
-        # Write gnuplot file delimiter
-        gp.write("e\n")
-    gp.close()
-
+            # Write gnuplot file delimiter
+            gp.write("e\n")
+        gp.close()
+    except:
+        print ("Error while spawning gnuplot")
 
 def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, setlabel=None,fake_signals=0):
     """
@@ -327,7 +330,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     header_labels = columns[2:]
                     logger.debug("Header labels:  %s" % header_labels)
 
-                    # Darwin:  previous line will have the disk device then "cpu"
+                    # Darwin iostat:  previous line will have the disk device then "cpu"
                     # Use that sketchy set of facts to figure out the disk.
                     try:
                         logger.debug(prev_columns[3])

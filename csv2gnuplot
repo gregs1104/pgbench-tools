@@ -278,6 +278,28 @@ def ds_gnuplotter(set_container, destination, title="", tsdata=True, ycolumn=1, 
     except:
         print ("Error while spawning gnuplot")
 
+def value_parse(value):
+    """
+    Convert string value into a float.
+    Device columns will have the device name, skip those and other junk.
+    On Darwin some values have suffixes like this:
+        188921K
+    Those are mainly seen in the summary values given after each header.
+    Not sure how high those can go; supporting K, M, and G.
+    """
+
+    multiplier=1
+    if value.endswith("K"):  multiplier=1024
+    if value.endswith("M"):  multiplier=1024*1024
+    if value.endswith("G"):  multiplier=1024*1024*1024
+    value=value.rstrip("KMG")  # You down with KMG?
+    if multiplier>1:
+        logger.debug('multiplier %s %s',value,multiplier)
+    try:
+        return float(value) * multiplier
+    except:
+        return None
+
 def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal=None, setlabel=None,fake_signals=0):
     """
     Provides a generic way to derive labels that takes advantage of how some common input
@@ -430,14 +452,12 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
             val = columns[pos + 2]
             logger.debug("Considering %s %s %s %s" % (dataset, label, epoch, val))
 
-            # Device columns will have the name of the device, skip those and other junk
-            try:
-                float(val)
-            except:
+            float_val=value_parse(val)
+            if float_val is None:
                 logger.debug("Rejecting as not numeric:  '%s'",val)
                 continue
 
-            formatted = (str(epoch), str(val))
+            formatted = (str(epoch), str(float_val))
 
             if dataset not in sets:
                 sets[str(dataset)] = {}
@@ -445,8 +465,8 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                 sets[str(dataset)][label] = []
 
             sets[str(dataset)][label].append(formatted)
-            logger.debug("Appended %s %s %s %s" % (dataset, label, epoch, val))
-            metric_row=[ts,val,match_prefix + label]
+            logger.debug("Appended %s %s %s %s" % (dataset, label, epoch, float_val))
+            metric_row=[ts,float_val,match_prefix + label]
             csv_rows.append(metric_row)
 
 # The CSV data has to be saved in an array and written at the end.

@@ -12,13 +12,14 @@ logger.setLevel(dblevel)
 
 def try_pandas(s,fn):
     want_pandas = False
-    if want_pandas:
-        try:
-            import pandas
-        except:
-            return
+    if not want_pandas:
+        return
 
-    import pandas as pd
+    try:
+        import pandas as pd
+    except:
+        return
+
     df=pd.DataFrame(s)
     df.to_json(("%s.json" % fn))
     logger.debug("pandas saved to '%s.json'",fn)

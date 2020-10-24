@@ -75,14 +75,17 @@ def parse_options():
 def try_pandas(s,fn):
     # TODO Make this a command line option
     want_pandas = False
-    if want_pandas:
-        try:
-            import pandas as pd
-        except:
-            return
-        df=pd.DataFrame(s)
-        df.to_json(fn)
-        logger.debug("pandas saved to '%s'",fn)
+    if not want_pandas:
+        return
+
+    try:
+        import pandas as pd
+    except:
+        return
+
+    df=pd.DataFrame(s)
+    df.to_json(fn)
+    logger.debug("pandas saved to '%s'",fn)
 
 # TODO Refactor the common gnuplot setup tasks in table_gnuplotter and ds_gnuplotter into gnuplot wrapper functions
 

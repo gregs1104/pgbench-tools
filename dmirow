@@ -11,6 +11,7 @@ BOARD=`sudo dmidecode | grep -A 2 "Base Board" | grep "Product Name:" | cut -d: 
 MEMVENDOR=`sudo dmidecode -t memory | grep "Manufacturer:" | sort | uniq | head -n 1 | cut -d: -f2`
 MEMTYPE=`sudo dmidecode -t memory | grep "Type:" | cut -d: -f 2 | grep -v "None" | sort | uniq | head -n 1`
 MEMSPEED=`sudo dmidecode -t memory | grep "Speed:" | sort | uniq | head -n 1 | cut -d: -f2`
+MEMPART=`sudo dmidecode -t memory | grep "Part Number" | head -n 1 | cut -d" " -f3`
 
 # TODO Handle more than one entry in disklist
 DISKMODEL=`sudo smartctl -i /dev/${DISKLIST} | grep "^Model Number" | cut -d":" -f2`
@@ -32,10 +33,10 @@ VALUES
 	TRIM('${SERVERNAME}'),
 	TRIM('${BOARDVENDOR}') || ' - ' || TRIM('${BOARD}'),
 	TRIM('${CPU}'),
-	TRIM('${MEMVENDOR}') || ' - ' || TRIM('${MEMTYPE}') || '-' || TRIM('${MEMSPEED}'),
+	TRIM('${MEMPART}') || ' - ' || TRIM('${MEMVENDOR}') || ' - ' || TRIM('${MEMTYPE}') || '-' || TRIM('${MEMSPEED}'),
 	TRIM('${DISKMODEL}') || ' - ' || TRIM('${DISKFW}'),
 	${PROCS},${MEMGB},${DISKGB}
 );
 "
 
-psql -h localhost -U postgres -d results -x -c "SELECT * FROM server WHERE server='${SERVER}'"
+psql -h localhost -U postgres -d results -x -c "SELECT * FROM server WHERE server='${SERVERNAME}'"

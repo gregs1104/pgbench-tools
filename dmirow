@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Collect Linux server info you can only grab as root, mostly DMI.
 # This is not pretty or robust, it's bootstrapping until I can do better.
@@ -11,15 +11,15 @@ BOARD=`sudo dmidecode | grep -A 2 "Base Board" | grep "Product Name:" | cut -d: 
 MEMVENDOR=`sudo dmidecode -t memory | grep "Manufacturer:" | sort | uniq | head -n 1 | cut -d: -f2`
 MEMTYPE=`sudo dmidecode -t memory | grep "Type:" | cut -d: -f 2 | grep -v "None" | sort | uniq | head -n 1`
 MEMSPEED=`sudo dmidecode -t memory | grep "Speed:" | sort | uniq | head -n 1 | cut -d: -f2`
-# TODO Handle more than one entry in disklist
 
-DISKMODEL=`sudo smartctl -i ${DISKLIST} | grep "^Model Number" | cut -d":" -f2`
-DISKFW=`sudo smartctl -i ${DISKLIST} | grep "^Firmware Version" | cut -d":" -f2`
+# TODO Handle more than one entry in disklist
+DISKMODEL=`sudo smartctl -i /dev/${DISKLIST} | grep "^Model Number" | cut -d":" -f2`
+DISKFW=`sudo smartctl -i /dev/${DISKLIST} | grep "^Firmware Version" | cut -d":" -f2`
 
 SERVERNAME=`hostname`
 PROCS=`cat /proc/cpuinfo  | grep ^processor | wc -l`
-DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'
-MEMGB=`free -h | grep "^Mem:" | awk '{print $2}'
+DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'`
+MEMGB=`free -h | grep "^Mem:" | awk '{print $2}'`
 
 psql -h localhost -U postgres -d results -c "DELETE FROM server WHERE server='${SERVERNAME}'"
 

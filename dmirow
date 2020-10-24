@@ -19,7 +19,7 @@ DISKFW=`sudo smartctl -i /dev/${DISKLIST} | grep "^Firmware Version" | cut -d":"
 SERVERNAME=`hostname`
 PROCS=`cat /proc/cpuinfo  | grep ^processor | wc -l`
 DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'`
-MEMGB=`free -h | grep "^Mem:" | awk '{print $2}'`
+MEMGB=`free -h | grep "^Mem:" | awk '{print substr($2, 1, length($2)-1)}'`
 
 psql -h localhost -U postgres -d results -c "DELETE FROM server WHERE server='${SERVERNAME}'"
 

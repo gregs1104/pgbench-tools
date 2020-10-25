@@ -505,8 +505,7 @@ for f in `ls /etc/lsb-release /etc/debian_version /etc/redhat-release 2>/dev/nul
 done
 
 # Save version info on Mac OS X
-OSNAME=`uname`
-if [ "$OSNAME" = "Darwin" ] ; then
+if [ "$OS" = "Darwin" ] ; then
   sw_vers >> $SETTINGS
 fi
 echo >> $SETTINGS

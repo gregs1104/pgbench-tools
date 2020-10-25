@@ -39,13 +39,13 @@ else
   # Produce combined report, averaged across all test sets
   $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' group by scale order by scale" > scaling.txt
   gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
-  mv scaling.png results/$SERVERNAME/
-  rm scaling.txt
+  mv -f scaling.png results/$SERVERNAME/
+  rm -f scaling.txt
 
   $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' group by clients order by clients" > clients.txt
   gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
-  mv clients.png results/$SERVERNAME/
-  rm clients.txt
+  mv -f clients.png results/$SERVERNAME/
+  rm -f clients.txt
 fi
 
 # Copy the header HTML template to our outfile
@@ -95,13 +95,13 @@ for SET in $SETS ; do
     # Generate graphs for just this test set
     $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' group by scale order by scale" > scaling.txt
     gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
-    mv scaling.png results/${SERVERNAME}/scaling-$SET.png
-    mv scaling.txt scaling-$SET.txt
+    mv -f scaling.png results/${SERVERNAME}/scaling-$SET.png
+    mv -f scaling.txt scaling-$SET.txt
 
     $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' group by clients order by clients" > clients.txt
     gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
-    mv clients.png results/${SERVERNAME}/clients-$SET.png
-    mv clients.txt clients-$SET.txt
+    mv -f clients.png results/${SERVERNAME}/clients-$SET.png
+    mv -f clients.txt clients-$SET.txt
  fi
 
   echo "<img src=\"scaling-$SET.png\"><p>" >> $OUTFILE
@@ -206,15 +206,15 @@ done
 if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   gnuplot multi-scale.plot 2>&1 | grep -v "Warning: empty"
   gnuplot multi-client.plot 2>&1 | grep -v "Warning: empty"
-  mv clients-sets.png results/$SERVERNAME/
-  mv scaling-sets.png results/$SERVERNAME/
-  rm multi-scale.plot
-  rm multi-client.plot
+  mv -f clients-sets.png results/$SERVERNAME/
+  mv -f scaling-sets.png results/$SERVERNAME/
+  rm -f multi-scale.plot
+  rm -f multi-client.plot
 fi
 
 for SET in $SETS ; do
   rm -f scaling-$SET.txt clients-$SET.txt
 done
 
-rm temp.txt
+rm -f temp.txt
 cat templates/footer.html >> $OUTFILE

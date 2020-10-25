@@ -1,11 +1,13 @@
-#!/bin/bash
+#!/bin/bash -ex
 # Usage:
 #
 #   metrics2csv test server
 #
-# Recursive re-processing of an entire directory tree coded but not callable yet
+# Or recursive re-processing of an entire directory tree instead:
+#
+  #   metrics2csv test server
 
-# Only for re-testing the import code
+# Scaffolding for re-testing the import code
 function clear {
 psql -d results -c "TRUNCATE TABLE test_metrics_data;"
 }
@@ -17,7 +19,7 @@ fi
 source ./config
 TEST=$1
 
-if [ -f "meminfo.log" ] ; then
+if [ -s "meminfo.log" ] ; then
     # Linux
     echo Processing Linux formatted log files
     ../../../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
@@ -32,6 +34,7 @@ fi
 
 psql -d results -f ../../../export-latency-metric.sql
 
+psql -d results -c "DELETE FROM test_metrics_data WHERE test=${TEST} AND server='${SERVERNAME}'"
 psql -d results -c "TRUNCATE TABLE tmp_metric_import;"
 psql -d results -c "\copy tmp_metric_import FROM 'latency_metric.csv' WITH CSV HEADER"
 psql -d results -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
@@ -77,7 +80,12 @@ done
 #
 # Main
 #
-if [ -n "$2" ] ; then
+
+if [ "$1" = "recurse" ] ; then
+  echo "Recursion mode"
+  reprocess
+
+elif [ -n "$2" ] ; then
   # Try to handle being called from test results directory or from
   # toolkit base directory
   if [ ! -f "iostat.log" ] ; then
@@ -85,5 +93,6 @@ if [ -n "$2" ] ; then
   fi
   process $1
 else
-  echo "Usage:  metrics2csv test server"
+    echo "Usage:  metrics2csv test server."
+    echo "Or use 'recurse' from the code directory for automatic mode."
 fi

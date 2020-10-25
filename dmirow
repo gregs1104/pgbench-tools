@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/bash -ex
 
 # Collect Linux server info you can only grab as root, mostly DMI.
 # This is not pretty or robust, it's bootstrapping until I can do better.
@@ -20,7 +20,11 @@ DISKFW=`sudo smartctl -i /dev/${DISKLIST} | grep "^Firmware Version" | cut -d":"
 SERVERNAME=`hostname`
 PROCS=`cat /proc/cpuinfo  | grep ^processor | wc -l`
 DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'`
-MEMGB=`free -h | grep "^Mem:" | awk '{print substr($2, 1, length($2)-1)}'`
+MEMGB=`free -h | grep "^Mem:" | awk '{print $2}'`
+
+# Remove possible endings of G or Gi
+MEMGB=${MEMGB%"Gi"}
+MEMGB=${MEMGB%"G"}
 
 psql -h localhost -U postgres -d results -c "DELETE FROM server WHERE server='${SERVERNAME}'"
 

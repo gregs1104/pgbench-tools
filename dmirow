@@ -1,34 +1,59 @@
-#!/bin/bash -ex
+#!/bin/bash
 
 # Collect Linux server info you can only grab as root, mostly DMI.
 # This is not pretty or robust, it's bootstrapping until I can do better.
 
 source ./config
 
-CPU=`more /proc/cpuinfo | grep "^model name" | head -n 1 | cut -d: -f 2`
-BOARDVENDOR=`sudo dmidecode | grep -A 1 "Base Board" | grep "Manufacturer:" | cut -d: -f 2`
-BOARD=`sudo dmidecode | grep -A 2 "Base Board" | grep "Product Name:" | cut -d: -f 2`
-MEMVENDOR=`sudo dmidecode -t memory | grep "Manufacturer:" | sort | uniq | head -n 1 | cut -d: -f2`
-MEMTYPE=`sudo dmidecode -t memory | grep "Type:" | cut -d: -f 2 | grep -v "None" | sort | uniq | head -n 1`
-MEMSPEED=`sudo dmidecode -t memory | grep "Speed:" | sort | uniq | head -n 1 | cut -d: -f2`
-MEMPART=`sudo dmidecode -t memory | grep "Part Number" | head -n 1 | cut -d" " -f3`
-
-# TODO Handle more than one entry in disklist
-DISKMODEL=`sudo smartctl -i /dev/${DISKLIST} | grep "^Model Number" | cut -d":" -f2`
-DISKFW=`sudo smartctl -i /dev/${DISKLIST} | grep "^Firmware Version" | cut -d":" -f2`
-
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 SERVERNAME=`hostname`
-PROCS=`cat /proc/cpuinfo  | grep ^processor | wc -l`
-DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'`
-MEMGB=`free -h | grep "^Mem:" | awk '{print $2}'`
+OS=`uname`
 
-# Remove possible endings of G or Gi
-MEMGB=${MEMGB%"Gi"}
-MEMGB=${MEMGB%"G"}
+if [ "$OS" = "Linux" ] ; then
+	CPU=`more /proc/cpuinfo | grep "^model name" | head -n 1 | cut -d: -f 2`
+	BOARDVENDOR=`sudo dmidecode | grep -A 1 "Base Board" | grep "Manufacturer:" | cut -d: -f 2`
+	BOARD=`sudo dmidecode | grep -A 2 "Base Board" | grep "Product Name:" | cut -d: -f 2`
+	PROCS=`cat /proc/cpuinfo  | grep ^processor | wc -l`
+	MEMVENDOR=`sudo dmidecode -t memory | grep "Manufacturer:" | sort | uniq | head -n 1 | cut -d: -f2`
+	MEMTYPE=`sudo dmidecode -t memory | grep "Type:" | cut -d: -f 2 | grep -v "None" | sort | uniq | head -n 1`
+	MEMSPEED=`sudo dmidecode -t memory | grep "Speed:" | sort | uniq | head -n 1 | cut -d: -f2`
+	MEMPART=`sudo dmidecode -t memory | grep "Part Number" | head -n 1 | cut -d" " -f3`
 
-psql -h localhost -U postgres -d results -c "DELETE FROM server WHERE server='${SERVERNAME}'"
+	# TODO Handle more than one entry in disklist
+	DISKMODEL=`sudo smartctl -i /dev/${DISKLIST} | grep "^Model Number" | cut -d":" -f2`
+	DISKFW=`sudo smartctl -i /dev/${DISKLIST} | grep "^Firmware Version" | cut -d":" -f2`
 
-psql -h localhost -U postgres -d results -c "
+	DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'`
+	MEMGB=`free -h | grep "^Mem:" | awk '{print $2}'`
+
+	# Remove possible endings of G or Gi
+	MEMGB=${MEMGB%"Gi"}
+	MEMGB=${MEMGB%"G"}
+
+elif [ "$OS" = "Darwin" ] ; then
+	BOARDVENDOR=`system_profiler SPHardwareDataType | grep "Model Name:" | cut -d":" -f 2`
+	BOARD=`system_profiler SPHardwareDataType | grep "Model Identifier:" | cut -d":" -f 2`
+	CPU=`sysctl machdep.cpu.brand_string | cut -d" " -f 2-`
+	PROCS=`sysctl hw.ncpu | cut -d" " -f 2`
+	MEMGB=`sysctl hw.memsize | awk '{print $2 / 1024 / 1024 / 1024}'`
+    MEMSPEED=`system_profiler SPMemoryDataType | grep "Speed:" | head -n 1 | awk '{print $2}'`
+	MEMTYPE=`system_profiler SPMemoryDataType | grep "Type:" | head -n 1 | awk '{print $2}'`
+	MEMVENDOR=`system_profiler SPMemoryDataType | grep "Manufacturer:" | head -n 1 | cut -d":" -f 2`
+	# Memory part number is often "-", save it regardless.
+	MEMPART=`system_profiler SPMemoryDataType | grep "Part Number:" | head -n 1 | cut -d":" -f 2`
+	DISKMODEL=`system_profiler SPStorageDataType | grep "Device Name:" | head -n 1 | cut -d":" -f 2`
+    DISKGB=`df -g | grep ${DISKLIST} | head -n 1 | awk '{print $2}'`
+	# There doesn't seem to be a way to get at disk firmware on Darwin.
+	# Use the volume type, like "AppleAPFSMedia", instead.
+	DISKFW=`system_profiler SPStorageDataType | grep "Media Name:" | head -n 1 | cut -d":" -f 2`
+else
+	echo Unsupported OS:  $OS
+	exit 1
+fi
+
+$RESULTPSQL -c "DELETE FROM server WHERE server='${SERVERNAME}'"
+
+$RESULTPSQL -c "
 INSERT INTO server
 	(server,server_info,server_cpu,server_mem,server_disk,
 	server_num_proc,server_mem_gb,server_disk_gb)
@@ -43,4 +68,4 @@ VALUES
 );
 "
 
-psql -h localhost -U postgres -d results -x -c "SELECT * FROM server WHERE server='${SERVERNAME}'"
+$RESULTPSQL -x -c "SELECT * FROM server WHERE server='${SERVERNAME}'"

@@ -42,7 +42,6 @@ else
     echo Processing Darwin formatted log files server $H test $TESTNUM
     ../../../csv2gnuplot -i iostat.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat
-    return
 fi
 
 $RESULTPSQL -f ../../../export-latency-metric.sql

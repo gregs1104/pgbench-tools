@@ -5,69 +5,78 @@
 #
 # Or recursive re-processing of an entire directory tree instead:
 #
-  #   metrics2csv test server
+#   metrics2csv test server
+
+source ./config
+TEST=$1
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
 # Scaffolding for re-testing the import code
 function clear {
-psql -d results -c "TRUNCATE TABLE test_metrics_data;"
+$RESULTPSQL -c "TRUNCATE TABLE test_metrics_data;"
+}
+
+function show {
+$RESULTPSQL -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
 }
 
 function process {
+# In theory I could rely on existing environment variables to figure these both
+# out.  In practice that's already caused one bug, so parameters for these two.
+TESTNUM="$1"
+H="$2"
+
 if [ ! -f config ] ; then
   echo Not a test result directory, skipping
+  return 1
 fi
-source ./config
-TEST=$1
 
 if [ -s "meminfo.log" ] ; then
     # Linux
-    echo Processing Linux formatted log files
+    echo Processing Linux formatted log files server '$H' test $TESTNUM
     ../../../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
     ../../../dirty-plot < meminfo.log > dirtydata.txt
 else
     # Assume Darwin for now, eventually others?
-    echo Processing Darwin formatted log files
+    echo Processing Darwin formatted log files server $H test $TESTNUM
     ../../../csv2gnuplot -i iostat.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat
+    return
 fi
 
-psql -d results -f ../../../export-latency-metric.sql
+$RESULTPSQL -f ../../../export-latency-metric.sql
 
-psql -d results -c "DELETE FROM test_metrics_data WHERE test=${TEST} AND server='${SERVERNAME}'"
-psql -d results -c "TRUNCATE TABLE tmp_metric_import;"
-psql -d results -c "\copy tmp_metric_import FROM 'latency_metric.csv' WITH CSV HEADER"
-psql -d results -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
-psql -d results -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
+$RESULTPSQL -c "TRUNCATE TABLE tmp_metric_import;"
+$RESULTPSQL -c "\copy tmp_metric_import FROM 'latency_metric.csv' WITH CSV HEADER"
+$RESULTPSQL -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
+$RESULTPSQL -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
 if [ -f "meminfo.csv" ] ; then
-  psql -d results -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
+  $RESULTPSQL -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
 fi
-psql -d results -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TEST},'${SERVERNAME}'  FROM tmp_metric_import;"
-}
-
-function show {
-psql -d results -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
+$RESULTPSQL -c "DELETE FROM test_metrics_data WHERE test=${TESTNUM} AND server='$H}'"
+$RESULTPSQL -e -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TESTNUM},'${H}'  FROM tmp_metric_import;"
 }
 
 #
-# Recurse import an entire directory tree
+# Recurse import an entire directory tree4 1cr2 w
 #
 function reprocess {
 shopt -s nullglob
 pushd results
 
-for d in *
+for serv in *
 do
-  if [ -d $d ] ; then
-    pushd $d
-    echo "Server directory $d"
+  if [ -d $serv ] ; then
+    pushd $serv
+    echo "Server directory $serv"
 
-	for f in *
+	for t in *
 	do
-	  if [ -d $f ] ; then
-	    pushd $f
+	  if [ -d $t ] ; then
+	    pushd $t
 	    echo "Result directory $d/$f"
-	    process $f
+	    process $t $serv
         popd
 	  fi
     done
@@ -84,14 +93,13 @@ done
 if [ "$1" = "recurse" ] ; then
   echo "Recursion mode"
   reprocess
-
 elif [ -n "$2" ] ; then
   # Try to handle being called from test results directory or from
   # toolkit base directory
   if [ ! -f "iostat.log" ] ; then
     pushd results/$2/$1
   fi
-  process $1
+  process $2 $1
 else
     echo "Usage:  metrics2csv test server."
     echo "Or use 'recurse' from the code directory for automatic mode."

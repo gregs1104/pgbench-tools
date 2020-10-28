@@ -20,7 +20,7 @@ if [ "$OS" = "Linux" ] ; then
 	MEMPART=`sudo dmidecode -t memory | grep "Part Number" | head -n 1 | cut -d" " -f3`
 
 	# TODO Handle more than one entry in disklist
-	DISKMODEL=`sudo smartctl -i /dev/${DISKLIST} | grep "^Model Number" | cut -d":" -f2`
+	DISKMODEL=`sudo smartctl -i /dev/${DISKLIST} | egrep "^Model Number|^Device Model" | cut -d":" -f2`
 	DISKFW=`sudo smartctl -i /dev/${DISKLIST} | grep "^Firmware Version" | cut -d":" -f2`
 
 	DISKGB=`df -B1G | grep ${DISKLIST} | head -n 1 | awk '{print $4}'`

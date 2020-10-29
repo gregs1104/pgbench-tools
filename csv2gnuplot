@@ -51,7 +51,7 @@ def parse_options():
     optparser.add_option('-x', '--xlabel', dest="xlabel", default="Clients",
                          help="X Axis Label")
 
-    optparser.add_option('-y', '--ylabel', dest="ylabel", default="Transactions/second",
+    optparser.add_option('-y', '--ylabel', dest="ylabel", default="Transactions per second",
                          help="Y Axis Label")
 
     optparser.add_option('-s', '--signal', dest="header_signal", default=None,
@@ -121,9 +121,8 @@ def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=No
         gp.write("set grid xtics ytics;\n")
         gp.write("set key right bottom;\n")
 
-        # TODO Add parameters for this text
-        gp.write("set xlabel 'Clients';\n")
-        gp.write("set ylabel 'Transactions per second';\n")
+        gp.write("set xlabel '%s';\n" % xlabel)
+        gp.write("set ylabel '%s';\n" % ylabel)
         gp.write("set title '%s'; " % title)
 
         # Sometimes needed if auto-detection doesn't work right
@@ -176,12 +175,12 @@ def table_gnuplotter(rows, header=True, destination="graph", title="", xlabel=No
     except:
         print ("Error while spawning gnuplot")
 
-def table_csv2gnuplot(in_file, out_file, graph_title):
+def table_csv2gnuplot(in_file, out_file, graph_title, xlabel, ylabel):
     in_lines = []
     reader = csv.reader(in_file)
     for row in reader:
         in_lines.append(row)
-    table_gnuplotter(in_lines, header=True, destination=out_file, title=graph_title)
+    table_gnuplotter(in_lines, header=True, destination=out_file, title=graph_title,xlabel=xlabel,ylabel=ylabel)
 
 
 def ds_gnuplotter(set_container, destination, title="", tsdata=True, ycolumn=1, ylabel="Rate"):
@@ -504,7 +503,7 @@ def main():
 
     # TODO Convert remaining fixed values to parameter inputs:  filt_text, ylabel
     if options.data_type == "table":
-        return table_csv2gnuplot(file_to_process,out_file,options.title)
+        return table_csv2gnuplot(file_to_process,out_file,options.title,xlabel=options.xlabel,ylabel=options.ylabel)
     if options.data_type == "iostat":
         return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
                                filt_text=options.disk_list, 

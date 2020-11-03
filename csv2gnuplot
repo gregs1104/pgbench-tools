@@ -369,7 +369,7 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     # Darwin iostat:  previous line will have the disk device then "cpu"
                     # Use that sketchy set of facts to figure out the disk.
                     try:
-                        logger.debug(prev_columns[3])
+                        logger.debug("previous columns index 3=%s" % prev_columns[3])
                         if prev_columns[3]=="cpu":
                             darwin_format=True
                             disk=prev_columns[2]
@@ -377,6 +377,25 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                             header_labels[0]=disk+"_"+header_labels[0]
                             header_labels[1]=disk+"_"+header_labels[1]
                             header_labels[2]=disk+"_"+header_labels[2]
+
+                        elif prev_columns[3].startswith("disk"):
+                            # Handle two disk devices manually here.
+                            # TODO Handle more than two
+                            # TODO Reduce code duplication by handling 1 or 2
+                            darwin_format=True
+
+                            disk=prev_columns[2]
+                            logger.debug("Disk %s" % disk)
+                            header_labels[0]=disk+"_"+header_labels[0]
+                            header_labels[1]=disk+"_"+header_labels[1]
+                            header_labels[2]=disk+"_"+header_labels[2]
+
+                            disk=prev_columns[3]
+                            logger.debug("Disk %s" % disk)
+                            header_labels[3]=disk+"_"+header_labels[3]
+                            header_labels[4]=disk+"_"+header_labels[4]
+                            header_labels[5]=disk+"_"+header_labels[5]
+
                     except:
                         logger.debug("Failed to process previous row")
 
@@ -387,10 +406,6 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     if "0fill" in header_labels:
                         darwin_format=True
                         gulp_next=True
-                        prev_line=row
-                        continue
-                    if "KB/t" in header_labels:
-                        darwin_format=True
                         prev_line=row
                         continue
 

@@ -345,14 +345,14 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
     for row in in_file:
         columns = row.split()
 
-        # Throw out Darwin lies like this right out
+        # Throw out Darwin lines like this right out
         # "Mach Virtual Memory Statistics: (page size of 4096 bytes)"
         if len(columns)>3:
             if columns[2]=="Mach" and columns[3]=="Virtual":
                 darwin_format=True
                 prev_line=row
                 continue
-
+        disks=None
         # Look for a header label row.
         # Stop processing once one is found, since programs like vmstat
         # republish the header every screen.
@@ -387,6 +387,10 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     if "0fill" in header_labels:
                         darwin_format=True
                         gulp_next=True
+                        prev_line=row
+                        continue
+                    if "KB/t" in header_labels:
+                        darwin_format=True
                         prev_line=row
                         continue
 

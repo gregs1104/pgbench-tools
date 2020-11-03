@@ -11,7 +11,7 @@ else
     ioheader="KB/t"
 fi
 
-rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt iostat-darwin.json iostat-darwin.csv vmstat-darwin.csv vmstat-darwin.json
+rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtydata.txt iostat-darwin.json iostat-darwin.csv iostat-darwin-2.json iostat-darwin-2.csv vmstat-darwin.csv vmstat-darwin.json
 
 # Linux samples
 ../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks="sdc" -o iostat
@@ -20,7 +20,23 @@ rm -f disks.png disks.json iostat.png iostat.json vmstat.png vmstat.json dirtyda
 
 # Mac samples
 ../csv2gnuplot -i iostat-darwin.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat-darwin
+../csv2gnuplot -i iostat-darwin-2.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat-darwin-2
 ../csv2gnuplot -i vmstat-darwin.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat-darwin
 
 # Generic table
 ../csv2gnuplot -i disktable.csv -d table -t "Disk Comparison" -o disks
+#!/bin/bash -e
+# Test csv2gnuplot script
+
+if [ -f "meminfo.log" ] ; then
+    # Linux
+    vmheader="cache"
+    ioheader="Device"
+else
+    # Darwin
+    vmheader="wired"
+    ioheader="KB/t"
+fi
+
+# Mac samples
+

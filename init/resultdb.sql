@@ -163,6 +163,7 @@ SELECT
   round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
   max_dirty,
   server_version,
+  server_info,
   server_num_proc,
   server_mem_gb,
   server_disk_gb,

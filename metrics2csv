@@ -33,7 +33,7 @@ fi
 
 if [ -s "meminfo.log" ] ; then
     # Linux
-    echo Processing Linux formatted log files server '$H' test $TESTNUM
+    echo Processing Linux formatted log files server ${H} test $TESTNUM
     ../../../csv2gnuplot -i iostat.log -d iostat -s "Device" -t "pgbench disk" --disks=${DISKLIST} -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "cache" -t "pgbench vmstat" -o vmstat
     ../../../dirty-plot < meminfo.log > dirtydata.txt
@@ -53,7 +53,7 @@ $RESULTPSQL -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
 if [ -f "meminfo.csv" ] ; then
   $RESULTPSQL -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
 fi
-$RESULTPSQL -c "DELETE FROM test_metrics_data WHERE test=${TESTNUM} AND server='$H}'"
+$RESULTPSQL -c "DELETE FROM test_metrics_data WHERE test=${TESTNUM} AND server='${H}'"
 $RESULTPSQL -e -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TESTNUM},'${H}'  FROM tmp_metric_import;"
 }
 
@@ -98,7 +98,7 @@ elif [ -n "$2" ] ; then
   if [ ! -f "iostat.log" ] ; then
     pushd results/$2/$1
   fi
-  process $2 $1
+  process $1 $2
 else
     echo "Usage:  metrics2csv test server."
     echo "Or use 'recurse' from the code directory for automatic mode."

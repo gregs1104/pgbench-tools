@@ -269,8 +269,8 @@ def core_sweep(cores):
     because many disk devices can queue 32 requests.
     """
     if cores>=6:
-        l=[1,2,4,32]
-        custom=[int(cores/4),int(cores/2),cores,cores*2,cores*4]
+        l=[1,2,4,8,16,32]
+        custom=[cores,cores*2,cores*4]
         l=list(set(l + custom))
         l.sort()
     else:

@@ -346,20 +346,14 @@ def test_sizing():
     print('SETCLIENTS="%s" # Stress %s processors' % (test_cpus,cpus))
     print('SCALES="%s" # Max database %s MB' % (test_scales,max_memory_mb))
 
-def main(program_args):
-    pg_ver=version_parse(pg_version())
-    print("# PostgreSQL version",pg_ver)
-
-    machine_summary()
-    print()
-
-    test_sizing()
-
+def check_tracking():
+    # Disabling for now
+    if True:  return
     changes=0
     io=check_config('track_io_timing')
     if io=="off":
         print("Fixing track_io_timing")
-        o=spawn_read("psql -e -c 'ALTER SYSTEM SET track_io_timing=ON'")            
+        o=spawn_read("psql -Atc 'ALTER SYSTEM SET track_io_timing=ON'")
         print(o)
         changes=changes+1
 
@@ -370,17 +364,28 @@ def main(program_args):
         # TODO Existing shared_preload_libraries is probably an empty string or None here
         # Should handle the rare case where it's set to another module and that needs
         # to be merged with this case.
-        o=spawn_read("psql -e -c 'ALTER SYSTEM SET shared_preload_libraries = \'pg_stat_statements\''")     
+        o=spawn_read("psql -Atc 'ALTER SYSTEM SET shared_preload_libraries = \'pg_stat_statements\''")
         print(o)
 
-    o=spawn_read("psql -e -c 'SELECT extname FROM pg_extension where extname=\'pg_stat_statements\''")
+    o=spawn_read('psql -Atc "SELECT extname FROM pg_extension where extname=\'pg_stat_statements\'"')
     if o is None:  o=""
     o=o.strip()
     if o!='pg_stat_statements':
-        o=spawn_read("psql -e -c 'CREATE EXTENSION pg_stat_statistics'")
-    
+        o=spawn_read("psql -Atc 'CREATE EXTENSION pg_stat_statements'")
+
     if changes>0:
         print("Restart database to activate changes")
+
+def main(program_args):
+    test_parsing()
+    pg_ver=version_parse(pg_version())
+    print("# PostgreSQL version",pg_ver)
+
+    machine_summary()
+    print()
+
+    test_sizing()
+    check_tracking()
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

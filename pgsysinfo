@@ -10,7 +10,6 @@ import os
 import platform
 import re
 import sys
-import string
 from subprocess import Popen, PIPE, STDOUT
 
 # dateutil not really used.  It's just here so this script will catch
@@ -23,7 +22,7 @@ try:
     from ctypes import *
     # wintypes is only is available on Windows
     from ctypes.wintypes import *
-  
+
     def Win32Memory():
         class memoryInfo(Structure):
             _fields_ = [
@@ -54,12 +53,35 @@ def spawn_read(cmd):
     Basic wrapper to spawn programs like psql and consume a line of output.
     If there's an error, None is returned.
     """
+
+    from os import path
+    from shutil import which
+
+    wn=which("psql")
+    if not wn is None:
+        psqlbin=path.join(wn,cmd)
+    else:
+        psqlbin=cmd
+
+    if (False):
+        print ("psqlbin=",psqlbin)
+        print("Command line ",wn)
+
     p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT,
               close_fds=True, encoding='utf-8')
 
-    out=p.communicate()[0]
-    if p.returncode > 0:
+    out=p.communicate()[0].rstrip()
+    exit_code = p.returncode
+    
+    if exit_code==127:
+        print("Error 127:  your psql is not in the path where this Python script can find it")
+        sys.exit(exit_code)
+    
+    if exit_code > 0:
+        print("exit code is '%s'" % exit_code)
+        print("bad command:  '%s'" % cmd)
         return None
+
     return out
 
 def pg_version():
@@ -76,6 +98,15 @@ def pg_version():
     v=spawn_read('psql -Atc "show server_version"')
     if v is None:
         v=spawn_read('psql --version')
+    return v
+
+def check_config(guc):
+    """
+    Lookup a GUC value and return the value
+    """
+
+    # TODO When bindings like psycopg2 are around, use them for this query
+    v=spawn_read('psql -Atc "SELECT current_setting(\'%s\')"' % guc)
     return v
 
 def total_mem():
@@ -157,6 +188,7 @@ def version_parse(version):
     Multi-word input is fine, it takes the first word that seems like
     a version number--either starting with a digit or "V".
     """
+    if version is None:  return None
     max_pg=50
     v=None
 
@@ -289,8 +321,6 @@ def test_sizing():
     """
     Provide recommended sizing for performance testing of this system
     """
-    arch=platform.machine()
-
     total_memory = total_mem()
     if total_memory is None:
         print("Error:  total memory not specified and unable to detect")
@@ -317,7 +347,6 @@ def test_sizing():
     print('SCALES="%s" # Max database %s MB' % (test_scales,max_memory_mb))
 
 def main(program_args):
-    test_parsing()
     pg_ver=version_parse(pg_version())
     print("# PostgreSQL version",pg_ver)
 
@@ -325,6 +354,33 @@ def main(program_args):
     print()
 
     test_sizing()
+
+    changes=0
+    io=check_config('track_io_timing')
+    if io=="off":
+        print("Fixing track_io_timing")
+        o=spawn_read("psql -e -c 'ALTER SYSTEM SET track_io_timing=ON'")            
+        print(o)
+        changes=changes+1
+
+    sstat=check_config('shared_preload_libraries')
+    if sstat.find("pg_stat_statements")<0:
+        print("Fixing pg_stat_statements")
+        changes=changes+1
+        # TODO Existing shared_preload_libraries is probably an empty string or None here
+        # Should handle the rare case where it's set to another module and that needs
+        # to be merged with this case.
+        o=spawn_read("psql -e -c 'ALTER SYSTEM SET shared_preload_libraries = \'pg_stat_statements\''")     
+        print(o)
+
+    o=spawn_read("psql -e -c 'SELECT extname FROM pg_extension where extname=\'pg_stat_statements\''")
+    if o is None:  o=""
+    o=o.strip()
+    if o!='pg_stat_statements':
+        o=spawn_read("psql -e -c 'CREATE EXTENSION pg_stat_statistics'")
+    
+    if changes>0:
+        print("Restart database to activate changes")
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

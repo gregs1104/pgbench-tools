@@ -372,6 +372,7 @@ def check_tracking():
     o=o.strip()
     if o!='pg_stat_statements':
         o=spawn_read("psql -Atc 'CREATE EXTENSION pg_stat_statements'")
+        changes=changes + 1
 
     if changes>0:
         print("Restart database to activate changes")

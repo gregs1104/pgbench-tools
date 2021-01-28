@@ -114,18 +114,30 @@ CREATE TABLE server(
     server_details jsonb
   );
 
+DROP TABLE IF EXISTS tmp_metric_import;
 CREATE TABLE tmp_metric_import (
     collected timestamp,
     value float,
     metric text NOT NULL
 );
 
+DROP TABLE IF EXISTS test_metrics_data;
 CREATE TABLE test_metrics_data (
     collected TIMESTAMP,
     value float,
     metric text NOT NULL,
     test integer NOT NULL,
     server text NOT NULL
+);
+
+DROP TABLE IF EXISTS test_settings;
+CREATE TABLE test_settings (
+    server text,
+    test integer,
+    name text,
+    setting text,
+    numeric_value numeric,
+    units text
 );
 
 CREATE INDEX idx_test_metrics_test on test_metrics_data(server,test);

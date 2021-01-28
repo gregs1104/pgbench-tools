@@ -118,3 +118,12 @@ CREATE VIEW test_metric_summary AS
   ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.test,ts.tps,
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb;
+
+CREATE TABLE test_settings (
+    server text,
+    test integer,
+    name text,
+    setting text,
+    numeric_value numeric,
+    units text
+);

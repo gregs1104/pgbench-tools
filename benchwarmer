@@ -272,6 +272,7 @@ START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 fi
 $RESULTPSQL -c "insert into test_bgwriter(server,test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$SERVERNAME','$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 $TESTPSQL -c 'SELECT pg_stat_reset()' >> /dev/null 2>&1
+$TESTPSQL -c 'SELECT pg_stat_statements_reset()' >> /dev/null 2>&1
 
 # Setup test directory tree
 echo This is test $TEST
@@ -360,6 +361,9 @@ $TESTPSQL -c "\copy (SELECT '${SERVERNAME}', '$TEST',
     FROM pg_settings
 ) TO 'pgset.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_settings FROM 'pgset.csv' WITH DELIMITER ',' CSV HEADER"
+
+$TESTPSQL   -c "\copy (SELECT '$SERVERNAME','$TEST',queryid,query,plans,total_plan_time,min_plan_time,max_plan_time,mean_plan_time,stddev_plan_time,calls,total_exec_time,min_exec_time,max_exec_time,mean_exec_time,stddev_exec_time,rows,shared_blks_hit,shared_blks_read,shared_blks_dirtied,shared_blks_written,local_blks_hit,local_blks_read,local_blks_dirtied,local_blks_written,temp_blks_read,temp_blks_written,blk_read_time,blk_write_time,wal_records,wal_fpi,wal_bytes FROM pg_stat_statements WHERE calls>1) TO 'statements.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy test_statements FROM 'statements.csv' WITH DELIMITER ',' CSV HEADER"
 
 $TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp, stats_reset, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conflicts, temp_files, temp_bytes, deadlocks, blk_read_time, blk_write_time, '$SERVERNAME' FROM pg_stat_database WHERE datname=current_database()) TO 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_stat_database FROM 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
@@ -557,3 +561,4 @@ rm -f latency.txt
 rm -f dirtydata.txt
 rm -f dbstat.csv statio.csv
 rm -f pgset.csv
+rm -f statements.csv

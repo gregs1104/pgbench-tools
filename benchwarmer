@@ -336,7 +336,11 @@ $RESULTPSQL -c "update test_bgwriter set \
 
 $TESTPSQL -c "\copy (SELECT '${SERVERNAME}', '$TEST',
         name,
-        current_setting(name) AS setting,
+        setting,
+        unit,
+        source,
+        boot_val,
+        current_setting(name) AS value,
         CASE
             WHEN unit='B' THEN setting::numeric
             WHEN unit='8kB' THEN setting::numeric * 8192
@@ -352,7 +356,7 @@ $TESTPSQL -c "\copy (SELECT '${SERVERNAME}', '$TEST',
             WHEN unit IN ('B','8kB','kB','MB') THEN 'bytes'
             WHEN unit IN ('s','ms','min') THEN 'seconds'
             WHEN unit IN ('integer,real') THEN 'numeric'
-            END AS units
+            END AS numeric_unit
     FROM pg_settings
 ) TO 'pgset.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_settings FROM 'pgset.csv' WITH DELIMITER ',' CSV HEADER"

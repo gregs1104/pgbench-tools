@@ -136,8 +136,12 @@ CREATE TABLE test_settings (
     test integer,
     name text,
     setting text,
+    unit text,
+    source text,
+    boot_val text,
+    value text,
     numeric_value numeric,
-    units text
+    numeric_unit text
 );
 
 CREATE INDEX idx_test_metrics_test on test_metrics_data(server,test);

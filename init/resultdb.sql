@@ -146,7 +146,7 @@ CREATE TABLE test_settings (
 
 CREATE TABLE test_statements (
     server text,
-    test text,
+    test integer,
     queryid bigint,
     query text,
     plans bigint,

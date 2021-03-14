@@ -1,16 +1,32 @@
+\echo Summary scorecard
+WITH max AS (
+  SELECT server,max(scale) AS s FROM tests GROUP BY server
+  )
+SELECT
+  server,
+  script || '-' || CASE WHEN scale=100 THEN 'mem' ELSE 'seek' END || '-' || clients,
+  ROUND(AVG(tps))
+FROM tests
+  WHERE (scale=100 OR scale IN (SELECT s FROM max WHERE tests.server=max.server)) AND
+    (clients=1 OR clients=32) AND
+    (script='select' OR script='insert')
+    GROUP BY server,script,scale,clients
+    ORDER BY server,script,scale,clients
+\crosstabview
+
 \echo Average write rate MBps
 WITH t AS 
   (SELECT
-     server || '-' || set::text AS server,clients,round(avg(tps)) AS tps
+     server || '-' || set::text AS server,clients,round(avg(avg)) AS avg_write_Mbps
    FROM test_metric_summary
    WHERE
      script='insert' AND
      (metric='disk0_MB/s' OR metric like '%wMB/s') AND
-     clients IN (1,2,4,8,16,32)
+     clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
    ORDER BY server,set,clients
   )
-SELECT server,clients,tps FROM t
+SELECT server,clients,avg_write_Mbps FROM t
 \crosstabview
 
 \echo Maximum write rate MBps
@@ -21,7 +37,7 @@ WITH t AS
    WHERE
      script='insert' AND
      (metric='disk0_MB/s' OR metric like '%wMB/s') AND
-     clients IN (1,2,4,8,16,32)
+     clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
    ORDER BY server,set,clients
   )
@@ -36,7 +52,7 @@ WITH t AS
    WHERE
      script='insert' AND
      (metric='disk0_tps' OR metric like '%_w/s') AND
-     clients IN (1,2,4,8,16,32)
+     clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
    ORDER BY server,set,clients
   )
@@ -51,7 +67,7 @@ WITH t AS
    WHERE
      script='insert' AND
      (metric='disk0_tps' OR metric like '%_w/s') AND
-     clients IN (1,2,4,8,16,32)
+     clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
    ORDER BY server,set,clients
   )
@@ -66,7 +82,7 @@ WITH t AS (
    WHERE
      script='insert' AND
      metric='rate' AND
-     clients IN (1,2,4,8,16,32)
+     clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
    ORDER BY server,set,clients
   )
@@ -81,7 +97,7 @@ WITH t AS (
    WHERE
      script='insert' AND
      metric='rate' AND
-     clients IN (1,2,4,8,16,32)
+     clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
    ORDER BY server,set,clients
   )
@@ -95,12 +111,27 @@ FROM test_metric_summary
 WHERE
   script='insert' AND
   (metric='disk0_MB/s' OR metric like '%wMB/s') AND
-  clients IN (1,2,4,8,16,32)
+  clients IN (1,2,4,8,16,32,64,128)
 GROUP BY server,set,clients
 ORDER BY server,set,clients
 )
 SELECT * FROM t
 \crosstabview
+
+\echo Commit time usec
+WITH t AS (SELECT server || '-' || set::text AS server,clients,
+  ROUND(1000 * 1000.0 / avg(tps),3) AS commit_ms
+FROM test_metric_summary
+WHERE
+  script='insert' AND
+  (metric='disk0_MB/s' OR metric like '%wMB/s') AND
+  clients IN (1,2,4,8,16,32,64,128)
+GROUP BY server,set,clients
+ORDER BY server,set,clients
+)
+SELECT * FROM t
+\crosstabview
+
 
 \echo Linux disk util%
 WITH t AS (SELECT server || '-' || set::text AS server,scale,max(max) as max
@@ -108,7 +139,7 @@ FROM test_metric_summary
 WHERE
   script='insert' AND
   (metric like '%util') AND
-   clients IN (1,2,4,8,16,32)
+   clients IN (1,2,4,8,16,32,64,128)
 GROUP BY server,set,scale
 ORDER BY server,set,scale
 )

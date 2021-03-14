@@ -200,18 +200,20 @@ ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) R
 ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
-DROP VIEW IF EXISTS test_stats;
-CREATE VIEW test_stats AS
+DROP VIEW IF EXISTS test_stats CASCADE;
+CREATE OR REPLACE VIEW test_stats AS
+WITH test_wrap AS
+  (SELECT *,extract(epoch FROM (end_time - start_time))::bigint AS seconds FROM tests)
 SELECT
-  tests.set, testset.info, tests.server,script,scale,clients,tests.test,
+  testset.set, testset.info, server.server,script,scale,clients,test_wrap.test,
   round(dbsize / (1024 * 1024)) as dbsize_mb,
   round(tps) as tps, max_latency,
-  round(blks_hit           * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS hit_Bps,
-  round(blks_read          * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS read_Bps,
-  round(buffers_checkpoint * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS check_Bps,
-  round(buffers_clean      * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS clean_Bps,
-  round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,
-  round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
+  round(blks_hit           * 8192 / seconds) AS hit_Bps,
+  round(blks_read          * 8192 / seconds) AS read_Bps,
+  round(buffers_checkpoint * 8192 / seconds) AS check_Bps,
+  round(buffers_clean      * 8192 / seconds) AS clean_Bps,
+  round(buffers_backend    * 8192 / seconds) AS backend_Bps,
+  round(wal_written / seconds) AS wal_written_Bps,
   max_dirty,
   server_version,
   server_info,
@@ -219,12 +221,15 @@ SELECT
   server_mem_gb,
   server_disk_gb,
   server_details
-FROM test_bgwriter
-  RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
-  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server
-  RIGHT JOIN testset ON testset.set=tests.set and tests.server=test_bgwriter.server
-  FULL OUTER JOIN server on tests.server=server.server
-ORDER BY server,set,info,script,scale,clients,tests.test
+FROM
+  test_wrap
+  RIGHT JOIN test_bgwriter ON
+      test_wrap.test=test_bgwriter.test AND test_wrap.server=test_bgwriter.server
+  RIGHT JOIN test_stat_database ON
+      test_wrap.test=test_stat_database.test AND test_wrap.server=test_stat_database.server
+  RIGHT JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
+  FULL OUTER JOIN server on test_wrap.server=server.server
+ORDER BY server,set,info,script,scale,clients,test_wrap.test
 ;
 
 DROP VIEW IF EXISTS test_metrics;

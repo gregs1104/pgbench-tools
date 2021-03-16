@@ -1,0 +1,19 @@
+#!/usr/bin/env bash -ex
+
+pushd archive
+touch last_download
+rsync -av --progress grace:results/* .
+find * -type f -anewer last_download -print0 | while IFS= read -r -d '' file; do
+    server=`echo $file | cut -d"-" -f 1`
+    echo Importing $file from $server
+    pushd ..
+	./wipe_server $server
+	cd results
+	tar xfz ../archive/$file
+	psql -d results -f $server/$server-results.sql
+	popd
+done
+
+rm last_download
+popd
+exit

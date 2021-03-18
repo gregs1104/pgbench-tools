@@ -120,7 +120,7 @@ SELECT * FROM t
 
 \echo Commit time usec
 WITH t AS (SELECT server || '-' || set::text AS server,clients,
-  ROUND(1000 * 1000.0 / avg(tps),3) AS commit_ms
+  ROUND(1000 * 1000.0 / avg(tps),0) AS commit_ms
 FROM test_metric_summary
 WHERE
   script='insert' AND
@@ -133,7 +133,7 @@ SELECT * FROM t
 \crosstabview
 
 
-\echo Linux disk util%
+\echo Linux disk util% by scale
 WITH t AS (SELECT server || '-' || set::text AS server,scale,max(max) as max
 FROM test_metric_summary
 WHERE
@@ -143,5 +143,19 @@ WHERE
 GROUP BY server,set,scale
 ORDER BY server,set,scale
 )
-SELECT server,scale,max FROM t
+SELECT server,scale,CASE WHEN max>100 THEN 100 ELSE round(max) END FROM t
 \crosstabview
+
+\echo Linux disk util% by clients
+WITH t AS (SELECT server || '-' || set::text AS server,clients,max(max) as max
+FROM test_metric_summary
+WHERE
+  script='insert' AND
+  (metric like '%util') AND
+   clients IN (1,2,4,8,16,32,64,128)
+GROUP BY server,set,clients
+ORDER BY server,set,clients
+)
+SELECT server,clients,CASE WHEN max>100 THEN 100 ELSE round(max) END FROM t
+\crosstabview
+

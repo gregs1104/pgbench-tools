@@ -1,0 +1,20 @@
+#!/bin/bash -ex
+
+if [ -z "$1" ]; then
+  echo Usage:  wipe_server servername
+  exit 1
+fi
+
+source ./config
+SERVERNAME=$1
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+
+$RESULTPSQL -c "DELETE FROM test_bgwriter WHERE server='${SERVERNAME}';"
+$RESULTPSQL -c "DELETE FROM test_metrics_data WHERE server='${SERVERNAME}';"
+$RESULTPSQL -c "DELETE FROM test_stat_database WHERE server='${SERVERNAME}';"
+$RESULTPSQL -c "DELETE FROM test_statio WHERE server='${SERVERNAME}';"
+$RESULTPSQL -c "DELETE FROM tests WHERE server='${SERVERNAME}';"
+$RESULTPSQL -c "DELETE FROM testset WHERE server='${SERVERNAME}';"
+$RESULTPSQL -c "DELETE FROM server WHERE server='${SERVERNAME}';"
+
+rm -rf results/${SERVERNAME}

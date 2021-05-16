@@ -4,7 +4,8 @@ DROP TABLE IF EXISTS testset CASCADE;
 CREATE TABLE testset(
   server text NOT NULL,
   set serial NOT NULL,
-  info text
+  info text,
+  category text;
   );
 
 DROP TABLE IF EXISTS tests CASCADE;

@@ -166,3 +166,6 @@ CREATE TABLE test_statements (
     wal_fpi bigint,
     wal_bytes numeric
 );
+
+
+ALTER TABLE testset ADD COLUMN category text;

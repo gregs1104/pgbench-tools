@@ -1,10 +1,15 @@
 #!/bin/bash
 
-#Cleaning results from test number
+# Cleaning results from test number.
+# Second parameter allows overriding the server name.
 
 source ./config
 TEST=$1
 
+if [ -n "$2" ] ; then
+	SERVERNAME=$2
+	echo Overriding server to ${SERVERNAME}
+fi
 pushd "results/${SERVERNAME}"
 psql -d results -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND test=$TEST" | xargs rm -rf
 psql -d results -At -c "DELETE FROM test_bgwriter WHERE server='${SERVERNAME}' AND test=$TEST"

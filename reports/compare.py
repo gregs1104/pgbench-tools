@@ -15,7 +15,7 @@ server='rising'
 server_label = server
 # TODO add server name from lookup and use that for chart title
 sets=">0"
-sets="IN (20,23,5)"
+#sets="IN (20,23,5)"
 sql="""
 SELECT 
 --  server_info,
@@ -27,7 +27,8 @@ FROM tests
   JOIN testset ON (tests.set=testset.set AND tests.server=testset.server)
 WHERE
   tests.server='%s' AND
-  tests.set %s
+  tests.set %s AND
+  testset.category='reference'
 GROUP BY server_info,testset.info,tests.server,tests.set,tests.script,clients
 ORDER BY server_info,testset.info,tests.server,tests.set,tests.script,clients
 ;""" % (server,sets);

@@ -11,27 +11,57 @@ import matplotlib.pyplot as plt
 #        records = cursor.fetchall()
 #        pprint.pprint(records)
 
-server='rising'
+server='mirror'
 server_label = server
 # TODO add server name from lookup and use that for chart title
-sets=">0"
-#sets="IN (20,23,5)"
 sql="""
-SELECT 
+SELECT
 --  server_info,
   testset.info,
---  script,tests.set,
-  clients,round(avg(tps)) AS tps 
-FROM tests 
+  clients,round(avg(tps)) AS tps
+FROM tests
   JOIN server ON (tests.server=server.server)
   JOIN testset ON (tests.set=testset.set AND tests.server=testset.server)
 WHERE
   tests.server='%s' AND
-  tests.set %s AND
   testset.category='reference'
 GROUP BY server_info,testset.info,tests.server,tests.set,tests.script,clients
 ORDER BY server_info,testset.info,tests.server,tests.set,tests.script,clients
-;""" % (server,sets);
+;""" % (server);
+
+script='insert'
+sql="""
+SELECT
+  testset.info,
+  clients,round(avg(tps)) AS tps
+FROM tests
+  JOIN server ON (tests.server=server.server)
+  JOIN testset ON (tests.set=testset.set AND tests.server=testset.server)
+WHERE
+  tests.script='%s' AND
+  testset.category='reference'
+GROUP BY server_info,testset.info,tests.server,tests.set,tests.script,clients
+ORDER BY server_info,testset.info,tests.server,tests.set,tests.script,clients
+;""" % (script);
+
+
+script='nobranch'
+col='scale_percentage'
+sql="""
+SELECT
+  testset.info,
+  round(100.0 * scale * 16 * 1024*1024 / (1024*1024*1024) / server_mem_gb) AS %s,
+  round(avg(tps)) AS tps
+FROM tests
+  JOIN server ON (tests.server=server.server)
+  JOIN testset ON (tests.set=testset.set AND tests.server=testset.server)
+WHERE
+  tests.script='%s' AND
+  testset.category='reference'
+GROUP BY server_info,testset.info,tests.server,server_mem_gb,tests.set,tests.script,scale
+ORDER BY server_info,testset.info,tests.server,server_mem_gb,tests.set,tests.script,scale
+;""" % (col,script);
+
 
 def main():
     conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
@@ -39,6 +69,7 @@ def main():
     conn = psycopg2.connect(conn_string)
 
     try:
+#        print(sql)
         df = pd.read_sql_query(sql, conn)
         return df
     finally:
@@ -48,7 +79,7 @@ if __name__ == "__main__":
     # TODO Create this directory if it doesn't exist
     base="images"
     df=main()
-    df.set_index(['clients'], inplace=True)
+    df.set_index(col, inplace=True)
     g=df.groupby('info')
     print(g)
 
@@ -62,7 +93,8 @@ if __name__ == "__main__":
         print("Processing",k)
         v.rename(columns={'tps':k},inplace=True)
         print(v)
-        ax=v.plot(grid=True,title=server_label,figsize=(8,6),ax=ax)
+        # TODO title needs to be server_label on first SQL, then script on second/third
+        ax=v.plot(grid=True,title=script,figsize=(8,6),ax=ax)
         ax.set_ylabel('TPS')
         ax.xaxis.grid(True, which="minor")
 

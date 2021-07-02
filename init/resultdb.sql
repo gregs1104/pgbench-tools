@@ -41,7 +41,8 @@ CREATE TABLE timing(
   filenum int, 
   latency numeric(9,3),
   test int NOT NULL,
-  server text
+  server text,
+  schedule_lag numeric
   );
 
 CREATE INDEX idx_timing_test on timing(test,ts);

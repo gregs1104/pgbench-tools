@@ -169,3 +169,4 @@ CREATE TABLE test_statements (
 
 
 ALTER TABLE testset ADD COLUMN category text;
+ALTER TABLE timing ADD COLUMN schedule_lag numeric;

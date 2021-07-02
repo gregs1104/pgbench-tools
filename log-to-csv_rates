@@ -6,12 +6,11 @@ import csv
 
 test=sys.argv[1]
 server=sys.argv[2]
-lag=0
 
 out=csv.writer(sys.stdout,delimiter=',')
 for l in sys.stdin:
   l=l.strip()
-  (client,trans,latency,filenum,sec,usec)=l.split(" ")
+  (client,trans,latency,filenum,sec,usec,lag)=l.split(" ")
   latency=float(latency) / 1000
   timestamp=float(sec)+float(usec) / 1000000
   d=datetime.datetime.fromtimestamp(timestamp)

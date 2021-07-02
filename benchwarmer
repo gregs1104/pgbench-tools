@@ -404,8 +404,7 @@ echo Worst latency results:
 
 # TODO On Solaris, this may need to use /usr/xpg4/bin/tail instead
 cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
-
-tps=`grep "(including connections establishing)" results.txt | cut -d " " -f 3`
+tps=`egrep "(without initial connection time)|(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
 $RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans', trans_latency='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
 

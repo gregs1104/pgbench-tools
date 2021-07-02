@@ -80,7 +80,7 @@ WITH t AS (
      server || '-' || set::text AS server,clients,round(max(avg)) AS tps
    FROM test_metric_summary
    WHERE
-     script='insert' AND
+     (script='insert' OR script='select') AND
      metric='rate' AND
      clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
@@ -95,7 +95,7 @@ WITH t AS (
      server || '-' || set::text AS server,clients,round(avg(avg)) AS tps
    FROM test_metric_summary
    WHERE
-     script='insert' AND
+     (script='insert' OR script='select') AND
      metric='rate' AND
      clients IN (1,2,4,8,16,32,64,128)
    GROUP BY server,set,clients
@@ -137,7 +137,7 @@ SELECT * FROM t
 WITH t AS (SELECT server || '-' || set::text AS server,scale,max(max) as max
 FROM test_metric_summary
 WHERE
-  script='insert' AND
+  (script='insert' OR script='select') AND
   (metric like '%util') AND
    clients IN (1,2,4,8,16,32,64,128)
 GROUP BY server,set,scale
@@ -150,7 +150,7 @@ SELECT server,scale,CASE WHEN max>100 THEN 100 ELSE round(max) END FROM t
 WITH t AS (SELECT server || '-' || set::text AS server,clients,max(max) as max
 FROM test_metric_summary
 WHERE
-  script='insert' AND
+  (script='insert' OR script='select') AND
   (metric like '%util') AND
    clients IN (1,2,4,8,16,32,64,128)
 GROUP BY server,set,clients

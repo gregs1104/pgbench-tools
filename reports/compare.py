@@ -11,14 +11,15 @@ import matplotlib.pyplot as plt
 #        records = cursor.fetchall()
 #        pprint.pprint(records)
 
-server='mirror'
+server='rising'
 server_label = server
+col='clients'
 # TODO add server name from lookup and use that for chart title
 sql="""
 SELECT
 --  server_info,
   testset.info,
-  clients,round(avg(tps)) AS tps
+  clients AS %s,round(avg(tps)) AS tps
 FROM tests
   JOIN server ON (tests.server=server.server)
   JOIN testset ON (tests.set=testset.set AND tests.server=testset.server)
@@ -27,13 +28,15 @@ WHERE
   testset.category='reference'
 GROUP BY server_info,testset.info,tests.server,tests.set,tests.script,clients
 ORDER BY server_info,testset.info,tests.server,tests.set,tests.script,clients
-;""" % (server);
+;""" % (col,server);
 
 script='insert'
+col='clients'
 sql="""
 SELECT
   testset.info,
-  clients,round(avg(tps)) AS tps
+  clients AS %s,
+  round(avg(tps)) AS tps
 FROM tests
   JOIN server ON (tests.server=server.server)
   JOIN testset ON (tests.set=testset.set AND tests.server=testset.server)
@@ -42,15 +45,17 @@ WHERE
   testset.category='reference'
 GROUP BY server_info,testset.info,tests.server,tests.set,tests.script,clients
 ORDER BY server_info,testset.info,tests.server,tests.set,tests.script,clients
-;""" % (script);
+;""" % (col,script);
 
-
-script='nobranch'
+script='nobranch';
 col='scale_percentage'
 sql="""
 SELECT
   testset.info,
-  round(100.0 * scale * 16 * 1024*1024 / (1024*1024*1024) / server_mem_gb) AS %s,
+  round(100.0 * scale * 16 * 1024*1024 / (1024*1024*1024) / 
+        # TODO Remove this hack once server memory is tired to test or set
+        CASE WHEN tests.server='rising' and tests.set<14 THEN server_mem_gb / 2 ELSE server_mem_gb END)
+        AS %s,
   round(avg(tps)) AS tps
 FROM tests
   JOIN server ON (tests.server=server.server)
@@ -58,10 +63,10 @@ FROM tests
 WHERE
   tests.script='%s' AND
   testset.category='reference'
+  AND server.server in ('rising','crystal')
 GROUP BY server_info,testset.info,tests.server,server_mem_gb,tests.set,tests.script,scale
 ORDER BY server_info,testset.info,tests.server,server_mem_gb,tests.set,tests.script,scale
 ;""" % (col,script);
-
 
 def main():
     conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
@@ -69,7 +74,7 @@ def main():
     conn = psycopg2.connect(conn_string)
 
     try:
-#        print(sql)
+        print(sql)
         df = pd.read_sql_query(sql, conn)
         return df
     finally:

@@ -53,7 +53,7 @@ sql="""
 SELECT
   testset.info,
   round(100.0 * scale * 16 * 1024*1024 / (1024*1024*1024) / 
-        # TODO Remove this hack once server memory is tired to test or set
+        -- TODO Remove this hack once server memory is tied to test or set
         CASE WHEN tests.server='rising' and tests.set<14 THEN server_mem_gb / 2 ELSE server_mem_gb END)
         AS %s,
   round(avg(tps)) AS tps

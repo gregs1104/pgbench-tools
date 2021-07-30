@@ -12,6 +12,7 @@ server_label = server
 col='collected'
 
 script='nobranch';
+dbagg='second'
 sql="""
 SELECT
   test_metrics_data.server,
@@ -19,7 +20,7 @@ SELECT
   scale,clients,
   round(tps) AS tps,
   metric,
-  date_trunc('minute',collected) AS collected,
+  date_trunc('%s',collected) AS collected,
   min(value) AS min,
   CASE 
     WHEN avg(value) > 100 THEN round(avg(value))
@@ -36,9 +37,9 @@ WHERE
   test_metrics_data.test=3833 AND
   test_metrics_data.server='rising' AND
   metric IN ('rate','avg_latency','min_latency','max_latency','id','wa','Dirty','nvme0n1_%%util','nvme0n1_rMB/s','nvme0n1_wMB/s')
-GROUP BY test_metrics_data.server,script,scale,clients,tps,metric,date_trunc('minute',collected)
-ORDER BY test_metrics_data.server,script,scale,clients,tps,metric,date_trunc('minute',collected)
-;""" % (script)
+GROUP BY test_metrics_data.server,script,scale,clients,tps,metric,date_trunc('%s',collected)
+ORDER BY test_metrics_data.server,script,scale,clients,tps,metric,date_trunc('%s',collected)
+;""" % (dbagg,script,dbagg,dbagg)
 
 def main():
     conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
@@ -55,13 +56,9 @@ def main():
 if __name__ == "__main__":
     # TODO Create this directory if it doesn't exist
     base="images"
+
     df=main()
     df.set_index(col, inplace=True)
-    g=df.groupby('metric')
-    print(g)
-
-    fig=plt.figure();
-    ax=fig.add_subplot(1,1,1)
 
     df.rename(columns={'avg':'Open'},inplace=True)
     df.rename(columns={'max':'High'},inplace=True)
@@ -69,14 +66,26 @@ if __name__ == "__main__":
     df['Close'] = df['Open']
     df['Close'] = df.loc[:, 'Open']
 
+    g=df.groupby('metric')
+
+    print(g)
+    fig=plt.figure();
+    ax=fig.add_subplot(1,1,1)
+
     for k,v in g:
         print("Processing",k)
+
+        v = v.resample('15S').agg(
+            {'Open'  :'first',
+             'High'  :'max',
+             'Low'   :'min',
+             'Close' :'last'
+            })
         print(v)
 
         unslashed=k.replace("/","-")
         fn=os.path.join(base,unslashed)
 
-        # TODO If Pandas had all the data instead of the minute resolution could use mav
-        mpf.plot(v,type='ohlc',ylabel=k,savefig=fn)
+        mpf.plot(v,type='ohlc',ylabel=k,savefig=fn,mav=5)
 
         print("saved to '%s.png'" % fn)

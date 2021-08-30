@@ -72,6 +72,10 @@ TOTTRANS=""
 # This takes a list like scale and clients
 SETRATES=""
 
+# Alternately and preferred if you enable both, list some maximum
+# rates per client to test and the total rate will scale based on it.
+CLIENTRATES=""
+
 # Set to 1 to compute a lot of latency buckets at 1% intervals
 LARGEBUCKETS=0
 

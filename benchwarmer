@@ -6,10 +6,9 @@ source ./config
 # otherwise
 
 # Clients
-if [ ! -z "$1" ]; then
+CLIENTS=4
+if [ -n "$1" ]; then
   CLIENTS="$1"
-elif [ -z "$CLIENTS" ]; then
-  CLIENTS=4
 fi
 
 # Rate limit
@@ -21,10 +20,16 @@ else
   RATEOPT=""
 fi
 
-# latency limit
+# Client limit
+CLIENT_LIMIT=0
 if [ -n "$3" ]; then
-  LAT="$3"
-  LATOPT="-L $3 "
+  CLIENT_LIMIT="$3"
+fi
+
+# latency limit
+if [ -n "$4" ]; then
+  LAT="$4"
+  LATOPT="-L $4 "
 else
   LAT="NULL"
   LATOPT=""
@@ -240,7 +245,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit) values('$SERVERNAME','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE)"
+$RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit,client_limit) values('$SERVERNAME','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests WHERE server='${SERVERNAME}'"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?

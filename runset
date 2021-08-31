@@ -64,7 +64,7 @@ for SCALE in $SCALES; do
         for l in $CLIENTRATES; do
           r=`expr $c \* $l`
           echo Run set \#$t of $SETTIMES with $c clients @ target=$l scale=$SCALE rate=$r
-          ./benchwarmer $c $r
+          ./benchwarmer $c $r $l
         done 
       fi
       echo

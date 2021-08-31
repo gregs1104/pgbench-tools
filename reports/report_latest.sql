@@ -6,6 +6,7 @@ SELECT max(set) as lastset from tests
 SELECT
   set,script,scale,test,clients,workers,
   rate_limit AS limit,
+  client_limit AS client_limit,
   round(tps) AS tps,
   round(1000*avg_latency)/1000 AS avg_latency,
   round(1000*percentile_90_latency)/1000 AS "90%<",

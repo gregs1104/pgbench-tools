@@ -170,3 +170,4 @@ CREATE TABLE test_statements (
 
 ALTER TABLE testset ADD COLUMN category text;
 ALTER TABLE timing ADD COLUMN schedule_lag numeric;
+ALTER TABLE tests ADD COLUMN client_limit numeric;

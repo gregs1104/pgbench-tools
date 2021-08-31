@@ -127,7 +127,7 @@ EOF
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  
   $RESULTPSQL -H -c "SELECT set,'<a href=\"' || tests.test || '/index.html\">' || tests.test || '</a>' as test,
-    tests.server,script,scale,clients,rate_limit,
+    tests.server,script,scale,clients,rate_limit,client_limit,
     round(tps) as tps, round(tps / clients) as per_client, max_latency, 
     pg_size_pretty(round(blks_hit           * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as hit_per_sec,
     pg_size_pretty(round(blks_read          * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as read_per_sec,

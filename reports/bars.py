@@ -87,5 +87,6 @@ if __name__ == "__main__":
         fn=os.path.join(base,unslashed)
 
         mpf.plot(v,type='ohlc',ylabel=k,savefig=fn,mav=5)
+        mpf.plot(v,type='ohlc',ylabel=k,mav=5)
 
         print("saved to '%s.png'" % fn)

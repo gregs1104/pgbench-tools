@@ -280,7 +280,7 @@ $TESTPSQL -c 'SELECT pg_stat_reset()' >> /dev/null 2>&1
 $TESTPSQL -c 'SELECT pg_stat_statements_reset()' >> /dev/null 2>&1
 
 # Tack on multiplier to rate option set
-if [[ "$MULTI" -gt "0" ]] ; then
+if [[ "$MULTI" -ge "0" ]] ; then
   RATEOPT="$RATEOPT -Dmultiplier=$MULTI"
 fi
 

@@ -245,7 +245,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
-$RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit,client_limit) values('$SERVERNAME','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT)"
+$RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit,client_limit,multi) values('$SERVERNAME','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT,$MULTI)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests WHERE server='${SERVERNAME}'"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?
@@ -278,6 +278,11 @@ fi
 $RESULTPSQL -c "insert into test_bgwriter(server,test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$SERVERNAME','$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
 $TESTPSQL -c 'SELECT pg_stat_reset()' >> /dev/null 2>&1
 $TESTPSQL -c 'SELECT pg_stat_statements_reset()' >> /dev/null 2>&1
+
+# Tack on multiplier to rate option set
+if [[ "$MULTI" -gt "0" ]] ; then
+  RATEOPT="$RATEOPT -Dmultiplier=$MULTI"
+fi
 
 # Setup test directory tree
 echo This is test $TEST

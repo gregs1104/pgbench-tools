@@ -32,7 +32,8 @@ CREATE TABLE tests(
   end_latency timestamp default null,
   trans_latency int default null,
   server_version text default version(),
-  client_limit numeric default null
+  client_limit numeric default null,
+  multi numeric default 0
   );
 
 DROP TABLE IF EXISTS timing;

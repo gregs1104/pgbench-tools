@@ -156,5 +156,9 @@ if __name__ == "__main__":
         plt.savefig(fn,dpi=80)  # gives 640x480 figures
 #        plt.close()
         print("saved to '%s.png'" % fn)
-    ax.legend()
+
+    # Reserve legend order for when later sets tend to be faster
+    handles, labels = ax.get_legend_handles_labels()
+    ax.legend(reversed(handles), reversed(labels), loc='best')
+
     plt.show()

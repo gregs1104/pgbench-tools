@@ -1,10 +1,8 @@
 WITH lastset AS (
-SELECT max(set) as lastset from tests
+  SELECT max(set) as lastset from tests
 )
-
-
 SELECT
-  set,script,scale,test,clients,workers,
+  set,script,scale,test,clients,multi,
   rate_limit AS limit,
   client_limit AS client_limit,
   round(tps) AS tps,
@@ -14,4 +12,4 @@ SELECT
   trans
 FROM tests
 WHERE set = (SELECT lastset FROM lastset)
-ORDER BY set,script,scale,test,clients,rate_limit; 
+ORDER BY set,script,scale,clients,rate_limit,multi,test; 

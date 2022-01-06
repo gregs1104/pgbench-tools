@@ -183,10 +183,12 @@ else
   fi
 fi
 
-# Determine database scale
-SCALE=0
-if [ "$PGBENCH_TABLES" -eq "1" ] ; then
-  SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
+# Determine database scale.  Allow overriding it in the config file.
+# That's needed to run the pgbench init script.
+if [ -z $SCALE ] ; then
+  if [ "$PGBENCH_TABLES" -eq "1" ] ; then
+    SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
+  fi
 fi
 
 # Confirm we have a useful pgbench to run
@@ -284,6 +286,17 @@ if [[ "$MULTI" -ge "0" ]] ; then
   RATEOPT="$RATEOPT -Dmultiplier=$MULTI"
 fi
 
+# Decide between regular script and pass through.
+# Most options are lost in pass-through mode to support the init workload.
+# pgbench doesn't allow most of its command line parameters unless you're in
+# "benchmark mode", which an init operation is not.
+PREFIX="${SCRIPT:0:1}"
+if [ "$PREFIX" == ":" ] ; then
+  SCRIPTOPT="${SCRIPT:1}"
+else
+  SCRIPTOPT="-f $BASEDIR/$TESTDIR/$SCRIPT.sql $TESTLEN -l -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT"
+fi
+
 # Setup test directory tree
 echo This is test $TEST
 mkdir -p results/$SERVERNAME/$TEST
@@ -305,7 +318,7 @@ fi
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
-$PGBENCHBIN -f $BASEDIR/$TESTDIR/$SCRIPT.sql -s $SCALE -l -n $TESTLEN -U $TESTUSER -h $TESTHOST -p $TESTPORT -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT $TESTDB > results.txt 2>&1 &
+$PGBENCHBIN $SCRIPTOPT -s $SCALE -n -U $TESTUSER -p $TESTPORT  $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"

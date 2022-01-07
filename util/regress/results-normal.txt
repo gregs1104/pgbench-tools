@@ -1,0 +1,10 @@
+transaction type: /Users/gsmith/repos/pgbench-tools/tests/select-pages.sql
+scaling factor: 4250
+query mode: simple
+number of clients: 12
+number of threads: 12
+duration: 60 s
+number of transactions actually processed: 32484
+latency average = 22.203 ms
+tps = 540.479109 (including connections establishing)
+tps = 540.578481 (excluding connections establishing)

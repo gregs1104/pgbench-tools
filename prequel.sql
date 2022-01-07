@@ -172,3 +172,129 @@ ALTER TABLE testset ADD COLUMN category text;
 ALTER TABLE timing ADD COLUMN schedule_lag numeric;
 ALTER TABLE tests ADD COLUMN client_limit numeric;
 ALTER TABLE tests ADD COLUMN multi numeric;
+
+DROP VIEW IF EXISTS test_stats CASCADE;
+CREATE OR REPLACE VIEW test_stats AS
+WITH test_wrap AS
+  (SELECT *,extract(epoch FROM (end_time - start_time))::bigint AS seconds FROM tests)
+SELECT
+  testset.set, testset.info, server.server,script,scale,clients,multi,test_wrap.test,
+  round(dbsize / (1024 * 1024)) as dbsize_mb,
+  round(tps) as tps, max_latency,
+  round(blks_hit           * 8192 / seconds) AS hit_Bps,
+  round(blks_read          * 8192 / seconds) AS read_Bps,
+  round(buffers_checkpoint * 8192 / seconds) AS check_Bps,
+  round(buffers_clean      * 8192 / seconds) AS clean_Bps,
+  round(buffers_backend    * 8192 / seconds) AS backend_Bps,
+  round(wal_written / seconds) AS wal_written_Bps,
+  max_dirty,
+  server_version,
+  server_info,
+  server_num_proc,
+  server_mem_gb,
+  server_disk_gb,
+  server_details
+FROM
+  test_wrap
+  RIGHT JOIN test_bgwriter ON
+      test_wrap.test=test_bgwriter.test AND test_wrap.server=test_bgwriter.server
+  RIGHT JOIN test_stat_database ON
+      test_wrap.test=test_stat_database.test AND test_wrap.server=test_stat_database.server
+  RIGHT JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
+  FULL OUTER JOIN server on test_wrap.server=server.server
+ORDER BY server,set,info,script,scale,clients,test_wrap.test
+;
+
+DROP VIEW IF EXISTS test_metric_summary;
+CREATE VIEW test_metric_summary AS
+  WITH ts AS (
+    SELECT test_stats.info,test_stats.server,test_stats.set,
+      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test,test_stats.tps,
+      hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+      server_num_proc,server_mem_gb,server_disk_gb
+    FROM test_stats
+    ORDER BY test_stats.server,test_stats.set,
+      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test)
+  SELECT ts.server,ts.set,ts.script,ts.scale,ts.clients,ts.test,ts.multi,ts.tps,
+    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+    server_num_proc,server_mem_gb,server_disk_gb,
+    round(100.0 * dbsize_mb / 1024 / server_mem_gb) AS ram_pct,
+    metric,min(value) as min,round(avg(value)) as avg,max(value) as max
+  FROM ts
+  JOIN test_metrics_data ON ts.test=test_metrics_data.test AND ts.server=test_metrics_data.server
+  GROUP BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
+    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+    server_num_proc,server_mem_gb,server_disk_gb
+  ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
+    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+    server_num_proc,server_mem_gb,server_disk_gb;
+
+DROP VIEW read_io_summary;
+CREATE VIEW read_io_summary AS
+SELECT
+testset.info,
+server_num_proc,server_mem_gb,server_disk_gb,
+test_metric_summary.server,test_metric_summary.set,
+script,scale,clients,multi,test,tps,
+metric,round(min) AS read_min,round(avg) AS read_avg,round(max) AS read_max,
+round(hit_bps / 1024 / 1024) AS hit_mbps,round(read_bps / 1024 / 1024) AS read_mbps,round(check_bps / 1024 / 1024) AS check_mbps,round(clean_bps / 1024 / 1024) AS clean_mbps,
+round(backend_bps / 1024 / 1024) AS backend_mbps,
+round(wal_written_bps / 1024 / 1024) AS wal_written_mbps,
+ram_pct
+FROM test_metric_summary,testset
+WHERE 
+     testset.server=test_metric_summary.server AND
+     testset.set=test_metric_summary.set AND
+     metric like '%rMB/s'
+ORDER BY server,set,scale,clients;
+
+DROP VIEW write_io_summary;
+CREATE VIEW write_io_summary AS
+SELECT
+testset.info,
+server_num_proc,server_mem_gb,server_disk_gb,
+test_metric_summary.server,test_metric_summary.set,
+script,scale,clients,multi,test,tps,
+metric,round(min) AS write_min,round(avg) AS write_avg,round(max) AS write_max,
+round(read_bps / 1024 / 1024) AS read_mbps,round(hit_bps / 1024 / 1024) AS hit_mbps,round(check_bps / 1024 / 1024) AS check_mbps,round(clean_bps / 1024 / 1024) AS clean_mbps,
+round(backend_bps / 1024 / 1024) AS backend_mbps,
+round(wal_written_bps / 1024 / 1024) AS wal_written_mbps,
+ram_pct
+FROM test_metric_summary,testset
+WHERE 
+     testset.server=test_metric_summary.server AND
+     testset.set=test_metric_summary.set AND
+     (metric ='disk0_MB/s' OR metric like '%wMB/s')
+ORDER BY server,set,scale,clients;
+
+DROP VIEW test_disk_summary;
+CREATE VIEW test_disk_summary AS
+SELECT
+  w.server, w.set, w.info,
+  w.script, w.scale, w.clients, w.multi,
+  w.test, w.tps,
+  read_min,read_avg,read_max, 
+  w.read_mbps, 
+  w.hit_mbps,
+  w.check_mbps,
+  w.clean_mbps,
+  w.backend_mbps,
+  write_min,write_avg,write_max,
+  COALESCE(read_min,0) + write_min AS total_min,
+  COALESCE(read_avg,0) + write_avg AS total_avg,
+  COALESCE(read_max,0) + write_max AS total_max,
+  w.wal_written_mbps,
+  w.ram_pct
+FROM write_io_summary w
+    LEFT OUTER JOIN read_io_summary r ON
+        (r.server = w.server AND
+        r.set = w.set AND
+        r.script = w.script AND
+        r.scale = w.scale AND
+        r.clients = w.clients AND
+        r.test = w.test)
+ORDER BY server,set,scale,clients;
+
+ALTER TABLE tests ADD COLUMN artifacts jsonb;
+
+

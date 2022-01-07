@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+
+import re
+
+# TODO Show how to get the settings output the guc pattern looks for
+
+# Built these with the excellent https://regex101.com/ 
+gregexen = {
+    'stats': re.compile(r'(?P<type>Node|Way|Relation) stats: total\((?P<total>\d*)\), max\((?P<max>\d*)\) in (?P<seconds>\d*)s'),
+    'indexes': re.compile(r'All indexes on (?P<index>\w*) created in (?P<seconds>\d*)s'),
+    'overall': re.compile(r'took (?P<overall>\d*)s overall'),
+    'hit': re.compile(r'hit rate: (?P<hit>\d*.\d*)%'),
+    # This one is specific to how I save logs of osm2pgsql runs.  It shouldn't hurt other users.
+	'guc': re.compile(r'^ (?P<guc>.+) \| (?P<value>.+)$')
+}
+
+def check_line(line):
+    for key, gregex in gregexen.items():
+        match = gregex.search(line)
+        if match:
+            return key, match
+    return None, None
+
+def parse_file(filepath):
+    out = {}
+    with open(filepath, 'r') as f:
+        line = f.readline()
+        while line:
+            key, match = check_line(line)
+            line = f.readline()
+
+            if key == 'stats':
+                type = str.lower(match.group('type'))
+                max = int(match.group('max'))
+                seconds = int(match.group('seconds'))
+
+                label="%s_%s" % (type,'seconds')
+                out[label]=seconds
+
+                label="%s_%s" % (type,'count')
+                out[label]=max
+
+            if key == 'indexes':
+                index = match.group('index')
+                seconds = int(match.group('seconds'))
+                out[index]=seconds
+
+            if key == 'hit':
+                out[key]=float(match.group('hit'))
+
+            if key == 'guc':
+                setting = match.group('guc').rstrip()
+                val=match.group('value')
+                # If settings were printed with column headings, don't save the heading.
+                if setting.lstrip()!='name':
+	                out[setting]=val
+
+            if key == 'overall':
+                out[key]=int(match.group('overall'))
+                break
+
+    return out
+
+if __name__ == '__main__':
+    filepath = 'osm-sample.log'
+    d = parse_file(filepath)
+    print(d)

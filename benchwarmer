@@ -294,7 +294,7 @@ PREFIX="${SCRIPT:0:1}"
 if [ "$PREFIX" == ":" ] ; then
   SCRIPTOPT="${SCRIPT:1}"
 else
-  SCRIPTOPT="-f $BASEDIR/$TESTDIR/$SCRIPT.sql $TESTLEN -l -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT"
+  SCRIPTOPT="-f $BASEDIR/$TESTDIR/$SCRIPT.sql $TESTLEN -n -l -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT"
 fi
 
 # Setup test directory tree
@@ -318,7 +318,7 @@ fi
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
-$PGBENCHBIN $SCRIPTOPT -s $SCALE -n -U $TESTUSER -p $TESTPORT  $TESTDB > results.txt 2>&1 &
+$PGBENCHBIN $SCRIPTOPT -s $SCALE -U $TESTUSER -p $TESTPORT  $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"
@@ -355,6 +355,12 @@ $RESULTPSQL -c "update test_bgwriter set \
   buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync, \
   max_dirty=1024 * '$max_dirty' \
   WHERE server='${SERVERNAME}' AND test='$TEST'"
+
+# Import test artifacts from results.  So far this only gives useful output
+# for the pgbench init case.
+
+$BASEDIR/util/pgbench-init-parse > results.json
+$RESULTPSQL -f $BASEDIR/util/art-import.sql
 
 # Export database statistics from pgbench into results database
 

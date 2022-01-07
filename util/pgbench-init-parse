@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+
+# Parse the output from "pgbench -i" initialization and return
+# a list of the runtimes of each section.
+# Sample input:
+#   done in 17.24 s (drop tables 0.03 s, create tables 0.00 s, client-side generate 11.68 s, primary keys 5.52 s).
+# Sample output (without vacuum step):
+# {"done": ["17.24"], "drop": ["0.03"], "create": ["0.00"], "clientside": ["11.68"], "primary": ["5.52"]}
+import string
+import re
+import json
+
+def parse_file(filepath):
+    out = {}
+    with open(filepath, 'r') as f:
+        line = f.readline()
+        while line:
+            if line.startswith('done'):
+                # Splitting at the "s" seconds delimiter is fragile but works
+                keys=line.split(" s")
+                for k in keys:
+                    v=0
+                    text=k.translate(str.maketrans('', '', string.punctuation)).lstrip()
+                    try:
+                        text=text.split(maxsplit=1)[0]
+                        v=re.findall(r'\d+.\d+$', k)
+                        v=float(v)
+                    except:
+                        pass
+                    if len(text)>3:
+                        out[text]=v
+            line = f.readline()
+    return out
+
+if __name__ == '__main__':
+    filepath = 'results.txt'
+    d = parse_file(filepath)
+    print(json.dumps(d))

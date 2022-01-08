@@ -173,7 +173,6 @@ if [ "$PGCOUNT" -eq 4 ] ; then
 else
   TABLEPREFIX=""
   PGCOUNT=`$TESTPSQL -A -t -c "SELECT count(*)  FROM pg_stat_user_tables WHERE relname IN ('history','tellers','accounts','branches')"`
-  echo "count=$PGCOUNT"
   if [ "$PGCOUNT" -eq 4 ] ; then
     echo Found standard pgbench tables with prefix=$TABLEPREFIX
     PGBENCH_TABLES=1
@@ -409,7 +408,7 @@ END_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 fi
 $RESULTPSQL -q -c "UPDATE tests SET wal_written=wal_lsn('$END_WAL') - wal_lsn('$START_WAL') WHERE server='${SERVERNAME}' AND test=$TEST"
 
-cat results.txt
+tail -n 40 results.txt
 
 # Try to do the table cleanup before spoiling the database and OS cache by
 # touching the results heavily.  That means before reading pgbench.log,
@@ -447,7 +446,7 @@ if [ -z "$TESTFORTS" ]; then
   echo
   echo "ERROR:  the pgbench used for this test is missing transaction"
   echo timestamps.  No latency information will be imported into
-  echo the database, and no plots will be generated.
+  echo the database and some plots will be missing.
   echo
 else
 
@@ -472,6 +471,7 @@ else
   fi
 fi
 $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans_latency)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+fi
 
 if [ "$OS" = "Linux" ] ; then
   $BASEDIR/dirty-plot < meminfo.log > dirtydata.txt
@@ -526,8 +526,6 @@ $RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS col
   else
     echo "gnuplot not found, skipping benchwarmer charts generation"
   fi
-
-fi
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore

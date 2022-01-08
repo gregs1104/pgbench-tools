@@ -43,9 +43,17 @@ for SCALE in $SCALES; do
       $TESTPSQL -c "drop table ${TABLEPREFIX}accounts; drop table ${TABLEPREFIX}branches; drop table ${TABLEPREFIX}tellers; drop table ${TABLEPREFIX}history;"
     fi
     $TESTPSQL -c "vacuum"
+    echo Creating new pgbench tables scale=$SCALE
 
-    echo Creating new pgbench tables
-      time $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+    if [ -n "$NEWINIT" ] ; then
+      cp config config.orig
+      echo "SCRIPT=:-i" >> config
+      export SCALE && ./benchwarmer 1
+      cp config.orig config
+    else
+     time $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+    fi
+
   fi
   #
   # Run the main test

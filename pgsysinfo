@@ -314,7 +314,7 @@ def scale_sweep(biggest):
     List scales from 20% to 100% of maximum, plus tiny 100 size
     """
     steps=5
-    scales=[100] + [biggest * i / steps for i in range(1, steps + 1)]
+    scales=[100] + [int(biggest * i / steps) for i in range(1, steps + 1)]
     return scales
 
 def test_sizing():

@@ -352,7 +352,7 @@ $RESULTPSQL -c "update test_bgwriter set \
   buffers_backend=$buffers_backend - buffers_backend,\
   buffers_alloc=$buffers_alloc - buffers_alloc,\
   buffers_backend_fsync=$buffers_backend_fsync - buffers_backend_fsync, \
-  max_dirty=1024 * '$max_dirty' \
+  max_dirty=1024::bigint * '$max_dirty' \
   WHERE server='${SERVERNAME}' AND test='$TEST'"
 
 # Import test artifacts from results.  So far this only gives useful output

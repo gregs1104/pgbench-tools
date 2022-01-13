@@ -317,7 +317,7 @@ fi
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
-$PGBENCHBIN $SCRIPTOPT -s $SCALE -U $TESTUSER -p $TESTPORT  $TESTDB > results.txt 2>&1 &
+$PGBENCHBIN $SCRIPTOPT -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT  $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"

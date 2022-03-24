@@ -356,7 +356,7 @@ $RESULTPSQL -c "update test_bgwriter set \
   WHERE server='${SERVERNAME}' AND test='$TEST'"
 
 # Save database size at the end to support init case
-DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
+DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
 $RESULTPSQL -c "update tests set dbsize=${DBSIZE} WHERE server='${SERVERNAME}' AND test='${TEST}'"
 
 # Import test artifacts from results.  So far this only gives useful output

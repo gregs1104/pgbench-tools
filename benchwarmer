@@ -245,7 +245,7 @@ if [ "$SKIPINIT" -ne "1" ]; then
 fi
 
 # Create the tests record
-DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size('$TESTDB')"`
+DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
 $RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit,client_limit,multi) values('$SERVERNAME','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT,$MULTI)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests WHERE server='${SERVERNAME}'"`
 if [ "$?" -ne "0" ]; then

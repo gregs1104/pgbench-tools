@@ -83,7 +83,7 @@ LARGEBUCKETS=0
 PREPARED=0
 
 # Set to 1 to trim 10% off the start and end of the test
-TRIM=1
+TRIM=0
 
 # Set over 0 to target more pages of data per transaction using a range sweep
 MULTI=0

@@ -48,6 +48,8 @@ for SCALE in $SCALES; do
     if [ -n "$NEWINIT" ] ; then
       cp config config.orig
       echo "SCRIPT=:-i" >> config
+# Uncomment for server-side bulk load option
+#      echo "SCRIPT=':-i -I dtGvp'" >> config
       export SCALE && ./benchwarmer 1
       cp config.orig config
     else

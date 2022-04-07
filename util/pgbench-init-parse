@@ -4,8 +4,10 @@
 # a list of the runtimes of each section.
 # Sample input:
 #   done in 17.24 s (drop tables 0.03 s, create tables 0.00 s, client-side generate 11.68 s, primary keys 5.52 s).
-# Sample output (without vacuum step):
+#   done in 1638.72 s (drop tables 0.01 s, create tables 0.04 s, server-side generate 759.36 s, vacuum 628.60 s, primary keys 250.71 s).
+# Sample output (without and with vacuum step):
 # {"done": ["17.24"], "drop": ["0.03"], "create": ["0.00"], "clientside": ["11.68"], "primary": ["5.52"]}
+# {"done": ["1638.72"], "drop": ["0.01"], "create": ["0.04"], "serverside": ["759.36"], "vacuum": ["628.60"], "primary": ["250.71"]}
 import string
 import re
 import json
@@ -16,7 +18,7 @@ def parse_file(filepath):
         line = f.readline()
         while line:
             if line.startswith('done'):
-                # Splitting at the "s" seconds delimiter is fragile but works
+                # Splitting at the "s" seconds delimiter is fragile but almost works
                 keys=line.split(" s")
                 for k in keys:
                     v=0
@@ -27,6 +29,9 @@ def parse_file(filepath):
                         v=float(v)
                     except:
                         pass
+                    # Hack to fix side-effect of sloppy parsing above
+                    if text=="erverside":
+                        text="serverside"
                     if len(text)>3:
                         out[text]=v
             line = f.readline()

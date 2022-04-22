@@ -42,6 +42,12 @@ SERVERNAME=`hostname`
 # Main test run customization.  Test scripts add a .sql extension for you.
 #
 
+# New init style saves the database creation as a test itself,
+# defaulting to the server-side option.  During that build,
+# disabling the server side option gives default COPY style load.
+NEWINIT=1
+SERVERSIDE=1
+
 # Set this to a number only when using pgbench 9.0 or later.  This will set
 # the number of worker threads up to this maximum for each client count
 MAX_WORKERS="auto"

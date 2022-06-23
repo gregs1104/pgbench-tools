@@ -55,10 +55,24 @@ if [ -f "meminfo.csv" ] ; then
 fi
 $RESULTPSQL -c "DELETE FROM test_metrics_data WHERE test=${TESTNUM} AND server='${H}'"
 $RESULTPSQL -e -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TESTNUM},'${H}'  FROM tmp_metric_import;"
+
+$RESULTPSQL -e -c "
+WITH S AS (
+  SELECT test,server,date_trunc('second',ts) AS collected,
+  round(min(schedule_lag)::numeric / 1000,3) AS min_schedule_lag_ms,
+  round(avg(schedule_lag)::numeric / 1000,3) AS avg_schedule_lag_ms,
+  round(max(schedule_lag)::numeric / 1000,3) AS max_schedule_lag_ms
+  FROM timing GROUP BY test,server,date_trunc('second',ts)),
+L AS (
+  SELECT test,server,collected,min_schedule_lag_ms AS lag_val,'min_schedule_lag_ms' AS metric FROM S UNION
+  SELECT test,server,collected,max_schedule_lag_ms,'max_schedule_lag_ms' FROM S UNION
+  SELECT test,server,collected,avg_schedule_lag_ms,'avg_schedule_lag_ms' FROM S)
+INSERT INTO test_metrics_data (collected,value,metric,test,server)
+  SELECT collected,lag_val,metric,test,server FROM l;"
 }
 
 #
-# Recurse import an entire directory tree4 1cr2 w
+# Recurse import an entire directory tree
 #
 function reprocess {
 shopt -s nullglob

@@ -297,4 +297,16 @@ ORDER BY server,set,scale,clients;
 
 ALTER TABLE tests ADD COLUMN artifacts jsonb;
 
+DROP TABLE IF EXISTS test_buffercache;
+CREATE TABLE test_buffercache (
+    server text,
+    test integer,
+    schemaname text,
+    relname text,
+    bytes bigint,
+    avg_usage numeric,
+    max_usage smallint,
+    isdirty boolean
+);
 
+CREATE INDEX idx_buffercache on test_buffercache(server,test);

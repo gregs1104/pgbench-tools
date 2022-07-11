@@ -31,6 +31,8 @@ if [ ! -f "${TESTDIR}/${SCRIPT}.sql" ]; then
   exit
 fi
 
+$TESTPSQL -c "CREATE EXTENSION pg_buffercache;"
+
 for SCALE in $SCALES; do
   #
   # Have a consistent, clean set of pgbench tables to start 

@@ -149,6 +149,7 @@ CREATE TABLE test_settings (
     numeric_unit text
 );
 
+DROP TABLE IF EXISTS test_statements;
 CREATE TABLE test_statements (
     server text,
     test integer,
@@ -184,6 +185,18 @@ CREATE TABLE test_statements (
     wal_bytes numeric
 );
 
+DROP TABLE IF EXISTS test_buffercache;
+CREATE TABLE public.test_buffercache (
+    server text,
+    test integer,
+    schemaname text,
+    relname text,
+    bytes bigint,
+    avg_usage numeric,
+    max_usage smallint,
+    isdirty boolean
+);
+
 CREATE INDEX idx_test_metrics_test on test_metrics_data(server,test);
 
 CREATE UNIQUE INDEX idx_server_set on testset(server,set);
@@ -198,7 +211,8 @@ ALTER TABLE test_bgwriter ADD UNIQUE USING INDEX idx_server_test_2;
 CREATE UNIQUE INDEX idx_server_test_3 on test_stat_database(server,test);
 ALTER TABLE test_stat_database ADD UNIQUE USING INDEX idx_server_test_3;
 
-CREATE INDEX idx_test on test_statio(server,test);
+CREATE INDEX idx_test_statio on test_statio(server,test);
+CREATE INDEX idx_buffercache on test_buffercache(server,test);
 
 ALTER TABLE test_bgwriter ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;

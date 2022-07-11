@@ -3,4 +3,3 @@
 \set limit :limit - :range
 \set aid random(1, :limit)
 SELECT aid,abalance FROM pgbench_accounts WHERE aid >= :aid ORDER BY aid LIMIT :range;
-

@@ -359,13 +359,21 @@ $RESULTPSQL -c "update test_bgwriter set \
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
 $RESULTPSQL -c "update tests set dbsize=${DBSIZE} WHERE server='${SERVERNAME}' AND test='${TEST}'"
 
+# Stats and buffer cache data are spoiled very fast by post processing, grab them as early as feasible
+$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp, stats_reset, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conflicts, temp_files, temp_bytes, deadlocks, blk_read_time, blk_write_time, '$SERVERNAME' FROM pg_stat_database WHERE datname=current_database()) TO 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy test_stat_database FROM 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
+$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, indexrelname AS indexname, pg_relation_size(indexrelid) AS size, idx_blks_read AS rel_blks_read, idx_blks_hit AS rel_blks_hit,  '$SERVERNAME' FROM pg_statio_user_indexes UNION SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, NULL AS indexname, pg_relation_size(relid) AS size, heap_blks_read AS rel_blks_read, heap_blks_hit AS relk_blks_hit, '$SERVERNAME' FROM pg_statio_user_tables) TO 'statio.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy test_statio FROM 'statio.csv' WITH DELIMITER ',' CSV HEADER"
+$TESTPSQL   -c "\copy (SELECT '$SERVERNAME' AS server,'$TEST' AS test, N.nspname AS schemaname,c.relname,8192 * count(*) AS bytes, round(avg(usagecount)::numeric,2) AS avg_usage,max(usagecount) AS max_usage,isdirty FROM pg_class c LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) INNER JOIN pg_buffercache b ON b.relfilenode = c.relfilenode INNER JOIN pg_database d ON (b.reldatabase = d.oid AND d.datname = current_database()) WHERE NOT N.nspname IN ('pg_catalog','pg_toast','information_schema') GROUP BY N.nspname,c.relname,isdirty ) TO 'buffercache.csv' WITH DELIMITER ',' CSV HEADER"
+$RESULTPSQL -c "\copy test_buffercache FROM 'buffercache.csv' WITH DELIMITER ',' CSV HEADER"
+
 # Import test artifacts from results.  So far this only gives useful output
 # for the pgbench init case.
 
 $BASEDIR/util/pgbench-init-parse > results.json
 $RESULTPSQL -f $BASEDIR/util/art-import.sql
 
-# Export database statistics from pgbench into results database
+# Export less time sensitive database statistics from pgbench into results database
 
 $TESTPSQL -c "\copy (SELECT '${SERVERNAME}', '$TEST',
         name,
@@ -396,11 +404,6 @@ $RESULTPSQL -c "\copy test_settings FROM 'pgset.csv' WITH DELIMITER ',' CSV HEAD
 
 $TESTPSQL   -c "\copy (SELECT '$SERVERNAME','$TEST',queryid,query,plans,total_plan_time,min_plan_time,max_plan_time,mean_plan_time,stddev_plan_time,calls,total_exec_time,min_exec_time,max_exec_time,mean_exec_time,stddev_exec_time,rows,shared_blks_hit,shared_blks_read,shared_blks_dirtied,shared_blks_written,local_blks_hit,local_blks_read,local_blks_dirtied,local_blks_written,temp_blks_read,temp_blks_written,blk_read_time,blk_write_time,wal_records,wal_fpi,wal_bytes FROM pg_stat_statements WHERE calls>1) TO 'statements.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_statements FROM 'statements.csv' WITH DELIMITER ',' CSV HEADER"
-
-$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp, stats_reset, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conflicts, temp_files, temp_bytes, deadlocks, blk_read_time, blk_write_time, '$SERVERNAME' FROM pg_stat_database WHERE datname=current_database()) TO 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
-$RESULTPSQL -c "\copy test_stat_database FROM 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
-$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, indexrelname AS indexname, pg_relation_size(indexrelid) AS size, idx_blks_read AS rel_blks_read, idx_blks_hit AS rel_blks_hit,  '$SERVERNAME' FROM pg_statio_user_indexes UNION SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, NULL AS indexname, pg_relation_size(relid) AS size, heap_blks_read AS rel_blks_read, heap_blks_hit AS relk_blks_hit, '$SERVERNAME' FROM pg_statio_user_tables) TO 'statio.csv' WITH DELIMITER ',' CSV HEADER"
-$RESULTPSQL -c "\copy test_statio FROM 'statio.csv' WITH DELIMITER ',' CSV HEADER"
 
 # WAL values are initially saved as text because they're pulled from the test
 # database--but the functions to turn them into numeric types is available
@@ -486,7 +489,7 @@ fi
 $RESULTPSQL -c "DROP TABLE buckets" >> /dev/null 2>&1
 $RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.05 as bucket_size,0.0 as bucket_left,0.05*generate_series(1,20) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE server='${SERVERNAME}' AND test=$TEST"
 $RESULTPSQL -c "UPDATE buckets SET bucket_left=bucket_right - bucket_size;"
-$RESULTPSQL -c "UPDATE buckets SET offset_left=round(trans * bucket_left), offset_right=round(trans * bucket_right) - 1";
+$RESULTPSQL -c "UPDATE buckets SET offset_left=round(trans * bucket_left), offset_right=round(trans * bucket_right) - 1;"
 
 # DEBUG $RESULTPSQL -c "explain SELECT bucket_left,bucket_right,(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_left limit 1) as latency_left,(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_right limit 1) as latency_right FROM buckets"
 $RESULTPSQL -c "UPDATE buckets SET latency_left=(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_left limit 1), latency_right=(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_right limit 1)"

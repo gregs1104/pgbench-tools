@@ -21,4 +21,5 @@ $RESULTPSQL -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND test=$TEST"
 $RESULTPSQL -c "DELETE FROM test_metrics_data WHERE server='${SERVERNAME}' AND test=$TEST"
 $RESULTPSQL -c "DELETE FROM test_settings WHERE server='${SERVERNAME}' AND test=$TEST"
 $RESULTPSQL -c "DELETE FROM test_statements WHERE server='${SERVERNAME}' AND test=$TEST"
+$RESULTPSQL -c "DELETE FROM test_buffercache WHERE server='${SERVERNAME}' AND test=$TEST"
 popd

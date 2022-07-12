@@ -17,4 +17,5 @@ psql -d results -At -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND test=
 psql -d results -At -c "DELETE FROM test_metrics_data WHERE server='${SERVERNAME}' AND test=$TEST"
 psql -d results -At -c "DELETE FROM test_settings WHERE server='${SERVERNAME}' AND test=$TEST"
 psql -d results -At -c "DELETE FROM test_statements WHERE server='${SERVERNAME}' AND test=$TEST"
+psql -d results -At -c "DELETE FROM test_buffercache WHERE server='${SERVERNAME}' AND test=$TEST"
 popd

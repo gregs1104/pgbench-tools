@@ -370,7 +370,7 @@ $RESULTPSQL -c "\copy test_buffercache FROM 'buffercache.csv' WITH DELIMITER ','
 # Import test artifacts from results.  So far this only gives useful output
 # for the pgbench init case.
 
-$BASEDIR/util/pgbench-init-parse > results.json
+$BASEDIR/util/pgbench-init-parse results.txt "${SCRIPT}" > results.json
 $RESULTPSQL -f $BASEDIR/util/art-import.sql
 
 # Export less time sensitive database statistics from pgbench into results database

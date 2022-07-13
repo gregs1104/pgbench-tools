@@ -2,7 +2,8 @@
 
 # Parse the output from "pgbench -i" initialization and return
 # a list of the runtimes of each section with one-word keys.
-# Requires a PostgreSQL 13 or later pgbench
+# Init timing equires a PostgreSQL 13 or later pgbench.  Also
+# has a parser for osm2pgsql output with the same output format.
 #
 # Sample input:
 #   done in 17.24 s (drop tables 0.03 s, create tables 0.00 s, client-side generate 11.68 s, primary keys 5.52 s).
@@ -13,6 +14,7 @@
 import string
 import re
 import json
+import sys
 
 def parse_init_timing(filepath):
     out = {}
@@ -34,7 +36,68 @@ def parse_init_timing(filepath):
             line = f.readline()
     return out
 
+# osm2pgsql parsing section.
+# Built these with the excellent https://regex101.com/
+gregexen = {
+    'stats': re.compile(r'(?P<type>Node|Way|Relation) stats: total\((?P<total>\d*)\), max\((?P<max>\d*)\) in (?P<seconds>\d*)s'),
+    'indexes': re.compile(r'All indexes on (?P<index>\w*) created in (?P<seconds>\d*)s'),
+    'overall': re.compile(r'took (?P<overall>\d*)s overall'),
+    'hit': re.compile(r'hit rate: (?P<hit>\d*.\d*)%')
+}
+
+def check_line(line):
+    for key, gregex in gregexen.items():
+        match = gregex.search(line)
+        if match:
+            return key, match
+    return None, None
+
+def parse_osm_results(filepath):
+    out = {}
+    with open(filepath, 'r') as f:
+        line = f.readline()
+        while line:
+            key, match = check_line(line)
+            line = f.readline()
+
+            if key == 'stats':
+                type = str.lower(match.group('type'))
+                max = int(match.group('max'))
+                seconds = int(match.group('seconds'))
+
+                label="%s_%s" % (type,'seconds')
+                out[label] = seconds
+
+                label="%s_%s" % (type,'count')
+                out[label] = max
+
+            if key == 'indexes':
+                index = match.group('index')
+                seconds = int(match.group('seconds'))
+                out[index] = seconds
+
+            if key == 'hit':
+                out[key] = float(match.group('hit'))
+
+            if key == 'overall':
+                out[key] = int(match.group('overall'))
+                break
+
+    return out
+
 if __name__ == '__main__':
-    filepath = 'results.txt'
-    d = parse_init_timing(filepath)
+    if len(sys.argv)<3:
+        print("usage:  pgbench-init-parse <file> <script>")
+        sys.exit(1)
+    script = sys.argv[2]
+    filepath = sys.argv[1]
+
+    if script=="osm2pgsql":
+        d = parse_osm_results(filepath)
+    elif script.startswith(":-i"):
+        d = parse_init_timing(filepath)
+    else:
+        print("pgbench-init-parse:  unknown script type, aborting")
+        sys.exit(1)
+
     print(json.dumps(d))

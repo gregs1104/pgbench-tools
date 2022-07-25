@@ -332,7 +332,7 @@ def test_sizing():
         sys.exit(1)
 
     max_memory=total_memory * 4
-    max_memory_mb = max_memory / 1024 / 1024
+    max_memory_mb = round(max_memory / 1024 / 1024)
 
     # Each pgbench scale unit is just over 15MB.
     max_scale = max_memory_mb / 15

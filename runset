@@ -49,7 +49,7 @@ for SCALE in $SCALES; do
 
     if [ -n "$NEWINIT" ] ; then
       cp config config.orig
-      if [ -n "$SERVERSIDE" ] ; then
+      if [ "$SERVERSIDE" -eq "1" ] ; then
         echo "SCRIPT=':-i -I dtGvp'" >> config
       else
         echo "SCRIPT=:-i" >> config

@@ -91,13 +91,11 @@ if __name__ == '__main__':
         sys.exit(1)
     script = sys.argv[2]
     filepath = sys.argv[1]
+    d={}
 
     if script=="osm2pgsql":
         d = parse_osm_results(filepath)
     elif script.startswith(":-i"):
         d = parse_init_timing(filepath)
-    else:
-        print("pgbench-init-parse:  unknown script type, aborting")
-        sys.exit(1)
 
     print(json.dumps(d))

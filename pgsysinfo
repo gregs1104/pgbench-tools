@@ -344,7 +344,7 @@ def test_sizing():
     test_scales=' '.join(map(str, scale_sweep(max_scale)))
 
     print('SETCLIENTS="%s" # Stress %s processors' % (test_cpus,cpus))
-    print('SCALES="%s" # Max database %s MB' % (test_scales,max_memory_mb))
+    print('SCALES="%s" # 4X RAM=%s MB, 8X RAM scale=%s' % (test_scales,max_memory_mb,max_scale * 2))
 
 def check_tracking():
     # Disabling for now

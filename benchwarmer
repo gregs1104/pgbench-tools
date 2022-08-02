@@ -183,11 +183,14 @@ else
 fi
 
 # Determine database scale.  Allow overriding it in the config file.
-# That's needed to run the pgbench init script.
-if [ -z $SCALE ] ; then
+# That's needed to run the pgbench init script.  It can't be an empty string.
+if [ -z "$SCALE" ] ; then
   if [ "$PGBENCH_TABLES" -eq "1" ] ; then
     SCALE=`$TESTPSQL -A -t -c "select count(*) from ${TABLEPREFIX}branches"`
   fi
+fi
+if [ -z "$SCALE" ] ; then
+  SCALE="0"
 fi
 
 # Confirm we have a useful pgbench to run

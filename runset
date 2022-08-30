@@ -27,8 +27,8 @@ fi
 
 # Make sure the configured test script actually exists
 if [ ! -f "${TESTDIR}/${SCRIPT}.sql" ]; then
-  echo "ERROR: cannot find test script ${TESTDIR}/${SCRIPT}.sql, aborting"
-  exit
+  echo "Warning: cannot find test script ${TESTDIR}/${SCRIPT}.sql"
+  echo "This is normal for internally run initialization steps"
 fi
 
 $TESTPSQL -c "CREATE EXTENSION pg_buffercache;"

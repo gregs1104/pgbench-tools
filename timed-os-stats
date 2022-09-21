@@ -49,7 +49,11 @@ def capture(cmd,tag_all=True,tag_when=None):
     except OSError:
         sys.stderr.write("Unable to setsid(). Already process group leader?")
 
-    p = subprocess.Popen(cmd, shell = True,
+    # When executing via shell, use a string for command instead of a list
+    cmdstr=' '.join(cmd)
+
+    p = subprocess.Popen(cmdstr, shell = True,
+                         universal_newlines=True,  # text mode
                          stdout = subprocess.PIPE,
                          stderr = subprocess.STDOUT,
                          )                         
@@ -99,7 +103,7 @@ def linux_meminfo(interval=1):
         time.sleep(interval)
 
 def usage():
-    sys.stderr.write("Usage:  %s [vmstat | iostat | meminfo]\n" % sys.argv[0])
+    sys.stderr.write("Usage:  %s [vmstat | iostat | meminfo | psql]\n" % sys.argv[0])
     sys.stderr.write("Supported platforms are linux and darwin\n")
     sys.stderr.write("meminfo is only available on linux\n")
     sys.exit(1)
@@ -110,7 +114,9 @@ if __name__=='__main__':
 
     cmd=sys.argv[1]
 
-    if sys.platform.startswith('linux'):
+    if cmd=="psql":
+        capture(sys.argv[1:])
+    elif sys.platform.startswith('linux'):
         if cmd=='vmstat':
             capture("vmstat 1")
         elif cmd=='iostat':

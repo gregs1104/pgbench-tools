@@ -25,6 +25,10 @@ TABBED=0
 OSDATA=1
 
 # Test/result database connection
+#
+# Using a URI for the DB fields will overwrite the standard (host,port,user) trio
+# *only* if the URI specifies that section
+
 TESTHOST=localhost
 TESTUSER=`whoami`
 TESTPORT=5432

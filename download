@@ -1,8 +1,10 @@
 #!/usr/bin/env bash -ex
 
+source ./config
+
 pushd archive
 touch last_download
-rsync -av --progress grace:results/* .
+rsync -av --progress ${ARCHIVE}:results/* .
 find * -type f -anewer last_download -print0 | while IFS= read -r -d '' file; do
     server=`echo $file | cut -d"-" -f 1`
     echo Importing $file from $server

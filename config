@@ -42,6 +42,9 @@ RESULTDB=results
 # What server name to use when saving the results.  It's just a label,
 SERVERNAME=`hostname`
 
+# Central server to upload results to
+ARCHIVE="gsmith@pony"
+
 #
 # Main test run customization.  Test scripts add a .sql extension for you.
 #

@@ -4,7 +4,7 @@
 source ./config
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-DEST="gsmith@pony:results/"
+DEST="${ARCHIVE}:results/"
 
 NOW=`date "+%Y%m%d-%H%M%S"`
 TARBALL="$SERVERNAME-$NOW.tar.gz"

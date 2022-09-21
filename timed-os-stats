@@ -49,6 +49,34 @@ def capture(cmd,tag_all=True,tag_when=None):
     except OSError:
         sys.stderr.write("Unable to setsid(). Already process group leader?")
 
+    p = subprocess.Popen(cmd, shell = True,
+                         stdout = subprocess.PIPE,
+                         stderr = subprocess.STDOUT,
+                         )
+
+    pid = p.pid
+
+    while True:
+        line = p.stdout.readline()
+        if line == '' and p.poll() != None:
+            break
+
+        if tag_all:
+            sys.stdout.write("%s\t" % datetime.datetime.now())
+        elif tag_when != None and line.find(tag_when)>=0:
+            sys.stdout.write("%s\n" % datetime.datetime.now())
+
+        sys.stdout.write(line)
+
+    retcode = p.returncode
+
+# Popen parameters have to be different for text psql output
+def capture_text(cmd,tag_all=True,tag_when=None):
+    try:
+        os.setsid()
+    except OSError:
+        sys.stderr.write("Unable to setsid(). Already process group leader?")
+
     # When executing via shell, use a string for command instead of a list
     cmdstr=' '.join(cmd)
 
@@ -115,7 +143,7 @@ if __name__=='__main__':
     cmd=sys.argv[1]
 
     if cmd=="psql":
-        capture(sys.argv[1:])
+        capture_text(sys.argv[1:])
     elif sys.platform.startswith('linux'):
         if cmd=='vmstat':
             capture("vmstat 1")

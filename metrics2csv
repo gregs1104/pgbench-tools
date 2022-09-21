@@ -47,12 +47,14 @@ fi
 $RESULTPSQL -f ../../../export-latency-metric.sql
 
 $RESULTPSQL -c "TRUNCATE TABLE tmp_metric_import;"
+$RESULTPSQL -c "\copy tmp_metric_import FROM 'psql.log' WITH DELIMITER '|'"
 $RESULTPSQL -c "\copy tmp_metric_import FROM 'latency_metric.csv' WITH CSV HEADER"
 $RESULTPSQL -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
 $RESULTPSQL -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
 if [ -f "meminfo.csv" ] ; then
   $RESULTPSQL -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
 fi
+
 $RESULTPSQL -c "DELETE FROM test_metrics_data WHERE test=${TESTNUM} AND server='${H}'"
 $RESULTPSQL -e -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TESTNUM},'${H}'  FROM tmp_metric_import;"
 

@@ -316,6 +316,10 @@ if [ "$OSDATA" -eq "1" ]; then
   fi
 fi
 
+# This one should run even if osdata collectors are not available
+./timed-os-stats $TESTPSQL -At -f $BASEDIR/util/metric-query.sql > results/$SERVERNAME/$TEST/psql.log &
+PSQLMET=$!
+
 # Run the main pgbench test
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
@@ -326,6 +330,7 @@ wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"
 $RESULTPSQL -q -c "UPDATE tests SET start_latency=start_time, end_latency=end_time WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
 
+../../../kill_pg "${PSQLMET}"
 if [ "$OSDATA" -eq "1" ]; then
   # The PIDs we have will be the process ID of the Python timed-os-stats
   # process, but we must make sure to also kill the child processes (launched
@@ -371,7 +376,7 @@ $TESTPSQL   -c "\copy (SELECT '$SERVERNAME' AS server,'$TEST' AS test, N.nspname
 $RESULTPSQL -c "\copy test_buffercache FROM 'buffercache.csv' WITH DELIMITER ',' CSV HEADER"
 
 # Import test artifacts from results.  So far this only gives useful output
-# for the pgbench init case.
+# for the pgbench init case and osm2pgsql.
 
 $BASEDIR/util/pgbench-init-parse results.txt "${SCRIPT}" > results.json
 $RESULTPSQL -f $BASEDIR/util/art-import.sql
@@ -515,27 +520,27 @@ $RESULTPSQL -c "\copy (SELECT * FROM buckets) TO 'latency-100.csv' WITH DELIMITE
 $RESULTPSQL -c "DROP TABLE buckets"
 fi
 
-# Save second resolution transaction summary
+# Save second resolution transaction summary and metrics summaries
 $RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, round(1000*avg(latency))/1000 AS avg_latency, max(latency) AS max_latency FROM timing WHERE server='${SERVERNAME}' AND test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"
+$BASEDIR/metrics2csv $TEST "${SERVERNAME}"
 
-  if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
-    # Plot result graphs
-    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where server='${SERVERNAME}' AND test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
-    $GNUPLOT $BASEDIR/plots/tps.plot
+# Plot result graphs
+if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
+  $RESULTPSQL -A -t -F' ' -c "select extract(epoch from date_trunc('second',ts)),count(*) from timing where server='${SERVERNAME}' AND test=$TEST group by date_trunc('second',ts) order by date_trunc('second',ts)" > tpsdata.txt
+  $GNUPLOT $BASEDIR/plots/tps.plot
 
-    $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing WHERE server='${SERVERNAME}' AND test=$TEST" > latency.txt
-    $GNUPLOT $BASEDIR/plots/latency.plot
-    if [ -f dirtydata.txt ] ; then
-      $GNUPLOT $BASEDIR/plots/dirty.plot
-    fi
-    # TODO If $GNUPLOT is set to something other than its default value from `which`, there
-    # should be a command line option in csv2gnuplot that informs the program of that path.
-    $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
-    $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
-    $BASEDIR/metrics2csv $TEST "${SERVERNAME}"
-  else
-    echo "gnuplot not found, skipping benchwarmer charts generation"
+  $RESULTPSQL -A -t -F' ' -c "select extract(epoch from ts),latency from timing WHERE server='${SERVERNAME}' AND test=$TEST" > latency.txt
+  $GNUPLOT $BASEDIR/plots/latency.plot
+  if [ -f dirtydata.txt ] ; then
+    $GNUPLOT $BASEDIR/plots/dirty.plot
   fi
+  # TODO If $GNUPLOT is set to something other than its default value from `which`, there
+  # should be a command line option in csv2gnuplot that informs the program of that path.
+  $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
+  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
+else
+  echo "gnuplot not found, skipping benchwarmer charts generation"
+fi
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore

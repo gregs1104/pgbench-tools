@@ -1,0 +1,18 @@
+#!/usr/bin/env bash -ex
+
+# Reinstall file fom archive; sample:
+# server:pgbench-tools $ ./reinstall fragile-20211024-220659.tar.gz
+
+source ./config
+pushd archive
+file=$1
+server=`echo $file | cut -d"-" -f 1`
+echo Importing $file from $server
+pushd ..
+./wipe_server $server
+cd results
+tar xfz ../archive/$file
+psql -d results -f $server/$server-results.sql
+popd
+popd
+exit

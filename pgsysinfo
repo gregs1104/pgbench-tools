@@ -207,6 +207,10 @@ def version_parse(version):
     v=v.translate(trans)
     digits=v.split('.')
 
+    if digits[0].__contains__('rc') or digits[0].__contains__('alpha') or digits[0].__contains__('beta'):
+        #print ("Failing on pre-release version ",digits)
+        return None
+
     # If there's one giant version number, like "96" or "120", assume it's just
     # missing a dot, and they should be 9.6 or 12.0.
     if len(digits)==1:
@@ -262,7 +266,9 @@ def test_parsing():
         ("10.0_0" , 10),
         ("10_1.1" , 10.1),
         ("10.12" , 10.12),
-        ("V10_12" , 10.12)
+        ("V10_12" , 10.12),
+        ("15rc1" , 15.0),
+        ("15beta4" , 15.0)
         ])
 
     failed=0

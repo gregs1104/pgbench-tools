@@ -207,19 +207,17 @@ def version_parse(version):
     v=v.translate(trans)
     digits=v.split('.')
 
-    if digits[0].__contains__('rc') or digits[0].__contains__('alpha') or digits[0].__contains__('beta'):
-        #print ("Failing on pre-release version ",digits)
-        return None
-
     # If there's one giant version number, like "96" or "120", assume it's just
     # missing a dot, and they should be 9.6 or 12.0.
     if len(digits)==1:
-        if float(digits[0]) > max_pg:
+        # Beta and RC releases have text after the digits, pull out just the version
+        relnum=re.search(r'\d+', digits[0]).group(0)
+        if float(relnum) > max_pg:
             f=float(v) / 10
             if f>=max_pg:  return None
             return f
         else:
-            return float(digits[0])
+            return float(relnum)
 
     # Normal major.minor number set
     if len(digits)>=2:

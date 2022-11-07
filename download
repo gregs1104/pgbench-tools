@@ -2,6 +2,7 @@
 
 source ./config
 
+mkdir -p archive
 pushd archive
 touch last_download
 rsync -av --progress ${ARCHIVE}:results/* .

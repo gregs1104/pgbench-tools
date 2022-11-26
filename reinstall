@@ -1,18 +1,30 @@
-#!/usr/bin/env bash -ex
+#!/usr/bin/env bash -e
 
 # Reinstall file fom archive; sample:
 # server:pgbench-tools $ ./reinstall fragile-20211024-220659.tar.gz
+
+if [ -z "$1" ] ; then
+  echo Reinstall results file from archive/ directory
+  echo Usage:  ./reinstall resultsfile.tar.gz
+  exit 1
+fi
 
 source ./config
 pushd archive
 file=$1
 server=`echo $file | cut -d"-" -f 1`
+
+if [ ! -f "../archive/$file" ]; then
+  echo Aborting:  no such file ../archive/$file
+  exit 2
+fi
+
 echo Importing $file from $server
 pushd ..
 ./wipe_server $server
 cd results
 tar xfz ../archive/$file
-psql -d results -f $server/$server-results.sql
+psql -e -d results -f $server/$server-results.sql
 popd
 popd
 exit

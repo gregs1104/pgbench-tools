@@ -17,10 +17,11 @@ import matplotlib
 server='siren'
 test='177'
 diskdev="nvme1n1" # siren
+script='init'  # Currently commented out in the SQL
 
+# General config options
 server_label = server
 col='collected'
-script='init';
 dbagg='minute'
 
 sql="""
@@ -77,9 +78,6 @@ if __name__ == "__main__":
     except:
         pass
 
-    fig=plt.figure();
-    ax=fig.add_subplot(1,1,1)
-
     df=main()
     df.set_index(col, inplace=True)
     print(df)    
@@ -89,10 +87,21 @@ if __name__ == "__main__":
         print("Processing",k)
         print(v)
         metrics[k]=v
+
+        ylabel="Transfer rate MB/s"
+        if k=='Dirty':
+            # Linux mem figures are in KB, rescale to GB
+            v['avg'] /= (1024 * 1024)
+            v['max'] /= (1024 * 1024)
+            print("Reprocessed")
+            print(v)
+            ylabel="Dirty Memory GB"
+
+        ax=v.plot(title=k,figsize=(8,6),color=['blue','purple'])
+        ax.set_ylabel(ylabel)
+
         unslashed=k.replace("/","-")
         fn=os.path.join(base,server+'-'+unslashed)
-        ax=v.plot(title=k,figsize=(8,6),color=['blue','purple'])
-        ax.set_ylabel("Transfer rate MB/s")
         ax.figure.savefig(fn)
         print("saved to '%s.png'" % fn)
 

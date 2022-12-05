@@ -370,7 +370,7 @@ $RESULTPSQL -c "update tests set dbsize=${DBSIZE} WHERE server='${SERVERNAME}' A
 # Stats and buffer cache data are spoiled very fast by post processing, grab them as early as feasible
 $TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp, stats_reset, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conflicts, temp_files, temp_bytes, deadlocks, blk_read_time, blk_write_time, '$SERVERNAME' FROM pg_stat_database WHERE datname=current_database()) TO 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_stat_database FROM 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"
-$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, indexrelname AS indexname, pg_relation_size(indexrelid) AS size, idx_blks_read AS rel_blks_read, idx_blks_hit AS rel_blks_hit,  '$SERVERNAME' FROM pg_statio_user_indexes UNION SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, NULL AS indexname, pg_relation_size(relid) AS size, heap_blks_read AS rel_blks_read, heap_blks_hit AS relk_blks_hit, '$SERVERNAME' FROM pg_statio_user_tables) TO 'statio.csv' WITH DELIMITER ',' CSV HEADER"
+$TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, indexrelname AS indexname, pg_relation_size(indexrelid) AS size, idx_blks_read AS rel_blks_read, idx_blks_hit AS rel_blks_hit,  '$SERVERNAME' FROM pg_statio_user_indexes UNION SELECT '$TEST', current_timestamp AS collected, schemaname AS nspname, relname AS tablename, NULL AS indexname, pg_relation_size(relid) AS size, heap_blks_read AS rel_blks_read, heap_blks_hit AS rel_blks_hit, '$SERVERNAME' FROM pg_statio_user_tables) TO 'statio.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_statio FROM 'statio.csv' WITH DELIMITER ',' CSV HEADER"
 $TESTPSQL   -c "\copy (SELECT '$SERVERNAME' AS server,'$TEST' AS test, N.nspname AS schemaname,c.relname,8192 * count(*) AS bytes, round(avg(usagecount)::numeric,2) AS avg_usage,max(usagecount) AS max_usage,isdirty FROM pg_class c LEFT JOIN pg_namespace N ON (N.oid = C.relnamespace) INNER JOIN pg_buffercache b ON b.relfilenode = c.relfilenode INNER JOIN pg_database d ON (b.reldatabase = d.oid AND d.datname = current_database()) WHERE NOT N.nspname IN ('pg_catalog','pg_toast','information_schema') GROUP BY N.nspname,c.relname,isdirty ) TO 'buffercache.csv' WITH DELIMITER ',' CSV HEADER"
 $RESULTPSQL -c "\copy test_buffercache FROM 'buffercache.csv' WITH DELIMITER ',' CSV HEADER"
@@ -537,7 +537,7 @@ if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   # TODO If $GNUPLOT is set to something other than its default value from `which`, there
   # should be a command line option in csv2gnuplot that informs the program of that path.
   $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
-  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat
+  $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat.png
 else
   echo "gnuplot not found, skipping benchwarmer charts generation"
 fi

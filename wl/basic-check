@@ -1,0 +1,20 @@
+#!/bin/bash -ex
+# basic-check workload set for pgbench automation
+
+./pgsysinfo > params
+. ./params
+
+./newset "SELECT"
+wl/select-grid
+
+./newset "Multiplied read"
+wl/multis
+
+# TODO Only need subset of SCALES given current pgbench INSERT test
+./newset "INSERT"
+echo "SETCLIENTS=$SETCLIENTS "  >> params
+echo "SCALES=$SCALES "  >> params
+echo "RUNTIME=$RUNTIME "  >> params
+#wl/insert
+echo "INSERT not finished yet"
+echo Finished basic-check workload

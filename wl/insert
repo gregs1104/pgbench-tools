@@ -1,0 +1,20 @@
+#!/bin/bash -ex
+
+# Basic INSERT workload for pgbench automation
+#
+# The script presumes you've already created a test database.
+# It's designed to run after the select grid workload creates one and
+# the SETCLIENTS and SCALE variables are expected in PARAMS already.
+# Some INSERT tests may prefer to create their test database here.
+
+SCRIPT="INSERT"
+SETTIMES=1
+RUNTIME=60
+
+echo "SCRIPT=$SCRIPT "  >> params
+echo "SETTIMES=$SETTIMES "  >> params
+echo "RUNTIME=$RUNTIME "  >> params
+
+./runset
+
+echo Finished INSERT workload

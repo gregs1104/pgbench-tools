@@ -1,0 +1,13 @@
+#!/bin/bash -ex
+# osm2pgsql sample workload for pgbench automation
+
+rm nodes.db
+
+# TODO Seto this up as a pgbench workload instead.   Need sample from siren/rising first.
+
+osm2pgsql -d gis -v --create --slim \
+--cache 0 \
+--number-processes 2 \
+--flat-nodes nodes.db \
+--hstore --hstore-add-index \
+~/osm/planet-latest.osm.pbf

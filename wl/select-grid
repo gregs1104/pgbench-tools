@@ -5,7 +5,7 @@ SCRIPT="select"
 SETTIMES=3
 RUNTIME=60
 
-echo "SCRIPT=$SCRIPT "  >> params
+echo "SCRIPT=$SCRIPT "  > params
 echo "SETTIMES=$SETTIMES "  >> params
 echo "RUNTIME=$RUNTIME "  >> params
 ./pgsysinfo >> params

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 . ./config
+. ./params
 
 # Confirm we have a useful pgbench to run
 if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
@@ -48,14 +49,14 @@ for SCALE in $SCALES; do
     echo Creating new pgbench tables scale=$SCALE
 
     if [ -n "$NEWINIT" ] ; then
-      cp config config.orig
-      if [ "$SERVERSIDE" -eq "1" ] ; then
-        echo "SCRIPT=':-i -I dtGvp'" >> config
+      cp params params.orig
+      if [ -n "$SERVERSIDE" ] && [ "$SERVERSIDE" -eq "1" ] ; then
+        echo "SCRIPT=':-i -I dtGvp'" >> params
       else
-        echo "SCRIPT=:-i" >> config
+        echo "SCRIPT=:-i" >> params
       fi
       export SCALE && ./benchwarmer 1
-      cp config.orig config
+      cp params.orig params
     else
      time $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
     fi

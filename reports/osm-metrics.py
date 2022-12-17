@@ -8,6 +8,7 @@ form because it's the code used to generate graphs in one of my presentations.
 import os
 import psycopg2
 import psycopg2.extras
+from datetime import datetime
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -15,7 +16,7 @@ import matplotlib
 
 # Not a UI yet, just modify this section to point at a single test to plot
 server='siren'
-test='177'
+test='179'
 diskdev="nvme1n1" # siren
 script='init'  # Currently commented out in the SQL
 
@@ -78,6 +79,15 @@ if __name__ == "__main__":
     except:
         pass
 
+    # Example code for drawing vertical bars to highlight loading stage
+    stage1 = datetime.fromisoformat('2022-11-16 15:52:31')
+    stage2 = datetime.fromisoformat('2022-11-16 16:01:03')
+    stage3 = datetime.fromisoformat('2022-11-16 17:09:52')
+    stage4 = datetime.fromisoformat('2022-11-16 18:29:51')
+    stage5 = datetime.fromisoformat('2022-11-16 21:12:00')
+    stages=[stage1,stage2,stage3,stage4,stage5]
+    show_stages=False
+
     df=main()
     df.set_index(col, inplace=True)
     print(df)    
@@ -99,6 +109,10 @@ if __name__ == "__main__":
 
         ax=v.plot(title=k,figsize=(8,6),color=['blue','purple'])
         ax.set_ylabel(ylabel)
+
+        ax.grid(True,which='both')
+        if show_stages == True:
+            ax.vlines(stages, 0, 1, transform=ax.get_xaxis_transform(), colors='r')
 
         unslashed=k.replace("/","-")
         fn=os.path.join(base,server+'-'+unslashed)
@@ -126,6 +140,11 @@ if __name__ == "__main__":
 #                    legend='reverse',
                     color=['blue','purple']
                     )
+
+    plt.grid(True,which='both')
+    if show_stages == True:
+        combined_ax.vlines(stages, 0, 1, transform=combined_ax.get_xaxis_transform(), colors='r')
+
     rw=os.path.join(base,server+'-'+'read-write')
     combined_ax.figure.savefig(rw)
     print("saved to '%s.png'" % rw)

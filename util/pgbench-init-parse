@@ -140,11 +140,13 @@ if __name__ == '__main__':
     filepath = sys.argv[1]
     d={}
 
-    if script=="osm2pgsql" or script=="osm2pgsql-1.2":
+    if script=="osm2pgsql" or script.startswith("osm2pgsql-1.2"):
         d = parse_osm_results_1_2(filepath)
-    if script=="osm2pgsql-1.6":
+    elif script.startswith("osm2pgsql-1.6") or script.startswith("osm2pgsql-1.7"):
+        d = parse_osm_results_1_6(filepath)
+    elif script.startswith("osm2pgsql"):
+        # Write an untested new version warning to stderr here?
         d = parse_osm_results_1_6(filepath)
     elif script.startswith(":-i"):
         d = parse_init_timing(filepath)
-
     print(json.dumps(d))

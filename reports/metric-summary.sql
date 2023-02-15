@@ -74,6 +74,36 @@ WITH t AS
 SELECT server,clients,writes AS avg_writes FROM t
 \crosstabview
 
+\echo Average read rate MBps
+WITH t AS
+  (SELECT
+     server || '-' || set::text AS server,clients,round(avg(avg)) AS avg_read_Mbps
+   FROM test_metric_summary
+   WHERE
+     (script='insert' OR script='select' OR script='select-pages') AND
+     (metric='disk0_MB/s' OR metric like '%rMB/s') AND
+     clients IN (1,2,4,8,16,32,64,128)
+   GROUP BY server,set,clients
+   ORDER BY server,set,clients
+  )
+SELECT server,clients,avg_read_Mbps FROM t
+\crosstabview
+
+\echo Max read rate MBps
+WITH t AS
+  (SELECT
+     server || '-' || set::text AS server,clients,round(max(max)) AS max_read_Mbps
+   FROM test_metric_summary
+   WHERE
+     (script='insert' OR script='select' OR script='select-pages') AND
+     (metric='disk0_MB/s' OR metric like '%rMB/s') AND
+     clients IN (1,2,4,8,16,32,64,128)
+   GROUP BY server,set,clients
+   ORDER BY server,set,clients
+  )
+SELECT server,clients,max_read_Mbps FROM t
+\crosstabview
+
 \echo Fastest second of TPS
 WITH t AS (
    SELECT

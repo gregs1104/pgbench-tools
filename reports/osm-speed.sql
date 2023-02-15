@@ -1,5 +1,6 @@
 SELECT  test,  server.server_cpu AS cpu,
 --script,
+--set,
 substring(server_version,1,18) as server_ver,
 pg_size_pretty(dbsize) AS dbsize,
 round((artifacts->'overall')::numeric/60/60,1) AS hours

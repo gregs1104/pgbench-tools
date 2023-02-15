@@ -2,7 +2,7 @@
   (
   SELECT server,test FROM tests WHERE
     -- server='dash' AND 
-    script IN ('osm2pgsql-1.2','osm2pgsql-1.6')
+    script LIKE 'osm2pgsql-%'
   )
   ,
   test_keys AS

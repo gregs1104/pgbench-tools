@@ -5,7 +5,7 @@
 #
 # Or recursive re-processing of an entire directory tree instead:
 #
-#   metrics2csv test server
+#   metrics2csv recurse
 
 source ./config
 TEST=$1

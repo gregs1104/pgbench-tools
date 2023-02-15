@@ -4,7 +4,7 @@
 # This is not pretty or robust, it's bootstrapping until I can do better.
 
 source ./config
-
+RESULTUSER="postgres"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 SERVERNAME=`hostname`
 OS=`uname`

@@ -37,12 +37,12 @@ if [ -z $GNUPLOT ] || [ ! -x $GNUPLOT ]; then
   echo "gnuplot not found, skipping webreport charts generation"
 else
   # Produce combined report, averaged across all test sets
-  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' group by scale order by scale" > scaling.txt
+  $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' and (not script like ':%') group by scale order by scale" > scaling.txt
   gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
   mv -f scaling.png results/$SERVERNAME/
   rm -f scaling.txt
 
-  $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' group by clients order by clients" > clients.txt
+  $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps from tests WHERE server='${SERVERNAME}' and (not script like ':%') group by clients order by clients" > clients.txt
   gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
   mv -f clients.png results/$SERVERNAME/
   rm -f clients.txt
@@ -64,7 +64,7 @@ echo "<img src=\"clients.png\"><p>" >> $OUTFILE
 echo Scale vs. client TPS grid: >> $OUTFILE
 $RESULTPSQL >> $OUTFILE -H -d results <<EOF
 \pset footer off
-SELECT scale,clients,ROUND(AVG(tps)) AS tps FROM tests GROUP BY scale,clients ORDER BY scale,clients
+SELECT scale,clients,ROUND(AVG(tps)) AS tps FROM tests WHERE not script like ':%' GROUP BY scale,clients ORDER BY scale,clients
 \crosstabview
 EOF
 
@@ -93,12 +93,12 @@ for SET in $SETS ; do
 
   if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     # Generate graphs for just this test set
-    $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' group by scale order by scale" > scaling.txt
+    $RESULTPSQL -At -F" " -c "select scale,round(avg(dbsize) / (1024 * 1024)) as dbsize,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' AND (not script like ':%') group by scale order by scale" > scaling.txt
     gnuplot plots/scaling.plot 2>&1 | grep -v "Warning: empty"
     mv -f scaling.png results/${SERVERNAME}/scaling-$SET.png
     mv -f scaling.txt scaling-$SET.txt
 
-    $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' group by clients order by clients" > clients.txt
+    $RESULTPSQL -At -F" " -c "select clients,round(avg(tps)) as tps FROM tests WHERE server='${SERVERNAME}' AND set='$SET' AND (not script like ':%') group by clients order by clients" > clients.txt
     gnuplot plots/clients.plot 2>&1 | grep -v "Warning: empty"
     mv -f clients.png results/${SERVERNAME}/clients-$SET.png
     mv -f clients.txt clients-$SET.txt
@@ -109,20 +109,20 @@ for SET in $SETS ; do
   echo Scale vs. client TPS grid: >> $OUTFILE
   $RESULTPSQL >> $OUTFILE -H -d results <<EOF
 \pset footer off
-SELECT scale,clients,ROUND(AVG(tps)) AS tps FROM tests WHERE server='${SERVERNAME}' AND set='${SET}' GROUP BY scale,clients ORDER BY scale,clients
+SELECT scale,clients,ROUND(AVG(tps)) AS tps FROM tests WHERE server='${SERVERNAME}' AND set='${SET}' AND (not script like ':%') GROUP BY scale,clients ORDER BY scale,clients
 \crosstabview
 EOF
   echo "<br>" >> $OUTFILE
 
   # Summarize the test set
   echo Averages for test set $SET by scale: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,scale,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency FROM tests WHERE server='${SERVERNAME}' AND tests.set='$SET' group by set,scale order by set,scale;" >> $OUTFILE
+  $RESULTPSQL -H -c "select set,scale,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency FROM tests WHERE server='${SERVERNAME}' AND tests.set='$SET' AND (not script like ':%') group by set,scale order by set,scale;" >> $OUTFILE
 
   echo Averages for test set $SET by clients: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,clients,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency FROM tests WHERE server='${SERVERNAME}' AND tests.set='$SET' group by set,clients order by set,clients;" >> $OUTFILE
+  $RESULTPSQL -H -c "select set,clients,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency FROM tests WHERE server='${SERVERNAME}' AND tests.set='$SET' AND (not script like ':%') group by set,clients order by set,clients;" >> $OUTFILE
 
   echo Averages for test set $SET by scale, client, and rate limit: >> $OUTFILE
-  $RESULTPSQL -H -c "select set,scale,clients,rate_limit,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency FROM tests WHERE server='${SERVERNAME}' AND tests.set='$SET' group by set,scale,clients,rate_limit order by set,scale,clients,rate_limit;" >> $OUTFILE
+  $RESULTPSQL -H -c "select set,scale,clients,rate_limit,round(avg(tps)) as tps,round(1000*avg(avg_latency))/1000 as avg_latency,round(1000*avg(percentile_90_latency))/1000 as \"90%<\",round(1000 * avg(max_latency))/1000 as max_latency FROM tests WHERE server='${SERVERNAME}' AND tests.set='$SET' AND (not script like ':%') group by set,scale,clients,rate_limit order by set,scale,clients,rate_limit;" >> $OUTFILE
 
   echo Detail for test set $SET: >> $OUTFILE
   # Create a line showing the results for every test as an HTML table  

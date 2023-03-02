@@ -1,13 +1,28 @@
 #!/bin/bash -ex
 # osm2pgsql sample workload for pgbench automation
+# Accepts single parameter for RAM size.
 
-rm nodes.db
+# TODO Validate MEMSIZE
+# TODO Validate cloud URI connections work.  Presumably resetting TESTDB here won't do anything to them.
+cat << EOF > params
+SETCLIENTS="4"
+SETTIMES=1
+SCALES="1"
+PGBENCHBIN=$BASEDIR/util/osm-importer
+SCRIPT="osm2pgsql-1.6"
+TESTDB="gis"
+SKIPINIT=1
+MEMSIZE=$1
+MULTI=5
+EOF
 
-# TODO Seto this up as a pgbench workload instead.   Need sample from siren/rising first.
+# TODO Correct connection string
+dropdb gis
+createdb gis
+psql -d gis -c "create extension postgis"
+psql -d gis -c "create extension hstore"
+psql -d gis -c "create extension pg_stat_statements"
+psql -d gis -c "create extension pg_buffercache"
 
-osm2pgsql -d gis -v --create --slim \
---cache 0 \
---number-processes 2 \
---flat-nodes nodes.db \
---hstore --hstore-add-index \
-~/osm/planet-latest.osm.pbf
+./newset "OSM"
+./runset

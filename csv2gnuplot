@@ -16,7 +16,7 @@
   this code will not have those libraries available.  A long-term goal is to provide a functionally similar
   program to this one that's based on a proper scientific Python stack instead.
 
-  Copyright 2011-2020, Greg Smith.
+  Copyright 2011-2023, Greg Smith.
   Part of the pgbench-tools set
 """
 
@@ -447,6 +447,8 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
                     # traffic.  The disk entry that matched is then used
                     # as a prefix , giving labels like "sdb_rMB/s".
                     if len(s)>0:
+                        # Find disk label after the "timestamp:" prefix 
+                        dataset = (row[row.find(s):]).split()[0]
                         match_prefix=dataset + "_"
                     logger.debug("Searching for '%s' dataset '%s' using match_prefix '%s'",s,dataset,match_prefix)
 

@@ -12,9 +12,9 @@ wl/multis
 
 # TODO Only need subset of SCALES given current pgbench INSERT test
 ./newset "INSERT"
-echo "SETCLIENTS=$SETCLIENTS "  > params
-echo "SCALES=$SCALES "  >> params
-echo "RUNTIME=$RUNTIME "  >> params
+echo "SETCLIENTS=$SETCLIENTS"  > params
+echo "SCALES=$SCALES"  >> params
+echo "RUNTIME=$RUNTIME"  >> params
 #wl/insert
 echo "INSERT not finished yet"
 echo Finished basic-check workload

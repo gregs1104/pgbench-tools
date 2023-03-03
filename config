@@ -102,6 +102,7 @@ TRIM=0
 MULTI=0
 
 #
-# Parameters for system monitoring code
+# Disk inclusion prefix list.  Only active for Linux system monitoring.  Mac systems
+# ignore this in the code, setting it there is only useful for documenting the database disk.
 #
 DISKLIST="sda"

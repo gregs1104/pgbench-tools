@@ -350,6 +350,20 @@ def test_sizing():
     print('SETCLIENTS="%s" # Stress %s processors' % (test_cpus,cpus))
     print('SCALES="%s" # 4X RAM=%s MB, 8X RAM scale=%s' % (test_scales,max_memory_mb,max_scale * 2))
 
+    # Standard tuning for osm2pgsql:  3/4 of memory to the node cache,
+    # capped at 60GB so far.  16GB set aside for the case where loading
+    # happens on the database server.
+    osm_cache = 0
+    db_server_reserved = 16 * 1024 * 1024 * 1024
+    if total_memory > db_server_reserved:
+        osm_cache = round((total_memory - db_server_reserved) * 3 / 4 / 1024 / 1024)
+        osm_cache = 100 * int((osm_cache + 50)/100)
+        if osm_cache > 60000:
+            osm_cache = 60000
+    # TODO Make this line optional if this program ever grows proper command line switches.
+    # TODO Ditto to control the DB server 16GB reservation and change the 60GB upper limit.
+    print('OSMNODECACHE="%s" # osm2pgsql node cache ~3/4 RAM=%s MB' % (osm_cache,osm_cache))
+
 def check_tracking():
     # Disabling for now
     if True:  return

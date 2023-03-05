@@ -1,14 +1,15 @@
 #!/bin/bash -x
 # TODO import ./CONFIG test database information passed so this works on the cloud.
 # Not sure what challenges that has yet, for what osm2pgsql needs to run remotely.
-
-# TODO Set cache number based on MEMSIZE parameter
-
+#
 # To avoid vacuum of giant GIS database, easiest for now to do
 # "dropdb gis; createdb gis" before running benchwarmer.  Then this script
 # puts all the extensions back.  We can't just drop/create here because
 # basic pgbench-tools work requires the database exist for starting
 # snapshots of stats.
+
+. ./config
+. ./params
 
 SERVER="localhost"
 
@@ -17,13 +18,17 @@ psql -h $SERVER -d gis -c 'CREATE EXTENSION hstore;'
 psql -h $SERVER -d gis -c 'CREATE EXTENSION pg_stat_statements;'
 psql -h $SERVER -d gis -c 'CREATE EXTENSION pg_buffercache;'
 
+if [ -z "${OSMNODECACHE}" ] ; then
+  OSMNODECACHE=0
+fi
+
 rm -f nodes.db 
-# When changing this, beware the usual style of commenting out a line.
+# When changing this, beware the usual style of commenting out any one line.
 # That doesn't work on this form of multi-line command.
 time osm2pgsql --create --slim -v -d gis \
-    --cache 0 --number-processes 2 \
+    --cache ${OSMNODECACHE} --number-processes 2 \
     --flat-nodes  \
-    --middle-way-node-index-id-shift=$MULTI \
+    --middle-way-node-index-id-shift=${MULTI} \
     --hstore --hstore-add-index \
     ~/osm/planet-latest.osm.pbf 
 rm -f nodes.db

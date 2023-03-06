@@ -8,8 +8,8 @@
 # basic pgbench-tools work requires the database exist for starting
 # snapshots of stats.
 
-. ./config
-. ./params
+. ../config
+. ../params
 
 SERVER="localhost"
 

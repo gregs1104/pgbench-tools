@@ -4,11 +4,18 @@
 . ./config
 
 # TODO Validate cloud URI connections work.  Presumably resetting TESTDB here won't do anything to them.
+
 ./pgsysinfo > params
+. ./params
+
+if [ -z "${OSMNODECACHE}" ] ; then
+  OSMNODECACHE=0
+fi
+
 cat << EOF >> params
 SETCLIENTS="4"
 SETTIMES=1
-SCALES="1"
+SCALES="${OSMNODECACHE}"
 PGBENCHBIN=$BASEDIR/util/osm-importer
 SCRIPT="osm2pgsql-1.6"
 TESTDB="gis"

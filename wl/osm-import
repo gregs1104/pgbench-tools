@@ -16,6 +16,7 @@ cat << EOF >> params
 SETCLIENTS="4"
 SETTIMES=1
 SCALES="${OSMNODECACHE}"
+SCALE="${OSMNODECACHE}"
 PGBENCHBIN=$BASEDIR/util/osm-importer
 SCRIPT="osm2pgsql-1.6"
 TESTDB="gis"

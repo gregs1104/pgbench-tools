@@ -22,11 +22,20 @@ if [ -z "${OSMNODECACHE}" ] ; then
   OSMNODECACHE=0
 fi
 
+# TODO SETCLIENTS is a list, assigning it to a single variable is risky.
+# Only the benchwarmer script knows the singular client count for a test.
+# However, it turns that into "-c 2" pgbench form before calling this script.
+# Here we would need an alternate communication or handling a full set of
+# command line parameters to find the number; thus the kludge.
+if [ -z "${SETCLIENTS}" ] ; then
+  SETCLIENTS=2
+fi
+
 rm -f nodes.db 
 # When changing this, beware the usual style of commenting out any one line.
 # That doesn't work on this form of multi-line command.
 time osm2pgsql --create --slim -v -d gis \
-    --cache ${OSMNODECACHE} --number-processes 2 \
+    --cache ${OSMNODECACHE} --number-processes ${SETCLIENTS} \
     --flat-nodes nodes.db \
     --middle-way-node-index-id-shift=${MULTI} \
     --hstore --hstore-add-index \

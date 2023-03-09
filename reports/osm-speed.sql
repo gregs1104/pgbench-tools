@@ -4,6 +4,7 @@ SELECT
   --script,
   --set,
   --substring(server_version,1,16) AS server_ver,
+  clients AS procs,
   scale AS ncache,
   multi AS shift,
   pg_size_pretty(dbsize) AS dbsize,

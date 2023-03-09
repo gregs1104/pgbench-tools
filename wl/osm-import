@@ -13,7 +13,7 @@ if [ -z "${OSMNODECACHE}" ] ; then
 fi
 
 cat << EOF >> params
-SETCLIENTS="4"
+SETCLIENTS="2"
 SETTIMES=1
 SCALES="${OSMNODECACHE}"
 SCALE="${OSMNODECACHE}"

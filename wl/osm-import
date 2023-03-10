@@ -33,4 +33,4 @@ psql -d gis -c "create extension pg_stat_statements"
 psql -d gis -c "create extension pg_buffercache"
 
 ./newset "OSM"
-./runset
+#./runset

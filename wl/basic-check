@@ -6,6 +6,7 @@
 
 ./newset "SELECT"
 wl/select-grid
+./runset
 
 ./newset "Multiplied read"
 wl/multis
@@ -19,5 +20,6 @@ echo "SCALES=\"$SCALES\""  >> params
 echo "SCRIPT=insert"  >> params
 echo "RUNTIME=60"  >> params
 #wl/insert
+#./runset
 echo "INSERT not finished yet"
 echo Finished basic-check workload

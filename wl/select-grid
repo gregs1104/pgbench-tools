@@ -10,6 +10,6 @@ echo "SETTIMES=$SETTIMES "  >> params
 echo "RUNTIME=$RUNTIME "  >> params
 ./pgsysinfo >> params
 
-./runset
+#./runset
 
 echo Finished select-grid workload

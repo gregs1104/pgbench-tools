@@ -159,8 +159,18 @@ if [ -n "$MAX_WORKERS" ] ; then
   fi
 fi
 
+# Setting SOCKETS to 1 avoids host IP networking to prefer a socket connection.
+# Only useful when running this script on the server itself for local testing.
+# TODO Allow specifying the location of the sockets file.
+TESTHOSTPARAM="-h $TESTHOST"
+if [ -n "$SOCKETS" ]; then
+  if [ "$SOCKETS" -eq "1" ]; then
+    TESTHOSTPARAM=""
+  fi
+fi
+
 # psql statements for the test database and the result database
-TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+TESTPSQL="psql $TESTHOSTPARAM -U $TESTUSER -p $TESTPORT -d $TESTDB"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 echo Running tests using:  $TESTPSQL
 echo Storing results using:  $RESULTPSQL
@@ -325,7 +335,7 @@ PSQLMET=$!
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
-$PGBENCHBIN $SCRIPTOPT -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT  $TESTDB > results.txt 2>&1 &
+$PGBENCHBIN $SCRIPTOPT -s $SCALE $TESTHOSTPARAM -p $TESTPORT -U $TESTUSER $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"

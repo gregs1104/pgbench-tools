@@ -358,10 +358,10 @@ def test_sizing():
     if total_memory > db_server_reserved:
         osm_cache = round((total_memory - db_server_reserved) * 3 / 4 / 1024 / 1024)
         osm_cache = 100 * int((osm_cache + 50)/100)
-        if osm_cache > 60000:
-            osm_cache = 60000
+        if osm_cache > 45000:
+            osm_cache = 45000
     # TODO Make this line optional if this program ever grows proper command line switches.
-    # TODO Ditto to control the DB server 16GB reservation and change the 60GB upper limit.
+    # TODO Ditto to control the DB server 16GB reservation and change the 45GB upper limit.
     print('OSMNODECACHE="%s" # osm2pgsql node cache ~3/4 RAM=%s MB' % (osm_cache,osm_cache))
 
 def check_tracking():

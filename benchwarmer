@@ -306,8 +306,10 @@ fi
 PREFIX="${SCRIPT:0:1}"
 if [ "$PREFIX" == ":" ] ; then
   SCRIPTOPT="${SCRIPT:1}"
+  PASSTHRU=1
 else
   SCRIPTOPT="-f $BASEDIR/$TESTDIR/$SCRIPT.sql $TESTLEN -n -l -c $CLIENTS $WORKERS $RATEOPT $LATOPT $PREPAREDOPT"
+  PASSTHRU=0
 fi
 
 # Setup test directory tree
@@ -451,7 +453,7 @@ if [ "$SKIPINIT" -ne "1" ]; then
 fi
 
 # Save pgbench log
-# In the multi-threaded case, there may be a number of files, so copy
+# In the multi-threaded workers case, there may be a number of files, so copy
 # them all in
 cat pgbench_log.${P}* > pgbench.log
 echo Worst latency results:
@@ -460,6 +462,14 @@ echo Worst latency results:
 cat pgbench.log | cut -f 3 -d " " | sort -n | tail -n 5
 tps=`egrep "(without initial connection time)|(including connections establishing)" results.txt | cut -d " " -f 3`
 trans=`grep "number of transactions actually processed:" results.txt | cut -d":" -f 2 | cut -d "/" -f 1`
+
+# Defaults for init and custom scripts that don't have transaction data.
+if [ -z "$tps" ] ; then
+  tps=0
+fi
+if [ -z "$trans" ] ; then
+  trans=0
+fi
 $RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans', trans_latency='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
 
 cp $BASEDIR/config config
@@ -470,34 +480,38 @@ echo Importing and processing latency information
 # Confirm we have an patched version of pgbench that has timestamps
 TESTFORTS=`cat pgbench.log | head -n 1 | cut -d" " -f 6`
 if [ -z "$TESTFORTS" ]; then
-  echo
-  echo "ERROR:  the pgbench used for this test is missing transaction"
-  echo timestamps.  No latency information will be imported into
-  echo the database and some plots will be missing.
-  echo
+  if [ "$PGBENCH_TABLES" -eq "0" ] ; then
+    echo Skipping pgbench latency analysis since those tables aren\'t present.
+  elif [ "$PASSTHRU" -eq "1" ]; then
+    echo Database passthrough requests like initialization don\'t provide pgbench latency.
+  else
+    echo "ERROR:  the pgbench used for this test is missing transaction"
+    echo timestamps.  No latency information will be imported into
+    echo the database and some plots will be missing.
+    echo This may not be an error, some special features just don\'t create the right logs.
+    fi
 else
-
-# Import timestamp information
-# Format of csv file changes when --rates is used
-if [ -n "$2" ]; then
-  $BASEDIR/log-to-csv_rates $TEST "${SERVERNAME}" < pgbench.log > timing.csv
-  $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-  if [ "$TRIM" -gt 0 ] ; then
-    $RESULTPSQL -c "UPDATE tests SET start_latency=start_time + (end_time - start_time)/10, end_latency=end_time - (end_time - start_time)/10 WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
-    $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
-    $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
+  # Import timestamp information
+  # Format of csv file changes when --rates is used
+  if [ -n "$2" ]; then
+    $BASEDIR/log-to-csv_rates $TEST "${SERVERNAME}" < pgbench.log > timing.csv
+    $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
+    if [ "$TRIM" -gt 0 ] ; then
+      $RESULTPSQL -c "UPDATE tests SET start_latency=start_time + (end_time - start_time)/10, end_latency=end_time - (end_time - start_time)/10 WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
+      $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
+      $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
+    fi
+    $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=ti.test and latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+  else
+    $BASEDIR/log-to-csv $TEST "${SERVERNAME}" < pgbench.log > timing.csv
+    $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
+    if [ "$TRIM" -gt 0 ] ; then
+      $RESULTPSQL -c "UPDATE tests SET start_latency=start_time + (end_time - start_time)/10, end_latency=end_time - (end_time - start_time)/10 WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
+      $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
+      $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
+    fi
   fi
-  $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=ti.test and latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
-else
-  $BASEDIR/log-to-csv $TEST "${SERVERNAME}" < pgbench.log > timing.csv
-  $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
-  if [ "$TRIM" -gt 0 ] ; then
-    $RESULTPSQL -c "UPDATE tests SET start_latency=start_time + (end_time - start_time)/10, end_latency=end_time - (end_time - start_time)/10 WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
-    $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
-    $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
-  fi
-fi
-$RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans_latency)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+  $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans_latency)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 fi
 
 if [ "$OS" = "Linux" ] ; then
@@ -547,7 +561,7 @@ if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
     $GNUPLOT $BASEDIR/plots/dirty.plot
   fi
   # TODO If $GNUPLOT is set to something other than its default value from `which`, there
-  # should be a command line option in csv2gnuplot that informs the program of that path.
+  # should be a command line option in csv2gnuplot that informs this program of that path.
   $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
   $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat.png
 else
@@ -556,7 +570,7 @@ fi
 
 # Now that we're done plotting and computing stats, wipe the low-level
 # data we don't need anymore
-$RESULTPSQL -q -c "truncate table timing" # DEBUG
+$RESULTPSQL -q -c "truncate table timing"
 
 # Save some configuration information about the server
 CLIENTHOST=`hostname`

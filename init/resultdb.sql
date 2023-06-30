@@ -219,10 +219,22 @@ ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) R
 ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
+DROP VIEW IF EXISTS test_metrics;
+CREATE VIEW test_metrics AS
+  SELECT tests.test,tests.server,script,scale,clients,
+    tps,dbsize,wal_written,collected,value,metric
+  FROM test_metrics_data,tests
+  WHERE tests.test=test_metrics_data.test AND
+    tests.server=test_metrics_data.server
+;
+
 DROP VIEW IF EXISTS test_stats CASCADE;
 CREATE OR REPLACE VIEW test_stats AS
 WITH test_wrap AS
-  (SELECT *,extract(epoch FROM (end_time - start_time))::bigint AS seconds FROM tests)
+  (SELECT *,
+      CASE WHEN extract(epoch FROM (end_time - start_time))::bigint<1
+          THEN 1::bigint ELSE extract(epoch FROM (end_time - start_time))::bigint END AS seconds
+   FROM TESTS)
 SELECT
   testset.set, testset.info, server.server,script,scale,clients,multi,test_wrap.test,
   round(dbsize / (1024 * 1024)) as dbsize_mb,
@@ -249,15 +261,6 @@ FROM
   RIGHT JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
   FULL OUTER JOIN server on test_wrap.server=server.server
 ORDER BY server,set,info,script,scale,clients,test_wrap.test
-;
-
-DROP VIEW IF EXISTS test_metrics;
-CREATE VIEW test_metrics AS
-  SELECT tests.test,tests.server,script,scale,clients,
-    tps,dbsize,wal_written,collected,value,metric
-  FROM test_metrics_data,tests
-  WHERE tests.test=test_metrics_data.test AND
-    tests.server=test_metrics_data.server
 ;
 
 DROP VIEW IF EXISTS test_metric_summary;

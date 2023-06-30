@@ -43,33 +43,6 @@ CREATE TABLE server(
   server_details jsonb
   );
 
-DROP VIEW IF EXISTS test_stats;
-CREATE VIEW test_stats AS
-SELECT
-  tests.set, testset.info, tests.server,script,scale,clients,tests.test,
-  round(dbsize / (1024 * 1024)) as dbsize_mb,
-  round(tps) as tps, max_latency,
-  round(blks_hit           * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS hit_Bps,
-  round(blks_read          * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS read_Bps,
-  round(buffers_checkpoint * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS check_Bps,
-  round(buffers_clean      * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS clean_Bps,
-  round(buffers_backend    * 8192 / extract(epoch FROM (tests.end_time - tests.start_time)))::bigint AS backend_Bps,
-  round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint AS wal_written_Bps,
-  max_dirty,
-  server_version,
-  server_info,
-  server_num_proc,
-  server_mem_gb,
-  server_disk_gb,
-  server_details
-FROM test_bgwriter
-  RIGHT JOIN tests ON tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server
-  RIGHT JOIN test_stat_database ON tests.test=test_stat_database.test AND tests.server=test_stat_database.server
-  RIGHT JOIN testset ON testset.set=tests.set and tests.server=test_bgwriter.server
-  FULL OUTER JOIN server on tests.server=server.server
-ORDER BY server,set,info,script,scale,clients,tests.test
-;
-
 CREATE TABLE tmp_metric_import (
     collected timestamp,
     value float,
@@ -94,30 +67,6 @@ CREATE VIEW test_metrics AS
   WHERE tests.test=test_metrics_data.test AND
     tests.server=test_metrics_data.server
 ;
-
-DROP VIEW IF EXISTS test_metric_summary;
-CREATE VIEW test_metric_summary AS
-  WITH ts AS (
-    SELECT test_stats.info,test_stats.server,test_stats.set,
-      test_stats.script,test_stats.scale,test_stats.clients,test_stats.test,test_stats.tps,
-      hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-      server_num_proc,server_mem_gb,server_disk_gb
-    FROM test_stats
-    ORDER BY test_stats.server,test_stats.set,
-      test_stats.script,test_stats.scale,test_stats.clients,test_stats.test)
-  SELECT ts.server,ts.set,ts.script,ts.scale,ts.clients,ts.test,ts.tps,
-    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-    server_num_proc,server_mem_gb,server_disk_gb,
-    round(100.0 * dbsize_mb / 1024 / server_mem_gb) AS ram_pct,
-    metric,min(value) as min,round(avg(value)) as avg,max(value) as max
-  FROM ts
-  JOIN test_metrics_data ON ts.test=test_metrics_data.test AND ts.server=test_metrics_data.server
-  GROUP BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.test,ts.tps,
-    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-    server_num_proc,server_mem_gb,server_disk_gb
-  ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.test,ts.tps,
-    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-    server_num_proc,server_mem_gb,server_disk_gb;
 
 CREATE TABLE test_settings (
     server text,
@@ -172,62 +121,6 @@ ALTER TABLE testset ADD COLUMN category text;
 ALTER TABLE timing ADD COLUMN schedule_lag numeric;
 ALTER TABLE tests ADD COLUMN client_limit numeric;
 ALTER TABLE tests ADD COLUMN multi numeric;
-
-DROP VIEW IF EXISTS test_stats CASCADE;
-CREATE OR REPLACE VIEW test_stats AS
-WITH test_wrap AS
-  (SELECT *,extract(epoch FROM (end_time - start_time))::bigint AS seconds FROM tests)
-SELECT
-  testset.set, testset.info, server.server,script,scale,clients,multi,test_wrap.test,
-  round(dbsize / (1024 * 1024)) as dbsize_mb,
-  round(tps) as tps, max_latency,
-  round(blks_hit           * 8192 / seconds) AS hit_Bps,
-  round(blks_read          * 8192 / seconds) AS read_Bps,
-  round(buffers_checkpoint * 8192 / seconds) AS check_Bps,
-  round(buffers_clean      * 8192 / seconds) AS clean_Bps,
-  round(buffers_backend    * 8192 / seconds) AS backend_Bps,
-  round(wal_written / seconds) AS wal_written_Bps,
-  max_dirty,
-  server_version,
-  server_info,
-  server_num_proc,
-  server_mem_gb,
-  server_disk_gb,
-  server_details
-FROM
-  test_wrap
-  RIGHT JOIN test_bgwriter ON
-      test_wrap.test=test_bgwriter.test AND test_wrap.server=test_bgwriter.server
-  RIGHT JOIN test_stat_database ON
-      test_wrap.test=test_stat_database.test AND test_wrap.server=test_stat_database.server
-  RIGHT JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
-  FULL OUTER JOIN server on test_wrap.server=server.server
-ORDER BY server,set,info,script,scale,clients,test_wrap.test
-;
-
-DROP VIEW IF EXISTS test_metric_summary;
-CREATE VIEW test_metric_summary AS
-  WITH ts AS (
-    SELECT test_stats.info,test_stats.server,test_stats.set,
-      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test,test_stats.tps,
-      hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-      server_num_proc,server_mem_gb,server_disk_gb
-    FROM test_stats
-    ORDER BY test_stats.server,test_stats.set,
-      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test)
-  SELECT ts.server,ts.set,ts.script,ts.scale,ts.clients,ts.test,ts.multi,ts.tps,
-    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-    server_num_proc,server_mem_gb,server_disk_gb,
-    round(100.0 * dbsize_mb / 1024 / server_mem_gb) AS ram_pct,
-    metric,min(value) as min,round(avg(value)) as avg,max(value) as max
-  FROM ts
-  JOIN test_metrics_data ON ts.test=test_metrics_data.test AND ts.server=test_metrics_data.server
-  GROUP BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
-    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-    server_num_proc,server_mem_gb,server_disk_gb
-  ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
-    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
-    server_num_proc,server_mem_gb,server_disk_gb;
 
 DROP VIEW read_io_summary;
 CREATE VIEW read_io_summary AS
@@ -310,3 +203,62 @@ CREATE TABLE test_buffercache (
 );
 
 CREATE INDEX idx_buffercache on test_buffercache(server,test);
+
+DROP VIEW IF EXISTS test_stats CASCADE;
+CREATE OR REPLACE VIEW test_stats AS
+WITH test_wrap AS
+  (SELECT *,
+      CASE WHEN extract(epoch FROM (end_time - start_time))::bigint<1 
+          THEN 1::bigint ELSE extract(epoch FROM (end_time - start_time))::bigint END AS seconds
+   FROM TESTS)
+SELECT
+  testset.set, testset.info, server.server,script,scale,clients,multi,test_wrap.test,
+  round(dbsize / (1024 * 1024)) as dbsize_mb,
+  round(tps) as tps, max_latency,
+  round(blks_hit           * 8192 / seconds) AS hit_Bps,
+  round(blks_read          * 8192 / seconds) AS read_Bps,
+  round(buffers_checkpoint * 8192 / seconds) AS check_Bps,
+  round(buffers_clean      * 8192 / seconds) AS clean_Bps,
+  round(buffers_backend    * 8192 / seconds) AS backend_Bps,
+  round(wal_written / seconds) AS wal_written_Bps,
+  max_dirty,
+  server_version,
+  server_info,
+  server_num_proc,
+  server_mem_gb,
+  server_disk_gb,
+  server_details
+FROM
+  test_wrap
+  RIGHT JOIN test_bgwriter ON
+      test_wrap.test=test_bgwriter.test AND test_wrap.server=test_bgwriter.server
+  RIGHT JOIN test_stat_database ON
+      test_wrap.test=test_stat_database.test AND test_wrap.server=test_stat_database.server
+  RIGHT JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
+  FULL OUTER JOIN server on test_wrap.server=server.server
+ORDER BY server,set,info,script,scale,clients,test_wrap.test
+;
+
+DROP VIEW IF EXISTS test_metric_summary;
+CREATE VIEW test_metric_summary AS
+  WITH ts AS (
+    SELECT test_stats.info,test_stats.server,test_stats.set,
+      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test,test_stats.tps,
+      hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+      server_num_proc,server_mem_gb,server_disk_gb
+    FROM test_stats
+    ORDER BY test_stats.server,test_stats.set,
+      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test)
+  SELECT ts.server,ts.set,ts.script,ts.scale,ts.clients,ts.test,ts.multi,ts.tps,
+    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+    server_num_proc,server_mem_gb,server_disk_gb,
+    round(100.0 * dbsize_mb / 1024 / server_mem_gb) AS ram_pct,
+    metric,min(value) as min,round(avg(value)) as avg,max(value) as max
+  FROM ts
+  JOIN test_metrics_data ON ts.test=test_metrics_data.test AND ts.server=test_metrics_data.server
+  GROUP BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
+    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+    server_num_proc,server_mem_gb,server_disk_gb
+  ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
+    hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
+    server_num_proc,server_mem_gb,server_disk_gb;

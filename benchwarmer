@@ -376,7 +376,7 @@ $RESULTPSQL -c "update test_bgwriter set \
   max_dirty=1024::bigint * '$max_dirty' \
   WHERE server='${SERVERNAME}' AND test='$TEST'"
 
-MEMGB=`$TESTPSQL -A -t -c "select server_mem_gb from server where server='${SERVERNAME}'`
+MEMGB=`$TESTPSQL -A -t -c "select server_mem_gb from server where server='${SERVERNAME}'"`
 if [ -z "${MEMGB}" ] ; then
   MEMGB=0
   echo WARNING:  missing entry "${SERVERNAME}" in server table

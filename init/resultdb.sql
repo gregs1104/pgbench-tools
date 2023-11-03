@@ -34,7 +34,8 @@ CREATE TABLE tests(
   server_version text default version(),
   client_limit numeric default null,
   multi numeric default 0,
-  artifacts jsonb
+  artifacts jsonb,
+  server_mem_gb int
   );
 
 DROP TABLE IF EXISTS timing;

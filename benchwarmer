@@ -376,9 +376,15 @@ $RESULTPSQL -c "update test_bgwriter set \
   max_dirty=1024::bigint * '$max_dirty' \
   WHERE server='${SERVERNAME}' AND test='$TEST'"
 
+MEMGB=`$TESTPSQL -A -t -c "select server_mem_gb from server where server='${SERVERNAME}'`
+if [ -z "${MEMGB}" ] ; then
+  MEMGB=0
+  echo WARNING:  missing entry "${SERVERNAME}" in server table
+fi
+
 # Save database size at the end to support init case
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
-$RESULTPSQL -c "update tests set dbsize=${DBSIZE} WHERE server='${SERVERNAME}' AND test='${TEST}'"
+$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB} WHERE server='${SERVERNAME}' AND test='${TEST}'"
 
 # Stats and buffer cache data are spoiled very fast by post processing, grab them as early as feasible
 $TESTPSQL   -c "\copy (SELECT '$TEST', current_timestamp, stats_reset, numbackends, xact_commit, xact_rollback, blks_read, blks_hit, tup_returned, tup_fetched, tup_inserted, tup_updated, tup_deleted, conflicts, temp_files, temp_bytes, deadlocks, blk_read_time, blk_write_time, '$SERVERNAME' FROM pg_stat_database WHERE datname=current_database()) TO 'dbstat.csv' WITH DELIMITER ',' CSV HEADER"

@@ -1,0 +1,68 @@
+#!/bin/bash -x
+
+# =====
+# Complete Block Check
+# Standalone benchmark collector
+#
+# Runs the benchmark, saves to a text file in results/ directory.
+#
+# Inputs:
+#    - Database size in GB.  Defaults to 20.
+#
+# Output in a key/value style.
+# Lightly formatted example from AMD 7700X processor, 128GB RAM, SK41 2TB SSD:
+#
+# SERVER        siren
+# CREATE_TABLE  33116.420
+# VACUUM        9293.740
+# CREATE_INDEX  36316.109
+# SELECT_u1     832.447
+# SELECT_b      209.221
+# SELECT_r      2443.925
+# CLUSTER       87918.913
+# SELECT_u2     81.555
+# SELECT_c      80.997
+# SIZE_T        21837168640
+# SIZE_I        636223488
+# READ_RATE     2277.521
+# WRITE_RATE    2279.278
+# =====
+
+SIZEDB=20
+if [ -n "$1" ]; then
+  SIZEDB="$1"
+fi
+
+# TODO replace backticks with $()
+NOW=`date "+%Y%m%d-%H%M%S"`
+HOSTNAME=`hostname -s`
+OUTBASE="results/cbc-$HOSTNAME-${SIZEDB}gb-$NOW"
+# TODO replace hard code cbc references with the name of this script
+DB="cbc"
+
+# =====
+# Setup
+# =====
+mkdir -p results
+dropdb $DB
+createdb $DB
+psql -d $DB -qc "create extension pg_stat_statements"
+
+# =====
+# Run
+# =====
+psql -d $DB -v scale=$SIZEDB -ef cbc-psql.sql > $OUTBASE.log 2>&1
+
+# =====
+# Process results
+# =====
+echo "$HOSTNAME" > $OUTBASE.times
+egrep "^Time: " $OUTBASE.log | cut -d" " -f 2 >> $OUTBASE.times
+egrep "^Size-" $OUTBASE.log | cut -d" " -f 3 >> $OUTBASE.times
+# Extract VACUUM read/write rate shown starting in PG15
+egrep "^avg read rate" $OUTBASE.log | head -n 1 | cut -d" " -f 4 >> $OUTBASE.times
+egrep "^avg read rate" $OUTBASE.log | head -n 1 | cut -d" " -f 9 >> $OUTBASE.times
+paste cbc-lines.txt $OUTBASE.times > $OUTBASE.txt
+rm $OUTBASE.times
+echo $HOSTNAME
+cat $OUTBASE.txt

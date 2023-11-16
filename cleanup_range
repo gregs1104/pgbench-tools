@@ -6,14 +6,15 @@ source ./config
 START=$1
 END=$2
 
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 pushd "results/${SERVERNAME}"
-psql -d results -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END" | xargs rm -rf
-psql -d results -At -c "DELETE FROM test_bgwriter WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM test_stat_database WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM test_statio WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM test_metrics_data WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM test_settings WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM test_statements WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
-psql -d results -At -c "DELETE FROM test_buffercache WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END" | xargs rm -rf
+$RESULTPSQL -At -c "DELETE FROM test_bgwriter WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM test_stat_database WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM test_statio WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM test_metrics_data WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM test_settings WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM test_statements WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
+$RESULTPSQL -At -c "DELETE FROM test_buffercache WHERE server='${SERVERNAME}' AND test>=$START AND test<=$END"
 popd

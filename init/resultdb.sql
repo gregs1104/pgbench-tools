@@ -34,7 +34,8 @@ CREATE TABLE tests(
   server_version text default version(),
   client_limit numeric default null,
   multi numeric default 0,
-  artifacts jsonb
+  artifacts jsonb,
+  server_mem_gb int
   );
 
 DROP TABLE IF EXISTS timing;
@@ -219,12 +220,24 @@ ALTER TABLE test_stat_database ADD CONSTRAINT testfk FOREIGN KEY (server,test) R
 ALTER TABLE test_statio ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 ALTER TABLE timing ADD CONSTRAINT testfk FOREIGN KEY (server,test) REFERENCES tests (server,test) MATCH SIMPLE;
 
+DROP VIEW IF EXISTS test_metrics;
+CREATE VIEW test_metrics AS
+  SELECT tests.test,tests.server,script,scale,clients,
+    tps,dbsize,wal_written,collected,value,metric
+  FROM test_metrics_data,tests
+  WHERE tests.test=test_metrics_data.test AND
+    tests.server=test_metrics_data.server
+;
+
 DROP VIEW IF EXISTS test_stats CASCADE;
 CREATE OR REPLACE VIEW test_stats AS
 WITH test_wrap AS
-  (SELECT *,extract(epoch FROM (end_time - start_time))::bigint AS seconds FROM tests)
+  (SELECT *,
+      CASE WHEN extract(epoch FROM (end_time - start_time))::bigint<1
+          THEN 1::bigint ELSE extract(epoch FROM (end_time - start_time))::bigint END AS seconds
+   FROM TESTS)
 SELECT
-  testset.set, testset.info, server.server,script,scale,clients,multi,test_wrap.test,
+  testset.set, testset.info, server.server,script,scale,clients,multi,rate_limit,test_wrap.test,
   round(dbsize / (1024 * 1024)) as dbsize_mb,
   round(tps) as tps, max_latency,
   round(blks_hit           * 8192 / seconds) AS hit_Bps,
@@ -251,36 +264,28 @@ FROM
 ORDER BY server,set,info,script,scale,clients,test_wrap.test
 ;
 
-DROP VIEW IF EXISTS test_metrics;
-CREATE VIEW test_metrics AS
-  SELECT tests.test,tests.server,script,scale,clients,
-    tps,dbsize,wal_written,collected,value,metric
-  FROM test_metrics_data,tests
-  WHERE tests.test=test_metrics_data.test AND
-    tests.server=test_metrics_data.server
-;
-
 DROP VIEW IF EXISTS test_metric_summary;
 CREATE VIEW test_metric_summary AS
   WITH ts AS (
     SELECT test_stats.info,test_stats.server,test_stats.set,
-      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test,test_stats.tps,
+      test_stats.script,test_stats.scale,test_stats.clients,
+      test_stats.multi,test_stats.rate_limit,test_stats.test,test_stats.tps,
       hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
       server_num_proc,server_mem_gb,server_disk_gb
     FROM test_stats
     ORDER BY test_stats.server,test_stats.set,
-      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.test)
-  SELECT ts.server,ts.set,ts.script,ts.scale,ts.clients,ts.test,ts.multi,ts.tps,
+      test_stats.script,test_stats.scale,test_stats.clients,test_stats.multi,test_stats.rate_limit,test_stats.test)
+  SELECT ts.server,ts.set,ts.script,ts.scale,ts.clients,ts.test,ts.multi,ts.rate_limit,ts.tps,
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb,
     round(100.0 * dbsize_mb / 1024 / server_mem_gb) AS ram_pct,
     metric,min(value) as min,round(avg(value)) as avg,max(value) as max
   FROM ts
   JOIN test_metrics_data ON ts.test=test_metrics_data.test AND ts.server=test_metrics_data.server
-  GROUP BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
+  GROUP BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.rate_limit,ts.test,ts.tps,
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb
-  ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.test,ts.tps,
+  ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.rate_limit,ts.test,ts.tps,
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb;
 

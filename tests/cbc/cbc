@@ -7,7 +7,7 @@
 # Runs the benchmark, saves to a text file in results/ directory.
 #
 # Inputs:
-#    - Database size in GB.  Defaults to 20.
+#    - Database size in GB.  Defaults to 20.  Decimal fractions allowed.
 #
 # Output in a key/value style.
 # Lightly formatted example from AMD 7700X processor, 128GB RAM, SK41 2TB SSD:

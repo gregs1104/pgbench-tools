@@ -1,5 +1,5 @@
 \set SIZEGB :scale
-DROP TABLE settings_loop;
+DROP TABLE IF EXISTS settings_loop;
 SELECT name,current_setting(name) FROM pg_settings where name in ('autovacuum','shared_buffers');
 SELECT pg_stat_reset();
 SELECT pg_stat_statements_reset();

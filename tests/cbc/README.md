@@ -40,8 +40,11 @@ are in milliseconds, sizes in bytes, disk rates in MB/s:
 
 The READ/WRITE_RATE figures come from the VACUUM command and
 only apply to that line.  During benchmark development, that command
-was frequently the highest rate step.  PostgreSQL 15 introduced monitoring
-that rate in VACUUM's text output, making it easy to include here.
+was frequently the highest rate step.  Note that this server was
+configured for performance rather than reliability, with WAL and
+all nornal sync work disabled.  In a default configuration vacuum
+work will usually hit a WAL bottleneck before it stresses CPU and
+disk to the extent this sample does.
 
 # Usage
 
@@ -75,7 +78,11 @@ clients.  Currently that includes:
 	cbc-t00-ctas.sql	cbc-t01-vacuum.sql	cbc-t02-index.sql
 	cbc-t03-select-max.sql	cbc-t04-selectr.sql	cbc-t05-cluster.sql
 
-Here's a full run of the benchmark using `pgbench` to monitor each step:
+The full series of pgbench tests have been packed into a workload script
+in the source tree at wl/cbc that includes multiple client counts for
+the SELECT statements.
+
+Here's a manual run of the benchmark steps using `pgbench` to monitor each step:
 
 	createdb cbc
 	psql -d cbc -c "DROP TABLE settings_loop"
@@ -94,6 +101,12 @@ of course be run in parallel.  This example starts 4 clients running
 it for 60 seconds:
 
 	pgbench -n -T 60 -c 4 -s 20 -f cbc-t03-select-max.sql cbc
+
+Note that while the other methods of running CBC allow fractions of a GB
+for the size setting, pgbench scales must be integers of 1 or larger.
+To test <1GB configurations with pgbench you'd need to adjust the way
+the input scale is handled.
+
 
 # Credits
 

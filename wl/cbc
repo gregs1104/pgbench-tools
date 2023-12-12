@@ -1,0 +1,90 @@
+#!/bin/bash -ex
+# CBC workload for pgbench automation
+# Input scale parameter is size in GB, not regular pgbench unit.
+# Minimum size for pgbench run CGC is 1 scale unit.  pgbench
+# client driver doesn't handle fractions.
+
+SIZEGB="$1"
+if [ -zz"$SIZEGB" ] ; then
+  SIZEGB="20"
+fi
+
+# Sleep between steps in seconds
+COOLDOWN=1
+
+# cbc-t00-ctas.sql  cbc-t01-vacuum.sql  cbc-t02-index.sql
+TOTTRANS=1
+echo "SCALE=$SIZEGB"  > params
+echo "TOTTRANS=$TOTTRANS"  >> params
+
+# TODO Investigate cleanup after CTAS step, it may be doing VACUUM work we don't want yet
+
+SCRIPT="cbc/cbc-t00-ctas"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+SCRIPT="cbc/cbc-t01-vacuum"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+SCRIPT="cbc/cbc-t02-index"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+  
+# cbc-t03-select-max.sql
+
+SCRIPT="cbc/cbc-t03-select-max"
+SETCLIENTS="1 2 4 16 32"
+RUNTIME=120
+
+echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=$RUNTIME"  >> params
+echo "SCRIPT=$SCRIPT"  >> params
+
+for c in $SETCLIENTS ; do
+  ./benchwarmer $c
+  sleep $COOLDOWN
+done
+
+# cbc-t04-selectr.sql
+SCRIPT="cbc/cbc-t04-selectr"
+
+echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=$RUNTIME"  >> params
+echo "SCRIPT=$SCRIPT"  >> params
+
+for c in $SETCLIENTS ; do
+  ./benchwarmer $c
+  sleep $COOLDOWN
+done
+
+# cbc-t05-cluster.sql
+SCRIPT="cbc/cbc-t05-cluster"
+TOTTRANS=1
+
+echo "SCALE=$SIZEGB"  > params
+echo "TOTTRANS=$TOTTRANS"  >> params
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+# cbc-t03-select-max.sql
+
+SCRIPT="cbc/cbc-t03-select-max"
+
+# TODO should have some way to tell this invocation from the above one where no index is possible
+
+echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=$RUNTIME"  >> params
+echo "SCRIPT=$SCRIPT"  >> params
+
+for c in $SETCLIENTS ; do
+  ./benchwarmer $c
+  sleep $COOLDOWN
+done
+
+./webreport
+echo Finished CBC workload series

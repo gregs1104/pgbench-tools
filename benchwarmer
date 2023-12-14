@@ -507,7 +507,7 @@ else
       $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
       $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
     fi
-    $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=ti.test and latency IS NOT NULL order by latency offset (select round(0.90*count(*)) from timing where latency is not null ) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+    $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=ti.test and latency IS NOT NULL ORDER BY latency OFFSET GREATEST(0,(SELECT round(0.90*count(*)) FROM timing WHERE latency IS NOT null) LIMIT 1)) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
   else
     $BASEDIR/log-to-csv $TEST "${SERVERNAME}" < pgbench.log > timing.csv
     $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
@@ -517,7 +517,7 @@ else
       $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
     fi
   fi
-  $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test order by latency offset (round(0.90*trans_latency)) limit 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+  $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test ORDER BY latency OFFSET GREATEST(0,(round(0.90*trans_latency))) LIMIT 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 fi
 
 if [ "$OS" = "Linux" ] ; then
@@ -530,9 +530,7 @@ $RESULTPSQL -c "DROP TABLE buckets" >> /dev/null 2>&1
 $RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.05 as bucket_size,0.0 as bucket_left,0.05*generate_series(1,20) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE server='${SERVERNAME}' AND test=$TEST"
 $RESULTPSQL -c "UPDATE buckets SET bucket_left=bucket_right - bucket_size;"
 $RESULTPSQL -c "UPDATE buckets SET offset_left=round(trans * bucket_left), offset_right=round(trans * bucket_right) - 1;"
-
-# DEBUG $RESULTPSQL -c "explain SELECT bucket_left,bucket_right,(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_left limit 1) as latency_left,(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_right limit 1) as latency_right FROM buckets"
-$RESULTPSQL -c "UPDATE buckets SET latency_left=(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_left limit 1), latency_right=(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_right limit 1)"
+$RESULTPSQL -c "UPDATE buckets SET latency_left=(SELECT latency FROM timing WHERE test=$TEST ORDER BY test,latency OFFSET GREATEST(0,buckets.offset_left) LIMIT 1), latency_right=(SELECT latency FROM timing WHERE test=$TEST ORDER BY test,latency OFFSET GREATEST(0,buckets.offset_right) LIMIT 1)"
 
 $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN trans"
 $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN bucket_size"
@@ -545,7 +543,7 @@ $RESULTPSQL -c "DROP TABLE buckets"
 $RESULTPSQL -c "CREATE TABLE buckets AS SELECT trans,0.01 as bucket_size,0.0 as bucket_left,0.01*generate_series(1,100) AS bucket_right,0.0 as offset_left,0.0 as offset_right,0.0 as latency_left,0.0 as latency_right FROM tests WHERE tests.test=$TEST"
 $RESULTPSQL -c "UPDATE buckets SET bucket_left=bucket_right - bucket_size;"
 $RESULTPSQL -c "UPDATE buckets SET offset_left=round(trans * bucket_left), offset_right=round(trans * bucket_right) - 1";
-$RESULTPSQL -c "UPDATE buckets SET latency_left=(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_left limit 1), latency_right=(SELECT latency from timing WHERE test=$TEST order by test,latency offset buckets.offset_right limit 1)"
+$RESULTPSQL -c "UPDATE buckets SET latency_left=(SELECT latency from timing WHERE test=$TEST ORDER BY test,latency OFFSET GREATEST(0,buckets.offset_left) LIMIT 1), latency_right=(SELECT latency FROM timing WHERE test=$TEST ORDER BY test,latency OFFSET GREATEST(0,buckets.offset_right) LIMIT 1)"
 $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN trans"
 $RESULTPSQL -c "ALTER TABLE buckets DROP COLUMN bucket_size"
 $RESULTPSQL -c "\copy (SELECT * FROM buckets) TO 'latency-100.csv' WITH DELIMITER ',' CSV HEADER"

@@ -15,6 +15,7 @@ COOLDOWN=1
 # cbc-t00-ctas.sql  cbc-t01-vacuum.sql  cbc-t02-index.sql
 TOTTRANS=1
 echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=\"\""  >> params
 echo "TOTTRANS=$TOTTRANS"  >> params
 
 # TODO Investigate cleanup after CTAS step, it may be doing VACUUM work we don't want yet
@@ -67,6 +68,7 @@ TOTTRANS=1
 
 echo "SCALE=$SIZEGB"  > params
 echo "TOTTRANS=$TOTTRANS"  >> params
+echo "RUNTIME=\"\""  >> params
 echo "SCRIPT=$SCRIPT"  >> params
 ./benchwarmer 1
 sleep $COOLDOWN

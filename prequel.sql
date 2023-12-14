@@ -266,3 +266,13 @@ CREATE VIEW test_metric_summary AS
 
 ALTER TABLE tests ADD COLUMN server_mem_gb int;
 UPDATE tests t SET server_mem_gb=(SELECT max(s.server_mem_gb) FROM server s WHERE t.server=s.server);
+
+DROP TABLE IF EXISTS timing;
+CREATE TABLE timing(
+  ts timestamp,
+  filenum int,
+  latency double precision,
+  test int NOT NULL,
+  server text,
+  schedule_lag double precision
+  );

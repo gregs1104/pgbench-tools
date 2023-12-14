@@ -42,11 +42,11 @@ DROP TABLE IF EXISTS timing;
 -- Staging table, for loading in data from CSV
 CREATE TABLE timing(
   ts timestamp,
-  filenum int, 
-  latency numeric(9,3),
+  filenum int,
+  latency double precision,
   test int NOT NULL,
   server text,
-  schedule_lag numeric
+  schedule_lag double precision
   );
 
 CREATE INDEX idx_timing_test on timing(test,ts);

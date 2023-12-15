@@ -507,7 +507,7 @@ else
       $RESULTPSQL -c "WITH trimmed AS (SELECT start_time + (end_time - start_time)/10 as trim_start, end_time - (end_time - start_time)/10 as trim_end FROM tests WHERE server='${SERVERNAME}' AND test='$TEST') DELETE FROM timing WHERE server='${SERVERNAME}' AND test='$TEST' AND (ts<=(SELECT trim_start FROM trimmed) OR ts>=(SELECT trim_end FROM trimmed));"
       $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
     fi
-    $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=ti.test and latency IS NOT NULL ORDER BY latency OFFSET GREATEST(0,(SELECT round(0.90*count(*)) FROM timing WHERE latency IS NOT null) LIMIT 1)) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+    $RESULTPSQL -q -c "UPDATE tests set avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing ti where tests.test=ti.test and latency IS NOT NULL ORDER BY latency OFFSET GREATEST(0,(SELECT trunc(0.90*count(*)) FROM timing WHERE latency IS NOT null) LIMIT 1)) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
   else
     $BASEDIR/log-to-csv $TEST "${SERVERNAME}" < pgbench.log > timing.csv
     $RESULTPSQL -c "copy timing from stdin with csv" < timing.csv
@@ -517,7 +517,7 @@ else
       $RESULTPSQL -c "UPDATE tests SET trans_latency=(SELECT count(*) FROM timing WHERE server='${SERVERNAME}' AND tests.test='$TEST') WHERE server='${SERVERNAME}' AND tests.test='$TEST';"
     fi
   fi
-  $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test ORDER BY latency OFFSET GREATEST(0,(round(0.90*trans_latency))) LIMIT 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
+  $RESULTPSQL -q -c "UPDATE tests SET avg_latency=(select avg(latency) from timing where tests.test=timing.test), max_latency=(select max(latency)from timing where tests.test=timing.test), percentile_90_latency=(select latency from timing where tests.test=timing.test ORDER BY latency OFFSET GREATEST(0,(trunc(0.90*trans_latency))) LIMIT 1) WHERE server='${SERVERNAME}' AND tests.test='$TEST'"
 fi
 
 if [ "$OS" = "Linux" ] ; then

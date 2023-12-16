@@ -5,7 +5,7 @@
 # client driver doesn't handle fractions.
 
 SIZEGB="$1"
-if [ -zz"$SIZEGB" ] ; then
+if [ -z "$SIZEGB" ] ; then
   SIZEGB="20"
 fi
 

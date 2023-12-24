@@ -1,0 +1,38 @@
+#!/bin/bash -ex
+# Input scale parameter is size in GB, not regular pgbench unit.
+# Minimum size for pgbench run CGC is 1 scale unit.  pgbench
+# client driver doesn't handle fractions.
+
+SIZEGB="$1"
+if [ -z "$SIZEGB" ] ; then
+  SIZEGB="20"
+fi
+
+# Sleep between steps in seconds
+COOLDOWN=1
+
+TOTTRANS=1
+echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=\"\""  >> params
+echo "TOTTRANS=$TOTTRANS"  >> params
+
+SCRIPT="ctastorm-boot"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+SETCLIENTS="1 2 4 8 16"
+RUNTIME=120
+SCRIPT="ctastorm"
+
+echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=$RUNTIME"  >> params
+echo "SCRIPT=$SCRIPT"  >> params
+
+for c in $SETCLIENTS ; do
+  ./benchwarmer $c
+  sleep $COOLDOWN
+done
+
+./webreport
+echo Finished CTAStorm workload series

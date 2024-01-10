@@ -7,6 +7,9 @@ CLUSTER.  A simple but difficult to execute query is run along the way,
 initially with a Sequential Scan.  By the end that query should use a
 quick indexed lookup.
 
+To learn about the individual statements of CBC and how they work, see
+the CBC Tutorial in this same directory.
+
 # Intro
 
 I’ve evaluated a bunch of benchmark ideas that stress storage before,
@@ -15,7 +18,7 @@ When I was working on loading the Open Street Map data, I noticed that
 `CREATE TABLE AS` is really fast now, fast enough to be a load generator
 if you have a wide table to work with.  And there is a wide table in the
 system views!  `pg_settings` has a lot of columns of all sorts of data
-types, a lot more variation than the `pgbench` tables ever did. 
+types, a lot more variation than the trivial `pgbench` tables.
 
 # Example output
 
@@ -70,16 +73,15 @@ Output is in a key/value style.
 
 # pgbench driver
 
-The workload runs in pgbench utilizing its scale setting.  To make
-this compatible with using pgbench-tools to monitor each step, I've
-split the pieces up into individual files to allow executing by multiple
+The workload runs in `pgbench` utilizing its scale setting.  To make
+this compatible with using `pgbench-tools` to monitor each step, they are split the pieces up into individual files, also allowing execution by multiple
 clients.  Currently that includes:
 
 	cbc-t00-ctas.sql	cbc-t01-vacuum.sql	cbc-t02-index.sql
 	cbc-t03-select-max.sql	cbc-t04-selectr.sql	cbc-t05-cluster.sql
 
 The full series of pgbench tests have been packed into a workload script
-in the source tree at wl/cbc that includes multiple client counts for
+in the source tree at `wl/cbc` that includes multiple client counts for
 the SELECT statements.
 
 Here's a manual run of the benchmark steps using `pgbench` to monitor each step:
@@ -98,21 +100,64 @@ Here's a manual run of the benchmark steps using `pgbench` to monitor each step:
 
 Many of these steps can only run once.  The main SELECT query can
 of course be run in parallel.  This example starts 4 clients running
-it for 60 seconds:
+it for 120 seconds, same as the automated workload because that's usually enough to observe heat issues:
 
-	pgbench -n -T 60 -c 4 -s 20 -f cbc-t03-select-max.sql cbc
+	pgbench -n -T 120 -c 4 -s 20 -f cbc-t03-select-max.sql cbc
 
 Note that while the other methods of running CBC allow fractions of a GB
-for the size setting, pgbench scales must be integers of 1 or larger.
-To test <1GB configurations with pgbench you'd need to adjust the way
+for the size setting, `pgbench` scales must be integers of 1 or larger.
+To test <1GB configurations with `pgbench` you'd need to adjust the way
 the input scale is handled.
 
+# Automated workload
+
+A pgbench CBC workload driver at `wl/cbc` is available to make it easier
+to run every step with individual metrics collection.  `pgbench-tools` workloads generate a series of configuration files, run each test
+with `pgbench`, and save the results into a results database for analysis.
+
+# Validation
+
+To prove that CBC is effective at stressing system storage, four test
+systems were used:
+
+* MacBook Pro 16:  M1 Pro CPU, 16GB RAM, 1TB SSD
+* MacBook Air 15:  M2 CPU, 8GB RAM, 512GB SSD
+* AMD Ryzen 7700X:  128GB RAM, 2TB SK41 SSD
+* AMD Ryzen 5950X:  128GB RAM, 2TB Inland Performance PCI 4.0 SSD
+
+Tests tried a range of sizes, and as usual for benchmarking like this
+3-4X RAM was enough to reach maximum speed in most tests.
+
+CPU     |RAM |DB GB |Script      |Metric|Best |Max  |% Max
+--------+----+------+------------+------+-----+-----+-----
+M1 Pro  |  16|    32|t00-ctas    |R+W   |5107 |5263 |97%
+M2 Air  |   8|    20|t00-ctas    |R+W   |2556 |3238 |79%
+R9 5950X| 128|   384|t04-selectr |read  |4709 |5000 |94%
+R9 5950X| 128|   256|t00-ctas    |write |4072 |4300 |95%
+R7 7700X| 128|   384|t04-selectr |read  |6240 |7000 |89%
+R7 7700X| 128|   384|t00-ctas    |write |6529 |6500 |100%
+
+On the Mac, disk I/O data collected with `iostat` groups read and write
+operations into one total.  In theory then, the M1 Pro capable of 5263MB/s
+writes and slightly higher reads has a true theoretical max combined
+value of over 10GB/s.
+
+Here though, max values for the Mac systems only reflect the one I/O
+operation that the tests involved exercise.  For example, `t00-ctas` only
+generates write traffic.  The max possible on that test is the system's best
+write speed, not the max possible for the combined R+W metric being measured.
+
+Some other systems were lightly tested as well, and only the systems
+with strong thermal activity throttling failed to reach the 90% goal
+development aimed at.  The passive cooling of the Mac M2 Air for example,
+it's extremely hard to reach maximum I/O rates within its thermal
+constraints.
 
 # Credits
 
 `cbc` was developed by Greg Smith as part of the PostgreSQL regression testing
 effort at Crunchy Data.  The scripts are being initially released as part of
-the `pgbench-tools `repository.
+the `pgbench-tools` repository.
 
 # Dedication
 

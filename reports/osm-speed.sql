@@ -16,7 +16,7 @@ ORDER BY tests.server,script,test;
 SELECT
 --  server.server,
   server.server_cpu AS cpu,
-  server_mem_gb AS mem_gb,
+  tests.server_mem_gb AS mem_gb,
   substring(server_version,1,18) as server_ver,
   --set,
   --script,

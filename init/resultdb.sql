@@ -250,7 +250,7 @@ SELECT
   server_version,
   server_info,
   server_num_proc,
-  server_mem_gb,
+  test_wrap.server_mem_gb,
   server_disk_gb,
   server_details
 FROM

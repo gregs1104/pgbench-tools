@@ -204,6 +204,19 @@ CREATE TABLE test_buffercache (
 
 CREATE INDEX idx_buffercache on test_buffercache(server,test);
 
+ALTER TABLE tests ADD COLUMN server_mem_gb int;
+UPDATE tests t SET server_mem_gb=(SELECT max(s.server_mem_gb) FROM server s WHERE t.server=s.server);
+
+DROP TABLE IF EXISTS timing;
+CREATE TABLE timing(
+  ts timestamp,
+  filenum int,
+  latency double precision,
+  test int NOT NULL,
+  server text,
+  schedule_lag double precision
+  );
+
 DROP VIEW IF EXISTS test_stats CASCADE;
 CREATE OR REPLACE VIEW test_stats AS
 WITH test_wrap AS
@@ -225,7 +238,7 @@ SELECT
   server_version,
   server_info,
   server_num_proc,
-  server_mem_gb,
+  test_wrap.server_mem_gb,
   server_disk_gb,
   server_details
 FROM
@@ -263,16 +276,3 @@ CREATE VIEW test_metric_summary AS
   ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.rate_limit,ts.test,ts.tps,
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb;
-
-ALTER TABLE tests ADD COLUMN server_mem_gb int;
-UPDATE tests t SET server_mem_gb=(SELECT max(s.server_mem_gb) FROM server s WHERE t.server=s.server);
-
-DROP TABLE IF EXISTS timing;
-CREATE TABLE timing(
-  ts timestamp,
-  filenum int,
-  latency double precision,
-  test int NOT NULL,
-  server text,
-  schedule_lag double precision
-  );

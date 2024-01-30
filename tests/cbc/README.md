@@ -129,7 +129,7 @@ Tests tried a range of sizes, and as usual for benchmarking like this
 3-4X RAM was enough to reach maximum speed in most tests.
 
 |CPU     |RAM |DB GB |Script      |Metric|Best |Max  |% Max
-|--------+----+------+------------+------+-----+-----+-----
+|--------|----|------|------------|------|-----|-----|-----
 |M1 Pro  |  16|    32|t00-ctas    |R+W   |5107 |5263 |97%
 |M2 Air  |   8|    20|t00-ctas    |R+W   |2556 |3238 |79%
 |R9 5950X| 128|   384|t04-selectr |read  |4709 |5000 |94%

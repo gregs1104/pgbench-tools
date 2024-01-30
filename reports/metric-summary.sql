@@ -104,6 +104,22 @@ WITH t AS
 SELECT server,clients,max_read_Mbps FROM t
 \crosstabview
 
+\echo Average reads/sec (Linux) or total ops/sec (Mac)
+WITH t AS
+  (SELECT
+     server || '-' || set::text AS server,clients,round(avg(avg)) AS avg_read_per_sec
+   FROM test_metric_summary
+   WHERE
+     (script='insert' OR script='select' OR script='select-pages') AND
+     (metric='disk0_tps' OR metric like '%_r/s') AND
+     clients IN (1,2,4,8,16,32,64,128)
+   GROUP BY server,set,clients
+   ORDER BY server,set,clients
+  )
+SELECT server,clients,avg_read_per_sec FROM t
+\crosstabview
+
+
 \echo Fastest second of TPS
 WITH t AS (
    SELECT

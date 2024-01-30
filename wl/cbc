@@ -73,8 +73,8 @@ echo "SCRIPT=$SCRIPT"  >> params
 ./benchwarmer 1
 sleep $COOLDOWN
 
-# cbc-t03i-select-max.sql
-SCRIPT="cbc/cbc-t03i-select-max"
+# cbc-t06-iselect-max.sql
+SCRIPT="cbc/cbc-t06-iselect-max"
 
 echo "SCALE=$SIZEGB"  > params
 echo "RUNTIME=$RUNTIME"  >> params

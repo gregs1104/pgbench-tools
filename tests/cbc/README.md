@@ -8,7 +8,7 @@ initially with a Sequential Scan.  By the end that query should use a
 quick indexed lookup.
 
 To learn about the individual statements of CBC and how they work, see
-the CBC Tutorial in this same directory.
+the [CBC Tutorial](cbc-tutorial.md) in this same directory.
 
 # Intro
 

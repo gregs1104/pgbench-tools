@@ -11,7 +11,7 @@ with a single client and simple workload.  Tests will stress the speed
 block I/O occurs when creating new data and then scanning through it.
 
 This document is being provided as text and as a full active tutorial
-using Crunchy's Playground tutorial system.  When talking about the tutorial results here, that's the rates things run at in the tutorial playground.
+using Crunchy's [Postgres Playground](https://www.crunchydata.com/developers/playground) tutorial system.  When talking about the tutorial results here, that's the rates things run at in the playground.
 
 ## Data creation
 
@@ -59,7 +59,7 @@ After you add rows to the database, there is a period where you can abort
 that transaction and roll back its creation.  After enough transactions have
 gone by, eventually the transaction becomes permanent, what is called frozen,
 and its transaction number reclaimed.  That all normally happens as Autovacuum 
-background activity, lowly processing within moments of the transaction being
+background activity, slowly processing within moments of the transaction being
 committed.
 
 We can force it to happen immediately and all at once instead.  That speed

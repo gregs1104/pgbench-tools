@@ -3,24 +3,23 @@
 Complete Block Check (CBC) stresses multiple major parts of block I/O
 in the database using synthetic test data.  It was developed against
 PostgreSQL 15 and uses CREATE TABLE AS, VACUUM, CREATE INDEX, and
-CLUSTER.  A simple but difficult to execute query is run along the way,
-initially with a Sequential Scan.  By the end that query should use a
+CLUSTER.  Two simple but difficult to execute queries are run along the way,
+initially with a Sequential Scan.  By the end one query should use a
 quick indexed lookup.
 
-To learn about the individual statements of CBC and how they work, see
+To learn about the individual statements of CBC, how and why they work, see
 the [CBC Tutorial](cbc-tutorial.md) in this same directory.
 
-# Intro
+# Background
 
-I’ve evaluated a bunch of benchmark ideas that stress storage before,
-but usually using `pgbench` to generate the test database and workload.
+I’ve evaluated many benchmark ideas that stress storage before, usually using `pgbench` to generate the test database and workload.
 When I was working on loading the Open Street Map data, I noticed that
 `CREATE TABLE AS` is really fast now, fast enough to be a load generator
 if you have a wide table to work with.  And there is a wide table in the
 system views!  `pg_settings` has a lot of columns of all sorts of data
 types, a lot more variation than the trivial `pgbench` tables.
 
-# Example output
+# Example collector output
 
 Here's a lightly formatted example via the collector script.
 Hardware is AMD 7700X processor, 128GB RAM, SK41 2TB SSD; times
@@ -49,7 +48,7 @@ all nornal sync work disabled.  In a default configuration vacuum
 work will usually hit a WAL bottleneck before it stresses CPU and
 disk to the extent this sample does.
 
-# Usage
+# psql driver
 
 You can run a CBC in command line `psql` like this:
 
@@ -60,7 +59,7 @@ you just have to put the scale number in manually instead:
 
 	\set SIZEGB 1
 
-# Collector
+# CLI collector driver
 
 The program includes a standalone results collector script named
 `cbc` that runs the benchmark and saves to a text file in results/ directory.
@@ -69,7 +68,7 @@ Inputs:
 
 * Database size in GB.  Defaults to 20.
 
-Output is in a key/value style.
+Output is in the key/value style, shown as an example above.
 
 # pgbench driver
 
@@ -109,13 +108,13 @@ for the size setting, `pgbench` scales must be integers of 1 or larger.
 To test <1GB configurations with `pgbench` you'd need to adjust the way
 the input scale is handled.
 
-# Automated workload
+# Automated workload driver
 
 A pgbench CBC workload driver at `wl/cbc` is available to make it easier
 to run every step with individual metrics collection.  `pgbench-tools` workloads generate a series of configuration files, run each test
-with `pgbench`, and save the results into a results database for analysis.
+with `pgbench`, and save the results into a results database for analysis.  A sample report at `reports/cbc-best.sql` shows the results with associated disk metrics.  On the Mac this includes only disk0 throughput.
 
-# Validation
+# Storage throughput validation
 
 To prove that CBC is effective at stressing system storage, four test
 systems were used:

@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 # CBC workload for pgbench automation
 # Input scale parameter is size in GB, not regular pgbench unit.
-# Minimum size for pgbench run CGC is 1 scale unit.  pgbench
+# Minimum size for pgbench run CBC is 1GB=1 scale unit.  pgbench
 # client driver doesn't handle fractions.
 
 SIZEGB="$1"
@@ -73,11 +73,8 @@ echo "SCRIPT=$SCRIPT"  >> params
 ./benchwarmer 1
 sleep $COOLDOWN
 
-# cbc-t03-select-max.sql
-
-SCRIPT="cbc/cbc-t03-select-max"
-
-# TODO should have some way to tell this invocation from the above one where no index is possible
+# cbc-t03i-select-max.sql
+SCRIPT="cbc/cbc-t03i-select-max"
 
 echo "SCALE=$SIZEGB"  > params
 echo "RUNTIME=$RUNTIME"  >> params

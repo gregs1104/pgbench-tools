@@ -114,6 +114,13 @@ A pgbench CBC workload driver at `wl/cbc` is available to make it easier
 to run every step with individual metrics collection.  `pgbench-tools` workloads generate a series of configuration files, run each test
 with `pgbench`, and save the results into a results database for analysis.  A sample report at `reports/cbc-best.sql` shows the results with associated disk metrics.  On the Mac this includes only disk0 throughput.
 
+The workload version of CBC also includes a second copy of the
+`cbc-t03-select-max` script labeled with an "i", to distinguish the runs
+expected to use an index.  The test itself is identical, the script name
+is simply `cbc-t03i-select-max` instead.  A case could be made that
+this should be named the t06 step.  t03i was used to sort the results
+for with/without an index next to each other.
+
 # Storage throughput validation
 
 To prove that CBC is effective at stressing system storage, four test

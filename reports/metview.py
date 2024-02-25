@@ -21,6 +21,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 import matplotlib.image as image
 from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
+import argparse
 
 def examples():
     server='gp2'
@@ -81,9 +82,9 @@ def examples():
     test=4392 # high rate INSERT, drop glitch near end
     test=4387 # high rate INSERT, perfectly smooth, saved before schedule lag feature added
 
-def query():
-    server='rising'
-    test='4974' # 64000 TPS overheading with 500GB real disk I/O
+def query(options):
+    server=options['server']
+    test=options['test']
 
     diskdevs=["sda","sda"] # gp2/3
 
@@ -137,9 +138,9 @@ def query():
 
     return sql
 
-def graph(df):
-    server='rising'
-    test='4974'
+def graph_group(options,df):
+    server=options['server']
+    test=options['test']
 
     cpu=server
     if server=='rising':
@@ -240,19 +241,26 @@ def graph(df):
                 print("saved to '%s.png'" % fn)
 
 
-def connect():
+def connect(options):
     conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
     print("Connecting to database\n	->%s" % (conn_string))
     conn = psycopg2.connect(conn_string)
     try:
-        sql=query()
+        sql=query(options)
         print(sql)
         df = pd.read_sql_query(sql, conn)
         print(df)
-        graph(df)
+        graph_group(options,df)
     finally:
         conn.close()
 
-if __name__ == "__main__":
-    connect()
+def parse():
+    parser = argparse.ArgumentParser(description='metview.py benchmark results metrics viewer')
+    parser.add_argument("test", type=int, help='Test number',nargs='?',default=4974)
+    parser.add_argument("server", help="server name",nargs='?',default='rising')
+    args = parser.parse_args()
+    return args
 
+if __name__ == "__main__":
+    args_dict=vars(parse())
+    connect(args_dict)

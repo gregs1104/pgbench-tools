@@ -4,8 +4,7 @@
 metview.py generates metrics graphs out of a pgbench-tools benchmark results
 database.  This is the successor to the osm-metrics.py example code.
 
-This code is at rough works for me quality without a working UI yet.
-It's filled with debris related to an WIP presentation too.
+This code is at rough works for me quality with a minimal UI.
 Committing and releasing in this state as a safety net to enable a
 major refactoring to make this a proper CLI tool.
 """
@@ -23,66 +22,7 @@ import matplotlib.image as image
 from matplotlib.offsetbox import (OffsetImage, AnnotationBbox)
 import argparse
 
-def examples():
-    server='gp2'
-    test='2'
-    server='gp3'
-    test='2'
-
-    server='gp3'
-    test='8'
-    server='gp2'
-    test='8'
-
-    server='rising'
-
-    # Perfect results
-    test='4902' # 4000 TPS @ 1GB 4 clients, low latency
-    test='4909' # 38400 TPS @ 1GB, low latency
-    test='4905' # 49600 TPS @ 1GB, low latency
-    test='4910' # 68800 TPS @ 1GB, low latency
-    test='4911' # 99200 TPS @ 1GB, overheat
-    test='4932' # 128000 TPS @1GB low latency
-
-    test='4968' # 32000 perfect performance with 500GB DB
-    test='4915' # 76800 TPS @ 1GB perfect low latency
-    test='4914' # 16000 TPS @ 1GB perfect very low latency
-
-    test='4390' # INSERT 1GB 64 @ 12800 smooth
-
-    # Latency falls aoart
-    test='4921' # 153000 TPS @1GB, shows CPU overheating making latency escalate at the end
-    test='4916' # 137600 TPS @ 1GB late overhead drift
-    test='5166' # 64000 TPS at 151GB, slow overheat even though it seems it can do 130000
-    test='5214' # 64000 TPS at 200GB, just starting to overheat at the end
-    test='4944' # 2000 TPS @ 500GB very light overhead at end
-    test='4974' # 64000 TPS overheading with 500GB real disk I/O
-
-    # Max latency constantly falling apart
-    test='4945' # 9600 TPS @ 500GB constant latency misses
-    test='4917' # 198400 TPS  @ 1GB constant misses
-
-    test='8160' # Weird driver cache INSERT results
-    test='8204' # Checkpoint FPW spike trashes performance
-    test='9790' # fixed rate mesz
-
-    server='gp3'
-    test=327
-
-    server='gp2'
-    test=417  # 95% latency is just 25ms; just needs trimming to be perfect
-    test=409 # near breakdown @ 1600
-    test=419 # near breakdown @ 1920
-    test=418 # near breakdown @ 1920
-
-    test=385 # serious breakdown
-
-    server='rising'
-    test=4393 # high rate INSERT, trimmable edge issues
-    test=4392 # high rate INSERT, drop glitch near end
-    test=4387 # high rate INSERT, perfectly smooth, saved before schedule lag feature added
-
-def query(options):
+def query_multimet(options):
     server=options['server']
     test=options['test']
 
@@ -92,6 +32,7 @@ def query(options):
     col='collected'
     dbagg='second'
 
+    # TODO Use SQL proof parameter substitution here instead of Python's
     sql="""
     SELECT
       --test_metrics_data.server,
@@ -138,48 +79,40 @@ def query(options):
 
     return sql
 
-def graph_group(options,df):
+# TODO Turn each of these metric set groups into their own function
+def metric_set_groups(options):
     server=options['server']
     test=options['test']
 
-    cpu=server
-    if server=='rising':
-        cpu='5950X'
-
-    metrics={}
-    plt.rcParams.update({'font.size':'18'})
-
-    base="images"
-    try:
-        os.mkdir(base)
-    except:
-        pass
-
-    g=df.groupby('metric')
-
-    #
     view=['min_schedule_lag_ms','avg_schedule_lag_ms','max_schedule_lag_ms']
     view_label='Schedule Lag Latency'
     ylabel="Lag"
-
-    view=('Dirty')
-    view_label='Dirty'
-    ylabel="Dirty"
-
-    view=['rate']
-    view_label='Rate'
-    ylabel="TPS"
-
 
     view=['min_latency','max_latency','avg_latency']
     ylabel="Latency (ms)"
     #view_label='Latency '+cpu+" "+test
     view_label='Latency '+str(test)
 
-    view=['rate']
-    view_label='Rate'
-    ylabel="TPS"
+    view=('Dirty')
+    view_label='Dirty'
+    ylabel="Dirty"
 
+
+def images_dir(options):
+    base="images"
+    try:
+        os.mkdir(base)
+    except:
+        pass
+    return base
+
+def create_label(options,df):
+    server=options['server']
+    test=options['test']
+
+    cpu=server
+    if server=='rising':
+        cpu='5950X'
 
     # Extract run metadata from first row
     clients=df.iloc[0]['clients']
@@ -193,9 +126,32 @@ def graph_group(options,df):
     script=df.iloc[0]['script'].upper()
 
     view_label=cpu+" "+script+" "+str(db_gb)+"GB "+str(clients)+" clients @ "+str(rate_limit)+" TPS"
+    return view_label
+
+def gen_file_name(base,view,server,test):
+    unslashed=view.replace("/","-")
+    name=os.path.join(base,server+"-"+str(test)+"-"+unslashed)
+    return name
+
+def graph_group(options,df):
+    server=options['server']
+    test=options['test']
+
+    metrics={}
     rendered=0
 
+    base=images_dir(options)
+
+    plt.rcParams.update({'font.size':'18'})
     colors=('green','blue','purple')
+
+    view=['rate']
+    view_label='Rate'
+    ylabel="TPS"
+
+    view_label=create_label(options,df)
+
+    g=df.groupby('metric')
 
     for k,v in g:
         print("Processing",k)
@@ -222,8 +178,8 @@ def graph_group(options,df):
                 ylabel="Dirty Memory MB"
 
             ax=v['avg'].plot(rot=90,title=view_label,figsize=(8,6))
-            #,color=colors[rendered])
 
+            #,color=colors[rendered])
             # This just shows avg/avg/avg on legend
             # ax.legend()
 
@@ -233,26 +189,27 @@ def graph_group(options,df):
                  box_alignment=(0.55,1.85))
             ax.add_artist(ab)
 
-            unslashed=k.replace("/","-")
-            fn=os.path.join(base,server+"-"+str(test)+"-"+unslashed)
+            fn=gen_file_name(base,k,server,test)
             # Only save on last metric in the view list
             if rendered==(len(view)):
                 plt.savefig(fn,dpi=600)  # 80 for =640x480 figures
                 print("saved to '%s.png'" % fn)
 
 
-def connect(options):
-    conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
-    print("Connecting to database\n	->%s" % (conn_string))
-    conn = psycopg2.connect(conn_string)
+def process(options,conn):
     try:
-        sql=query(options)
+        sql=query_multimet(options)
         print(sql)
         df = pd.read_sql_query(sql, conn)
         print(df)
         graph_group(options,df)
     finally:
         conn.close()
+
+def connect(options):
+    conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
+    print("Connecting to database\n	->%s" % (conn_string))
+    return psycopg2.connect(conn_string)
 
 def parse():
     parser = argparse.ArgumentParser(description='metview.py benchmark results metrics viewer')
@@ -263,4 +220,5 @@ def parse():
 
 if __name__ == "__main__":
     args_dict=vars(parse())
-    connect(args_dict)
+    c=connect(args_dict)
+    process(args_dict,c)

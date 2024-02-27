@@ -19,7 +19,7 @@ import psycopg2
 import psycopg2.extras
 
 def connect(options):
-    # TODO put these parameters into options
+    # TODO Put database connection parameters into options
     conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
     print("Connecting to database\n	->%s" % (conn_string))
     return psycopg2.connect(conn_string)
@@ -30,12 +30,13 @@ def parse():
     parser.add_argument("test", type=int, help='Test number',nargs='?',default=4974)
     return vars(parser.parse_args())
 
+# TODO Move output directory to results/server/test/images
 def images_dir(options):
     base="images"
     try:
         os.mkdir(base)
     except:
-        # TODO catch real errors, continue to ignore already exists error
+        # TODO catch real errors, continue to ignore directory already exists error
         pass
     return base
 
@@ -67,10 +68,11 @@ def gen_file_name(base,view,server,test):
     name=os.path.join(base,server+"-"+str(test)+"-"+unslashed)
     return name
 
+# TODO Create alternate query that includes all the metrics
 def query_multi_met(options):
     server=options['server']
     test=options['test']
-    # TODO determine dbagg based on length of teat run
+    # TODO determine dbagg based on length of test run
     dbagg='second'
 
     # TODO Use SQL injection proof parameter substitution here instead of Python's
@@ -171,6 +173,7 @@ def graph_group(options,df):
                 plt.savefig(fn+"-logo",dpi=600)  # 80 for =640x480 figures
                 print("saved to '%s-logo.png'" % fn)
 
+# TODO add options to change which query and graph function are called
 def graph(options,conn):
     try:
         sql=query_multi_met(options)

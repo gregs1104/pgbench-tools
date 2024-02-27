@@ -18,6 +18,39 @@ import pandas as pd
 import psycopg2
 import psycopg2.extras
 
+# Define what categories various metrics are in
+rates=("rate")
+latencies=("avg_latency","max_latency ","min_latency")
+lags=("min_schedule_lag_ms","avg_schedule_lag_ms","max_schedule_lag_ms")
+
+linux_memory=("Active","Active(anon)","Active(file)","AnonHugePages",
+              "AnonPages","Bounce","Buffers","Cached","CmaFree","CmaTotal",
+              "CommitLimit","Committed_AS","DirectMap1G","DirectMap2M",
+              "DirectMap4k","Dirty","FileHugePages","FilePmdMapped",
+              "HardwareCorrupted","HugePages_Free","HugePages_Rsvd",
+              "HugePages_Surp","HugePages_Total","Hugepagesize","Hugetlb",
+              "Inactive","Inactive(anon)","Inactive(file)","KReclaimable",
+              "KernelStack","Mapped","MemAvailable","MemFree","MemTotal",
+              "Mlocked","NFS_Unstable","PageTables","Percpu","SReclaimable",
+              "SUnreclaim","Shmem","ShmemHugePages","ShmemPmdMapped","Slab",
+              "SwapCached","SwapFree","SwapTotal","Unevictable",
+              "VmallocChunk","VmallocTotal","VmallocUsed","Writeback",
+              "WritebackTmp", "Zswap","Zswapped")
+
+linux_vmstat=("b","bi","bo","buff","cache","cs","free","id","in","r",
+              "si","so","st","swpd","sy","us","wa")
+
+linux_iostat=("_%drqm","_%rrqm","_%util","_%wrqm",
+              "_aqu-sz","_d/s","_dMB/s",
+              "_d_await","_dareq-sz","_drqm/s",
+              "_r/s","_rMB/s","_r_await",
+              "_rareq-sz","_rrqm/s","_w/s",
+              "_wMB/s","_w_await","_wareq-sz",
+              "_wrqm/s")
+
+pg_stats=("pg_clients_active","pg_clients_idle","pg_db_size",
+          "pg_max_query_runtime_sec")
+
 def connect(options):
     # TODO Put database connection parameters into options
     conn_string = "host='localhost' dbname='results' user='gsmith' password='secret'"
@@ -30,9 +63,11 @@ def parse():
     parser.add_argument("test", type=int, help='Test number',nargs='?',default=4974)
     return vars(parser.parse_args())
 
-# TODO Move output directory to results/server/test/images
 def images_dir(options):
-    base="images"
+    server=options['server']
+    test=str(options['test'])
+    # TODO Deal with output to server/test directory given some are missing
+    base=os.path.join("results","images")
     try:
         os.mkdir(base)
     except:
@@ -100,7 +135,7 @@ def query_multi_met(options):
             'rate','avg_latency','min_latency','max_latency',
             'min_schedule_lag_ms','avg_schedule_lag_ms','max_schedule_lag_ms',
             'pg_clients_active','pg_clients_idle','pg_db_size','pg_max_query_runtime_sec',
-          'Dirty'
+            'Dirty','Active','Cached'
           )
     GROUP BY test_metrics_data.server,script,scale,clients,rate_limit,tps,round(dbsize / (1024*1024*1024)),metric,date_trunc('%s',collected)
     ORDER BY test_metrics_data.server,script,scale,clients,rate_limit,round(dbsize / (1024*1024*1024)),metric,date_trunc('%s',collected)
@@ -119,11 +154,20 @@ def graph_group(options,df):
     plt.rcParams.update({'font.size':'18'})
     colors=('green','blue','purple')
 
-    view=['rate']
-    view_label='Rate'
-    ylabel="TPS"
+    logo_file="reports/Color Horizontal.jpg"
+    logo=image.imread(logo_file)
+    logo_im = OffsetImage(logo, zoom=.03)
 
-    view_label=gen_label(options,df)
+    # This function combines multiple metrics onto a shared Y axis
+    # TODO Break out the single metric use case to another function
+    if (True):
+        view_set=['min_latency','max_latency','avg_latency']
+        ylabel="Latency (ms)"
+        view_label='Latency '+str(test)
+    else:
+        view_set=['rate']
+        ylabel="TPS"
+        view_label=gen_label(options,df)
 
     g=df.groupby('metric')
 
@@ -136,38 +180,34 @@ def graph_group(options,df):
         metrics[k]=metrics[k].drop(columns=['avg','metric'])
         metrics[k].rename(columns={'max': k}, inplace=True)
 
-        file="Color Horizontal.jpg"
-        logo=image.imread(file)
-        im = OffsetImage(logo, zoom=.03)
-
-        if k in view:
+        if k in view_set:
             rendered=rendered+1
 
-            if k=='Dirty':
+            if k in linux_memory:
                 # Linux mem figures are in KB, rescale
                 v['avg'] /= (1024 )
                 v['max'] /= (1024)
                 print("Reprocessed")
                 print(v)
-                ylabel="Dirty Memory MB"
+                ylabel="Memory MB"
 
             ax=v['avg'].plot(rot=90,title=view_label,figsize=(8,6))
             #,color=colors[rendered])
 
-            # This just shows avg/avg/avg on legend
-            # ax.legend()
+            # TODO This just shows avg/avg/avg on legend, should be min/avg/max
+            #ax.legend()
 
             ax.set_ylabel(ylabel)
             ax.grid(True,which='both')
 
             fn=gen_file_name(base,k,server,test)
             # Only save on last metric in the view list
-            if rendered==(len(view)):
+            if rendered==(len(view_set)):
                 # TODO Bottom part of graph is strangely cut off?  Rotation issue?
                 plt.savefig(fn,dpi=600)  # 80 for =640x480 figures
                 print("saved to '%s.png'" % fn)
 
-                ab = AnnotationBbox(im, (1, 0), frameon=False, xycoords='axes fraction',
+                ab = AnnotationBbox(logo_im, (1, 0), frameon=False, xycoords='axes fraction',
                      box_alignment=(0.55,1.85))
                 ax.add_artist(ab)
                 plt.savefig(fn+"-logo",dpi=600)  # 80 for =640x480 figures

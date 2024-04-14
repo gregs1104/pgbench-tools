@@ -1,0 +1,14 @@
+#!/bin/bash
+# Linux drop OS caching as root user, perhaps via sudo.
+# Install this into a directory like /usr/local/bin
+# Sample with sudo rule addition:
+#
+#   sudo cp drop_caches /usr/local/bin/
+#   sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/drop_caches\" >> /etc/sudoers.d/postgres"
+
+if [[ $(id -u) -ne 0 ]] ; then echo "Cache dropping must run as root" ; exit 1 ; fi
+echo -n "Dropping "
+grep ^Cached: /proc/meminfo
+sync
+echo 3 > /proc/sys/vm/drop_caches
+

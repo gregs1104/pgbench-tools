@@ -220,6 +220,9 @@ if [ "$?" -ne "0" ]; then
   exit
 fi
 
+# Version of Server
+SERVER_VERSION=`$TESTPSQL -A -t -F" " -c "select current_setting('server_version_num')::numeric;"`
+
 # Cleanup pgbench tables, unless we've been told to skip that
 if [ "$SKIPINIT" -ne "1" ]; then
   echo Cleaning up database $TESTDB
@@ -242,7 +245,15 @@ if [ "$SKIPINIT" -ne "1" ]; then
   else
     echo "Skipping vacuum, it was recently ran by the last test"
   fi
+fi
 
+# Run a reset script if one is provided.  Typical use is cache clearing.
+if [ -n "$TESTRESET" ]; then
+  $TESTRESET $SERVER_VERSION
+fi
+
+# Try to start the test close to the beginning of the checkpoint cycle.
+if [ "$SKIPINIT" -ne "1" ]; then
   # We want clean stats from the pg_stat_bgwriter, but those won't show up
   # until after the checkpoint is done.  Wait a bit for the stats to update
   STARTCHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
@@ -255,7 +266,6 @@ if [ "$SKIPINIT" -ne "1" ]; then
     fi 
     sleep 1
   done
-
 fi
 
 # Create the tests record
@@ -279,9 +289,6 @@ if [ "$?" -ne "0" ]; then
 else
   BACKEND_FSYNC="buffers_backend_fsync"
 fi
-
-# Version of Server
-SERVER_VERSION=`$TESTPSQL -A -t -F" " -c "select current_setting('server_version_num')::numeric;"`
 
 # Grab starting values for statistics
 get_bgwriter

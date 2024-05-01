@@ -91,3 +91,58 @@ SELECT metric,server,CASE WHEN avg>100 THEN 100 ELSE round(avg) END AS util FROM
 ORDER BY server,metric;
 \crosstabview
 
+\echo Max read rate MBps
+WITH t AS
+  (SELECT
+     server || '-' || set::text AS server,test,round(max(max)) AS max_read_MBps
+   FROM test_metric_summary
+   WHERE
+     (script like 'osm2pgsql%') AND
+     (metric  like 'disk%_MB/s' OR metric like '%rMB/s')
+   GROUP BY server,set,test
+   ORDER BY test
+  )
+SELECT test,server,max_read_MBps FROM t
+\crosstabview
+
+\echo Average read rate MBps
+WITH t AS
+  (SELECT
+     server || '-' || set::text AS server,test,round(avg(avg)) AS avg_read_Mbps
+   FROM test_metric_summary
+   WHERE
+     (script like 'osm2pgsql%') AND
+     (metric  like 'disk%_MB/s' OR metric like '%rMB/s')
+   GROUP BY server,set,test
+   ORDER BY test
+  )
+SELECT test,server,avg_read_Mbps FROM t
+\crosstabview
+
+\echo Maximum disk read ops
+WITH t AS
+  (SELECT
+     server || '-' || set::text AS server,test,round(max(max)) AS reads
+   FROM test_metric_summary
+   WHERE
+     (script like 'osm2pgsql%') AND
+     (metric like 'disk%_tps' OR metric like '%_r/s')
+   GROUP BY server,set,test
+   ORDER BY test
+  )
+SELECT test,server,reads AS read_count FROM t
+\crosstabview
+
+\echo Average disk read ops
+  WITH t AS
+    (SELECT
+       server || '-' || set::text AS server,test,round(avg(avg)) AS reads
+     FROM test_metric_summary
+     WHERE
+       (script like 'osm2pgsql%') AND
+       (metric like 'disk%_tps' OR metric like '%_r/s')
+     GROUP BY server,set,test
+     ORDER BY test
+    )
+  SELECT test,server,reads AS avg_reads FROM t
+\crosstabview

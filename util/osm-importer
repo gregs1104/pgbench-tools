@@ -11,12 +11,12 @@
 . ../../../config
 . ../../../params
 
-SERVER="localhost"
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
 
-psql -h $SERVER -d gis -c 'CREATE EXTENSION postgis;'
-psql -h $SERVER -d gis -c 'CREATE EXTENSION hstore;'
-psql -h $SERVER -d gis -c 'CREATE EXTENSION pg_stat_statements;'
-psql -h $SERVER -d gis -c 'CREATE EXTENSION pg_buffercache;'
+$TESTPSQL -c 'CREATE EXTENSION postgis;'
+$TESTPSQL -c 'CREATE EXTENSION hstore;'
+$TESTPSQL -c 'CREATE EXTENSION pg_stat_statements;'
+$TESTPSQL -c 'CREATE EXTENSION pg_buffercache;'
 
 if [ -z "${OSMNODECACHE}" ] ; then
   OSMNODECACHE=0
@@ -34,7 +34,8 @@ fi
 rm -f nodes.db 
 # When changing this, beware the usual style of commenting out any one line.
 # That doesn't work on this form of multi-line command.
-time osm2pgsql --create --slim -v -d gis \
+time osm2pgsql --create --slim -v \
+    -H $TESTHOST -U $TESTUSER -P $TESTPORT -d $TESTDB \
     --cache ${OSMNODECACHE} --number-processes ${SETCLIENTS} \
     --flat-nodes nodes.db \
     --middle-way-node-index-id-shift=${MULTI} \

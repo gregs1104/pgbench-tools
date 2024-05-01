@@ -255,11 +255,11 @@ SELECT
   server_details
 FROM
   test_wrap
-  RIGHT JOIN test_bgwriter ON
+  FULL OUTER JOIN test_bgwriter ON
       test_wrap.test=test_bgwriter.test AND test_wrap.server=test_bgwriter.server
-  RIGHT JOIN test_stat_database ON
+  FULL OUTER JOIN test_stat_database ON
       test_wrap.test=test_stat_database.test AND test_wrap.server=test_stat_database.server
-  RIGHT JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
+  JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
   FULL OUTER JOIN server on test_wrap.server=server.server
 ORDER BY server,set,info,script,scale,clients,test_wrap.test
 ;

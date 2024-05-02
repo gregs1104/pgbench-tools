@@ -222,6 +222,7 @@ fi
 
 # Version of Server
 SERVER_VERSION=`$TESTPSQL -A -t -F" " -c "select current_setting('server_version_num')::numeric;"`
+VERSION_TEXT=`$TESTPSQL -Atc "select version();"`
 
 # Cleanup pgbench tables, unless we've been told to skip that
 if [ "$SKIPINIT" -ne "1" ]; then
@@ -270,7 +271,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
-$RESULTPSQL -q -c "insert into tests (server,script,clients,workers,set,scale,dbsize,rate_limit,client_limit,multi) values('$SERVERNAME','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT,$MULTI)"
+$RESULTPSQL -q -c "insert into tests (server,server_version,script,clients,workers,set,scale,dbsize,rate_limit,client_limit,multi) values('$SERVERNAME','$VERSION_TEXT','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT,$MULTI)"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests WHERE server='${SERVERNAME}'"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?

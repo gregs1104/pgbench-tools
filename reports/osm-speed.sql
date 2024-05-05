@@ -1,6 +1,7 @@
 SELECT
   test,
-  server.server_cpu AS cpu,
+  tests.server_cpu AS cpu,
+  tests.server_mem_gb AS mem_gb,
   --script,
   --set,
   --substring(server_version,1,16) AS server_ver,
@@ -11,11 +12,11 @@ SELECT
   round((artifacts->'overall')::numeric/60/60,2) AS hours
 FROM tests,server
 WHERE script LIKE 'osm2pgsql%' AND tests.server=server.server
-ORDER BY tests.server,script,test;
+ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,script,multi,scale,test;
 
 SELECT
 --  server.server,
-  server.server_cpu AS cpu,
+  tests.server_cpu AS cpu,
   tests.server_mem_gb AS mem_gb,
   substring(server_version,1,18) as server_ver,
   --set,
@@ -39,4 +40,4 @@ SELECT
   round((artifacts->'relation_count')::numeric/(artifacts->'relation_seconds')::numeric,0) AS rel_ps
 FROM tests,server
 WHERE script LIKE 'osm2pgsql%' AND tests.server=server.server
-ORDER BY tests.server,script,set,multi,scale,test;
+ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,script,set,multi,scale,test;

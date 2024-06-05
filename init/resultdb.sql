@@ -247,6 +247,7 @@ usage AS
       avg_usage,
       avg_usage * bytes AS weighted
      FROM test_buffercache
+     GROUP BY server,test,relname,bytes,avg_usage,max_usage,isdirty  -- Eliminate accidental duplicates
     ) AS usage_detail
     GROUP BY server,test
   )

@@ -236,7 +236,20 @@ WITH test_wrap AS
   (SELECT *,
       CASE WHEN extract(epoch FROM (end_time - start_time))::bigint<1
           THEN 1::bigint ELSE extract(epoch FROM (end_time - start_time))::bigint END AS seconds
-   FROM TESTS)
+   FROM TESTS),
+usage AS
+  (SELECT
+    server,test,sum(bytes) AS cached,round(sum(weighted) / sum(bytes),2) AS avg_usage
+    FROM
+    (SELECT
+      server,test,
+      bytes,
+      avg_usage,
+      avg_usage * bytes AS weighted
+     FROM test_buffercache
+    ) AS usage_detail
+    GROUP BY server,test
+  )
 SELECT
   testset.set, testset.info, server.server,script,scale,clients,multi,rate_limit,test_wrap.test,
   round(dbsize / (1024 * 1024)) as dbsize_mb,
@@ -247,6 +260,13 @@ SELECT
   round(buffers_clean      * 8192 / seconds) AS clean_Bps,
   round(buffers_backend    * 8192 / seconds) AS backend_Bps,
   round(wal_written / seconds) AS wal_written_Bps,
+  CASE WHEN (blks_hit + blks_read) > 0
+      THEN round(100.0 * blks_hit / (blks_hit + blks_read),2)
+      ELSE 0 END AS blk_cached_pct,
+  CASE WHEN (buffers_checkpoint + buffers_clean + buffers_backend + buffers_alloc)  > 0
+      THEN round(100.0 * buffers_alloc / (buffers_checkpoint + buffers_clean + buffers_backend + buffers_alloc),2) 
+      ELSE 0 END AS blk_read_pct,
+  cached,avg_usage,
   max_dirty,
   server_version,
   server_info,
@@ -261,6 +281,7 @@ FROM
   FULL OUTER JOIN test_stat_database ON
       test_wrap.test=test_stat_database.test AND test_wrap.server=test_stat_database.server
   JOIN testset ON testset.set=test_wrap.set and testset.server=test_wrap.server
+  JOIN usage ON usage.test=test_wrap.test AND usage.server=test_wrap.server
   FULL OUTER JOIN server on test_wrap.server=server.server
 ORDER BY server,set,info,script,scale,clients,test_wrap.test
 ;

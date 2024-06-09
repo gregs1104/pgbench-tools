@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+
+import sys
+import requests
+import pandas as pd
+from datetime import datetime, timezone
+from datetime import timedelta
+
+if len(sys.argv)<4:
+    if (False):
+        print("Usage:  bridgeiops.py cluster_id bearer minutes")
+        sys.exit(1)
+    BRIDGE_CLUSTER_ID="fvzj3xmitrev5nctzuj7csamki"
+    BRIDGE_BEARER="cbkey_bpoq8AlqeE9WvAWcW5C3npw0QO11Iqxfu645mdCWBAjuRG"
+    MINUTES=10
+else:
+    BRIDGE_CLUSTER_ID=sys.argv[1]
+    BRIDGE_BEARER=sys.argv[2]
+    MINUTES=int(sys.argv[3])
+
+PLOTTER=False
+
+base_url="https://api.crunchybridge.com"
+classes=('cpu','disk-usage', 'iops', 'load-average', 'memory',
+         'postgres-connections')
+headers = {"Authorization": "Bearer %s" % BRIDGE_BEARER}
+data = {
+  'cluster_id': BRIDGE_CLUSTER_ID,
+}
+
+# TODO Use results test start/end values instead of last N minuts
+period='1h'
+
+end_time = datetime.now(timezone.utc).astimezone()
+end_rfc_format = end_time.isoformat('T')
+
+start_time=end_time - timedelta(minutes=MINUTES)
+start_rfc_format = start_time.isoformat('T')
+
+# This pulls the cluster list
+if (False):
+    access="%s/clusters" % (base_url)
+
+for c in classes:
+    if (False):  # access based on period
+        access="%s/metric-views/%s?cluster_id=%s&period=%s" % \
+           (base_url,c,BRIDGE_CLUSTER_ID,period)
+
+    access="%s/metric-views/%s?cluster_id=%s&start=%s&end=%s" % \
+           (base_url,c,BRIDGE_CLUSTER_ID,start_rfc_format,end_rfc_format)
+
+    if (False):
+        print ("access ",access)
+
+    r=requests.get(access,
+        data=data,
+        headers=headers).json()
+    if (False):
+        print(r)
+
+    class_name=r['name']
+    if (False):
+        print("---%s---" % class_name)
+    series=r['series']
+
+    for s in series:
+        name=s['name']
+        empty=s['is_empty']
+        title=s['title']
+        unit=s['unit']
+        min=s['min']
+        max=s['max']
+        points=s['points']
+
+        df=pd.DataFrame(points)
+
+        df.rename(columns={'time': 'collected'}, inplace=True)
+        df.set_index('collected',inplace=True)
+        df.index = pd.to_datetime(df.index, errors='coerce')
+
+        # TODO Rename gives a useful legend, for future plotting of multiple series.
+        if (False):
+            df.rename(columns={'value': name}, inplace=True)
+        df=df.drop(columns=['period_begin','period_end'])
+
+        graph_title="Bridge Metrics - %s" % c
+
+        if PLOTTER:
+            df.plot(rot=90,title=graph_title,ylabel=unit,figsize=(8,6))
+
+        df['metric']=name
+        #df['test']=test_num
+        #df['server']=server_name
+
+        # TODO Last value or two for each series can be zero due to Bridge trivia.
+        # Workaround will be to wait until main import works has
+        # finished before grabbing Bridge metrics
+
+        # TODO Directly export this into results DB?
+        if (False):
+            print("---%s---" % name)
+        print(df.to_csv(header=False),end='')
+

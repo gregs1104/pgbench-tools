@@ -8,17 +8,15 @@ from datetime import timedelta
 
 if len(sys.argv)<4:
     if (False):
-        print("Usage:  bridgeiops.py cluster_id bearer minutes")
+        print("Usage:  cbmetrics cluster_id bearer minutes")
         sys.exit(1)
-    BRIDGE_CLUSTER_ID="fvzj3xmitrev5nctzuj7csamki"
-    BRIDGE_BEARER="cbkey_bpoq8AlqeE9WvAWcW5C3npw0QO11Iqxfu645mdCWBAjuRG"
-    MINUTES=10
-else:
-    BRIDGE_CLUSTER_ID=sys.argv[1]
-    BRIDGE_BEARER=sys.argv[2]
-    MINUTES=int(sys.argv[3])
+
+BRIDGE_CLUSTER_ID=sys.argv[1]
+BRIDGE_BEARER=sys.argv[2]
+MINUTES=int(sys.argv[3])
 
 PLOTTER=False
+period='1h'
 
 base_url="https://api.crunchybridge.com"
 classes=('cpu','disk-usage', 'iops', 'load-average', 'memory',
@@ -29,8 +27,6 @@ data = {
 }
 
 # TODO Use results test start/end values instead of last N minuts
-period='1h'
-
 end_time = datetime.now(timezone.utc).astimezone()
 end_rfc_format = end_time.isoformat('T')
 

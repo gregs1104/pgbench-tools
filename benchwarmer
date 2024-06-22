@@ -562,7 +562,12 @@ fi
 
 # Save second resolution transaction summary and metrics summaries
 $RESULTPSQL -c "\copy (SELECT extract(epoch FROM date_trunc('second',ts)) AS collected, count(*) AS samples, min(latency) AS min_latency, round(1000*avg(latency))/1000 AS avg_latency, max(latency) AS max_latency FROM timing WHERE server='${SERVERNAME}' AND test=$TEST GROUP BY date_trunc('second',ts) ORDER BY date_trunc('second',ts)) TO 'latency_1s.csv' WITH DELIMITER ',' CSV HEADER"
-$BASEDIR/metrics2csv $TEST "${SERVERNAME}"
+
+if [ -z "$CBBEARER"] ; then
+    $BASEDIR/metrics2csv $TEST "${SERVERNAME}"
+else
+    $BASEDIR/util/cbmetrics-import $TEST "${SERVERNAME}"
+fi
 
 # Plot result graphs
 if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then

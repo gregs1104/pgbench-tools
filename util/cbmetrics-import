@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# cbmetrics-import
+# Usage:
+#
+#   util/cbmetrics-import test server
+#
+# Relies on util/cbmetrics to grab the metrics from Crunchy Bridge
+# and config settings for how to reach the server.
+
+source ./config
+TEST=$1
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+
+# Scaffolding for re-testing the import code
+function clear {
+$RESULTPSQL -c "TRUNCATE TABLE test_metrics_data;"
+}
+
+function show {
+$RESULTPSQL -c "SELECT metric,collected,value FROM test_metrics_data WHERE server='${SERVERNAME}' and test=${TEST} ORDER BY collected,metric LIMIT 10"
+}
+
+function process {
+    TESTNUM="$1"
+    H="$2"
+    if [ ! -f config ] ; then
+      echo Not a test result directory, skipping
+      return 1
+    fi
+
+    MINUTES=$RESULTPSQL -Atq -c "SELECT ceil(extract(epoch from (now() - start_time)) / 60 FROM tests WHERE test=${TESTNUM} AND server='${H}'"
+    echo Grabbing Bridge metrics from for cluster $BRIDGE_CLUSTER_ID last $MINUTES minutes
+    ./util/cbmetrics $BRIDGE_CLUSTER_ID $BRIDGE_BEARER $MINUTES > metrics.csv
+
+    $RESULTPSQL -c "TRUNCATE TABLE tmp_metric_import;"
+    $RESULTPSQL -c "\copy tmp_metric_import FROM 'metrics.csv' WITH CSV HEADER"
+    $RESULTPSQL -c "DELETE FROM test_metrics_data WHERE test=${TESTNUM} AND server='${H}'"
+    $RESULTPSQL -e -c "INSERT INTO test_metrics_data (collected,value,metric,test,server) SELECT collected,value,metric,${TESTNUM},'${H}'  FROM tmp_metric_import;"
+    # TODO Filter against the test start and end time when doing the import.
+}
+
+#
+# Main
+#
+
+if [ -n "$2" ] ; then
+  # Try to handle being called from test results directory or from
+  # toolkit base directory
+  if [ ! -f "results.txt" ] ; then
+    pushd results/$2/$1
+  fi
+  process $1 $2
+else
+    echo "Usage:  metrics2csv test server."
+fi

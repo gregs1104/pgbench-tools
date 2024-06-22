@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# Output format:
+#   collected,value,metric
+
 import sys
 import requests
 import pandas as pd
@@ -36,6 +39,8 @@ start_rfc_format = start_time.isoformat('T')
 # This pulls the cluster list
 if (False):
     access="%s/clusters" % (base_url)
+
+needs_header=True
 
 for c in classes:
     if (False):  # access based on period
@@ -95,5 +100,9 @@ for c in classes:
         # TODO Directly export this into results DB?
         if (False):
             print("---%s---" % name)
-        print(df.to_csv(header=False),end='')
+        if (needs_header):
+            print(df.to_csv(header=True),end='')
+            needs_header=False
+        else:
+            print(df.to_csv(header=False),end='')
 

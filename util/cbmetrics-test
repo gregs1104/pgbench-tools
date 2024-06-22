@@ -1,0 +1,5 @@
+#!/bin/bash
+BRIDGE_CLUSTER_ID="fvzj3xmitrev5nctzuj7csamki"
+BRIDGE_BEARER="cbkey_bpoq8AlqeE9WvAWcW5C3npw0QO11Iqxfu645mdCWBAjuRG"
+util/cbmetrics $BRIDGE_CLUSTER_ID $BRIDGE_BEARER 10
+

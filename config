@@ -48,6 +48,10 @@ SERVERNAME=`hostname`
 # Central server to upload results to
 ARCHIVE="gsmith@pony"
 
+# Integration for Crunchy Bridge metrics system
+$BRIDGE_CLUSTER_ID=""
+$BRIDGE_BEARER=""
+
 #
 # Main test run customization.  Test scripts add a .sql extension for you.
 #

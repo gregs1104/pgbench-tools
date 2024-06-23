@@ -24,14 +24,14 @@ $RESULTPSQL -c "SELECT metric,collected,value FROM test_metrics_data WHERE serve
 function process {
     TESTNUM="$1"
     H="$2"
-    if [ ! -f config ] ; then
+    if [ ! -f "results.txt" ] ; then
       echo Not a test result directory, skipping
       return 1
     fi
 
-    MINUTES=$RESULTPSQL -Atq -c "SELECT ceil(extract(epoch from (now() - start_time)) / 60 FROM tests WHERE test=${TESTNUM} AND server='${H}'"
+    MINUTES=`$RESULTPSQL -Atq -c "SELECT ceil(extract(epoch from (now() - start_time)) / 60) FROM tests WHERE test=${TESTNUM} AND server='${H}'"`
     echo Grabbing Bridge metrics from for cluster $BRIDGE_CLUSTER_ID last $MINUTES minutes
-    ./util/cbmetrics $BRIDGE_CLUSTER_ID $BRIDGE_BEARER $MINUTES > metrics.csv
+    ../../../util/cbmetrics $BRIDGE_CLUSTER_ID $BRIDGE_BEARER $MINUTES > metrics.csv
 
     $RESULTPSQL -c "TRUNCATE TABLE tmp_metric_import;"
     $RESULTPSQL -c "\copy tmp_metric_import FROM 'metrics.csv' WITH CSV HEADER"

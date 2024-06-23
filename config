@@ -49,8 +49,8 @@ SERVERNAME=`hostname`
 ARCHIVE="gsmith@pony"
 
 # Integration for Crunchy Bridge metrics system
-$BRIDGE_CLUSTER_ID=""
-$BRIDGE_BEARER=""
+BRIDGE_CLUSTER_ID=""
+BRIDGE_BEARER=""
 
 #
 # Main test run customization.  Test scripts add a .sql extension for you.

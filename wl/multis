@@ -23,7 +23,7 @@ for m in $MULTI ; do
   echo MULTI=$m
   echo "MULTI=$m"  >> params
   for c in $MULTI_CLIENTS ; do
-    ./benchwarmer $MULTI_CLIENTS
+    ./benchwarmer $c
   done
 done
 echo Finished multis multiplied read workload

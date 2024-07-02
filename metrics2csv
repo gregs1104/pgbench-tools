@@ -26,7 +26,7 @@ function process {
 TESTNUM="$1"
 H="$2"
 
-if [ ! -f "pg_settings.txt" ] ; then
+if [ ! -f "results.txt" ] ; then
   echo Not a test result directory, skipping
   return 1
 fi

@@ -92,4 +92,5 @@ WHERE
   tests.test=test_bgwriter.test and tests.server=test_bgwriter.server AND
   extract(epoch from (tests.end_time - tests.start_time))::bigint > 0 AND
   (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) > 0
-ORDER BY tests.server,tests.set,tests.server_cpu,tests.server_mem_gb,script,multi,scale,fsync,shared,max_wal_size,timeout,tests.test
+ORDER BY tests.server,tests.set,tests.server_cpu,tests.server_mem_gb,script,
+  multi,scale,fsync,shared,max_wal_size,timeout,tests.test;

@@ -52,7 +52,7 @@ SELECT
   set,
   substring(server_version,1,16) AS server_ver,
   clients AS procs,
-  multi AS shift,
+  --multi AS shift,
   scale AS ncache,
   pg_size_pretty(dbsize) AS dbsize,
   round((artifacts->'overall')::numeric/60/60,2) AS hours,
@@ -62,6 +62,11 @@ SELECT
     test_settings.name='shared_buffers'
     LIMIT 1
   ) as shared,
+  (SELECT value FROM test_settings WHERE
+    test_settings.server=tests.server AND test_settings.test=tests.test AND
+    test_settings.name='maintenance_work_mem'
+    LIMIT 1
+  ) as maint,
   (
   SELECT test_settings.setting FROM test_settings WHERE
     test_settings.server=tests.server AND test_settings.test=tests.test AND
@@ -73,15 +78,15 @@ SELECT
     test_settings.server=tests.server AND test_settings.test=tests.test AND
     test_settings.name='max_wal_size'
     LIMIT 1
-  ) as max_wal_size,
+  ) as max_wal,
   (
   SELECT test_settings.setting::integer / 60 FROM test_settings WHERE
     test_settings.server=tests.server AND test_settings.test=tests.test AND
     test_settings.name='checkpoint_timeout'
     LIMIT 1
   ) as timeout,
-  round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1) as min_per_chkp,
-  pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bytes_per_hour
+  round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1) as chkp_mins,
+  pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bph
 --  pg_size_pretty(round(buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bytes_per_sec,
 --  60*60*(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / extract(epoch from (tests.end_time - tests.start_time))::bigint as chkp_per_hour,
 --  test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req as chkpts,
@@ -89,8 +94,8 @@ SELECT
 FROM tests,server,test_bgwriter
 WHERE
   script LIKE 'osm2pgsql%' AND tests.server=server.server AND
-  tests.test=test_bgwriter.test and tests.server=test_bgwriter.server AND
+  tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server AND
   extract(epoch from (tests.end_time - tests.start_time))::bigint > 0 AND
   (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) > 0
-ORDER BY tests.server,tests.set,tests.server_cpu,tests.server_mem_gb,script,
-  multi,scale,fsync,shared,max_wal_size,timeout,tests.test;
+ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,script,tests.set,
+  multi,scale,fsync,shared,maint,max_wal,timeout,tests.test;

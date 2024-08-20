@@ -1,0 +1,49 @@
+#!/bin/bash -ex
+# CBC workload for pgbench automation
+# Input scale parameter is size in GB, not regular pgbench unit.
+# Minimum size for pgbench run CBC is 1GB=1 scale unit.  pgbench
+# client driver doesn't handle fractions.
+
+SIZEGB="$1"
+if [ -z "$SIZEGB" ] ; then
+  SIZEGB="20"
+fi
+
+# Sleep between steps in seconds
+COOLDOWN=10
+
+# cbc-t00-ctas.sql  cbc-t01-vacuum.sql  cbc-t02-index.sql
+TOTTRANS=1
+echo "SCALE=$SIZEGB"  > params
+echo "RUNTIME=\"\""  >> params
+echo "TOTTRANS=$TOTTRANS"  >> params
+
+# TODO Investigate cleanup after CTAS step, it may be doing VACUUM work we don't want yet
+
+SCRIPT="cbc/cbc-t00-ctas"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+SCRIPT="cbc/cbc-t01-vacuum"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+SCRIPT="cbc/cbc-t02-index"
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+sleep $COOLDOWN
+
+# cbc-t05-cluster.sql
+SCRIPT="cbc/cbc-t05-cluster"
+TOTTRANS=1
+
+echo "SCALE=$SIZEGB"  > params
+echo "TOTTRANS=$TOTTRANS"  >> params
+echo "RUNTIME=\"\""  >> params
+echo "SCRIPT=$SCRIPT"  >> params
+./benchwarmer 1
+
+./webreport
+echo Finished CBC workload series

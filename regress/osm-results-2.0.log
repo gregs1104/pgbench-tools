@@ -1,0 +1,113 @@
+2024-10-09 11:05:42  osm2pgsql version 2.0.0
+2024-10-09 11:05:42  [00] Database version: 17.0 (Debian 17.0-1)
+2024-10-09 11:05:42  [00] PostGIS version: 3.5
+2024-10-09 11:05:42  [00] Found properties table 'osm2pgsql_properties': false.
+2024-10-09 11:05:42  [00] Reading file: /sk41/osm/planet-latest.osm.pbf
+2024-10-09 11:05:42  [00] Started pool with 5 threads.
+2024-10-09 11:05:42  [00] Loading persistent node cache from '/sk41/17/nodes.db'.
+2024-10-09 11:05:42  [00] Mid: pgsql, cache=75000
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_users'
+NOTICE:  table "planet_osm_users" does not exist, skipping
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_nodes'
+NOTICE:  table "planet_osm_nodes" does not exist, skipping
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_ways'
+NOTICE:  table "planet_osm_ways" does not exist, skipping
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_rels'
+NOTICE:  table "planet_osm_rels" does not exist, skipping
+2024-10-09 11:05:42  [00] WARNING: The pgsql (default) output is deprecated. For details see https://osm2pgsql.org/doc/faq.html#the-pgsql-output-is-deprecated-what-does-that-mean
+2024-10-09 11:05:42  [00] Using projection SRS 3857 (Spherical Mercator)
+2024-10-09 11:05:42  [00] Using built-in tag transformations
+2024-10-09 11:05:42  [00] Middle 'pgsql' options:
+2024-10-09 11:05:42  [00]   nodes: false
+2024-10-09 11:05:42  [00]   untagged_nodes: false
+2024-10-09 11:05:42  [00]   use_flat_node_file: true
+2024-10-09 11:05:42  [00]   with_attributes: false
+2024-10-09 11:05:42  [00] Initializing properties table '"public"."osm2pgsql_properties"'.
+2024-10-09 11:05:42  [00] Storing properties to table '"public"."osm2pgsql_properties"'.
+2024-10-09 11:05:42  [00]   Storing attributes='false'
+2024-10-09 11:05:42  [00]   Storing db_format='2'
+2024-10-09 11:05:42  [00]   Storing flat_node_file='/sk41/17/nodes.db'
+2024-10-09 11:05:42  [00]   Storing output='pgsql'
+2024-10-09 11:05:42  [00]   Storing prefix='planet_osm'
+2024-10-09 11:05:42  [00]   Storing style='/usr/share/osm2pgsql/default.style'
+2024-10-09 11:05:42  [00]   Storing updatable='true'
+2024-10-09 11:05:42  [00]   Storing version='2.0.0'
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_point'
+NOTICE:  table "planet_osm_point" does not exist, skipping
+NOTICE:  table "planet_osm_point_tmp" does not exist, skipping
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_line'
+NOTICE:  table "planet_osm_line" does not exist, skipping
+NOTICE:  table "planet_osm_line_tmp" does not exist, skipping
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_polygon'
+NOTICE:  table "planet_osm_polygon" does not exist, skipping
+NOTICE:  table "planet_osm_polygon_tmp" does not exist, skipping
+2024-10-09 11:05:42  [00] Setting up table 'planet_osm_roads'
+NOTICE:  table "planet_osm_roads" does not exist, skipping
+NOTICE:  table "planet_osm_roads_tmp" does not exist, skipping
+Processing: Node(9332860k 17879.0k/s) Way(0k 0.00k/s) Relation(0 0.0/s)
+2024-10-09 11:14:24  [00] Node locations cache:
+2024-10-09 11:14:24  [00]   num locations stored: 9335778934
+2024-10-09 11:14:24  [00]   bytes overall: 63736MB
+2024-10-09 11:14:24  [00]   data capacity: 61440MB
+2024-10-09 11:14:24  [00]   data size: 53597MB
+2024-10-09 11:14:24  [00]   index used memory: 2296MB
+Processing: Node(9335778k 17884.6k/s) Way(122409k 161.70k/s) Relation(0 0.0/s)NOTICE:  Self-intersection at or near point -5306220.9274053443 -2596580.5323400931
+Processing: Node(9335778k 17884.6k/s) Way(154115k 168.80k/s) Relation(0 0.0/s)NOTICE:  Self-intersection at or near point 1395805.8735299152 4564707.7871678015
+Processing: Node(9335778k 17884.6k/s) Way(504442k 206.15k/s) Relation(0 0.0/s)NOTICE:  Self-intersection at or near point 4729261.1591440402 7937547.0514782891
+Processing: Node(9335778k 17884.6k/s) Way(889487k 228.90k/s) Relation(0 0.0/s)NOTICE:  Self-intersection at or near point 14634892.807722071 5851775.6019489216
+Processing: Node(9335778k 17884.6k/s) Way(941918k 230.75k/s) Relation(0 0.0/s)NOTICE:  Self-intersection at or near point -6648635.1753070997 -2948633.4883673568
+Processing: Node(9335778k 17884.6k/s) Way(1009773k 232.83k/s) Relation(0 0.0/s)NOTICE:  Self-intersection at or near point 5810270.3657291811 3593193.7038869103
+2024-10-09 13:21:52  [00] Reading input files done in 8170s (2h 16m 10s).
+2024-10-09 13:21:52  [00]   Processed 9335778934 nodes in 522s (8m 42s) - 17885k/s
+2024-10-09 13:21:52  [00]   Processed 1044011263 ways in 4461s (1h 14m 21s) - 234k/s
+2024-10-09 13:21:52  [00]   Processed 12435485 relations in 3187s (53m 7s) - 4k/s
+2024-10-09 13:21:52  [00] Overall memory usage: peak=158313MByte current=157880MByte
+2024-10-09 13:21:52  [05] Starting task...
+2024-10-09 13:21:52  [03] Starting task...
+2024-10-09 13:21:52  [02] Starting task...
+2024-10-09 13:21:54  [01] Starting task...
+2024-10-09 13:21:54  [05] Clustering table 'planet_osm_point' by geometry...
+2024-10-09 13:21:54  [02] Clustering table 'planet_osm_polygon' by geometry...
+2024-10-09 13:21:54  [03] Clustering table 'planet_osm_line' by geometry...
+2024-10-09 13:21:54  [01] Clustering table 'planet_osm_roads' by geometry...
+2024-10-09 13:21:54  [04] Starting task...
+2024-10-09 13:21:54  [04] Done task in 0ms.
+2024-10-09 13:21:54  [04] Starting task...
+2024-10-09 13:21:54  [00] Done postprocessing on table 'planet_osm_nodes' in 0s
+2024-10-09 13:21:54  [04] Building index on table 'planet_osm_ways'
+2024-10-09 13:24:41  [01] Creating geometry index on table 'planet_osm_roads'...
+2024-10-09 13:25:17  [01] Creating osm_id index on table 'planet_osm_roads'...
+2024-10-09 13:25:22  [01] Creating hstore indexes on table 'planet_osm_roads'...
+2024-10-09 13:26:54  [05] Creating geometry index on table 'planet_osm_point'...
+2024-10-09 13:28:37  [01] Analyzing table 'planet_osm_roads'...
+2024-10-09 13:28:38  [01] Done task in 403645ms.
+2024-10-09 13:28:38  [01] Starting task...
+2024-10-09 13:28:38  [01] Building index on table 'planet_osm_rels'
+2024-10-09 13:30:42  [05] Creating osm_id index on table 'planet_osm_point'...
+2024-10-09 13:31:16  [05] Creating hstore indexes on table 'planet_osm_point'...
+2024-10-09 13:32:57  [01] Done task in 258984ms.
+2024-10-09 13:38:18  [03] Creating geometry index on table 'planet_osm_line'...
+2024-10-09 13:44:22  [03] Creating osm_id index on table 'planet_osm_line'...
+2024-10-09 13:45:18  [03] Creating hstore indexes on table 'planet_osm_line'...
+2024-10-09 13:48:36  [02] Creating geometry index on table 'planet_osm_polygon'...
+2024-10-09 13:56:21  [03] Analyzing table 'planet_osm_line'...
+2024-10-09 13:56:22  [03] Done task in 2069382ms.
+2024-10-09 14:01:27  [05] Analyzing table 'planet_osm_point'...
+2024-10-09 14:01:31  [05] Done task in 2378610ms.
+2024-10-09 14:02:14  [02] Creating osm_id index on table 'planet_osm_polygon'...
+2024-10-09 14:04:12  [02] Creating hstore indexes on table 'planet_osm_polygon'...
+2024-10-09 14:24:50  [02] Analyzing table 'planet_osm_polygon'...
+2024-10-09 14:24:53  [02] Done task in 3779034ms.
+2024-10-09 14:49:12  [04] Done task in 5237475ms.
+2024-10-09 14:49:12  [00] Done postprocessing on table 'planet_osm_ways' in 5237s (1h 27m 17s)
+2024-10-09 14:49:12  [00] Done postprocessing on table 'planet_osm_rels' in 258s (4m 18s)
+2024-10-09 14:49:12  [00] All postprocessing on table 'planet_osm_point' done in 2378s (39m 38s).
+2024-10-09 14:49:12  [00] All postprocessing on table 'planet_osm_line' done in 2069s (34m 29s).
+2024-10-09 14:49:12  [00] All postprocessing on table 'planet_osm_polygon' done in 3779s (1h 2m 59s).
+2024-10-09 14:49:12  [00] All postprocessing on table 'planet_osm_roads' done in 403s (6m 43s).
+2024-10-09 14:49:12  [00] Storing properties to table '"public"."osm2pgsql_properties"'.
+2024-10-09 14:49:12  [00]   Storing current_timestamp='2024-08-11T23:59:57Z'
+2024-10-09 14:49:12  [00]   Storing import_timestamp='2024-08-11T23:59:57Z'
+2024-10-09 14:49:12  [00]   Storing replication_timestamp='2024-08-11T23:59:57Z'
+2024-10-09 14:49:12  [00] Overall memory usage: peak=158313MByte current=1707MByte
+2024-10-09 14:49:12  [00] osm2pgsql took 13410s (3h 43m 30s) overall.

@@ -46,7 +46,7 @@ gregexen_1_2 = {
 }
 
 gregexen_1_6 = {
-    'stats': re.compile('Processed (?P<max>\d*) (?P<type>node|way|relation)s in (?P<seconds>\d*)s'),
+    'stats': re.compile(r'Processed (?P<max>\d*) (?P<type>node|way|relation)s in (?P<seconds>\d*)s'),
     'indexes': re.compile(r'All postprocessing on table \'(?P<index>\w*)\' done in (?P<seconds>\d*)s'),
     'overall': re.compile(r'osm2pgsql took (?P<overall>\d*)s')
 }

@@ -75,11 +75,18 @@ function detect_cpus {
 # Query the test database and put its background writer statistics into
 # a set of environment variables, probably for use inserting stats into
 # the results database.
-#
-# This presumes that you have already set $BACKEND_FSYNC before
-# calling.
 function get_bgwriter {
-  BGW=`$TESTPSQL -A -t -F" " -c "select checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,$BACKEND_FSYNC from pg_stat_bgwriter"`
+  BACKEND_FSYNC="buffers_backend_fsync"
+  if [ "$SERVER_VERSION" -lt "900200" ]; then
+      BACKEND_FSYNC="0"
+  fi
+
+  if [ "$SERVER_VERSION" -ge "170000" ]; then
+    BGW=`$TESTPSQL -A -t -F" " -c "SELECT c.num_timed AS checkpoints_timed, c.num_requested AS checkpoints_req, c.buffers_written AS buffers_checkpoint, b.buffers_clean, b.maxwritten_clean, b.buffers_alloc, 0 AS buffers_backend, 0 AS buffers_backend_fsync FROM pg_catalog.pg_stat_checkpointer c,pg_catalog.pg_stat_bgwriter b;"`
+  else
+    BGW=`$TESTPSQL -A -t -F" " -c "select checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,$BACKEND_FSYNC from pg_stat_bgwriter"`
+  fi
+
   set -- $BGW
   checkpoints_timed=$1
   checkpoints_req=$2
@@ -257,11 +264,16 @@ fi
 if [ "$SKIPINIT" -ne "1" ]; then
   # We want clean stats from the pg_stat_bgwriter, but those won't show up
   # until after the checkpoint is done.  Wait a bit for the stats to update
-  STARTCHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
+  if [ "$SERVER_VERSION" -ge "170000" ]; then
+    REQCHECKER="SELECT num_requested FROM pg_stat_checkpointer;"
+  else
+    REQCHECKER="SELECT checkpoints_req FROM pg_stat_bgwriter;"
+  fi
+  STARTCHECK=`$TESTPSQL -At -c "$REQCHECKER"`
   $TESTPSQL -c "checkpoint"
   echo "Waiting for checkpoint statistics"
   while [ 1 ] ; do
-    CHECK=`$TESTPSQL -At -c "SELECT checkpoints_req FROM pg_stat_bgwriter"`
+    CHECK=`$TESTPSQL -At -c "$REQCHECKER"`
     if [ "$CHECK" -gt "$STARTCHECK" ] ; then
       break
     fi 
@@ -283,22 +295,17 @@ if [ -z "$TEST" ]; then
   exit
 fi
 
-# Figure out if this version of PostgreSQL includes buffers_backend_fsync
-$TESTPSQL -c "SELECT buffers_backend_fsync FROM pg_stat_bgwriter" >> /dev/null 2>&1
-if [ "$?" -ne "0" ]; then
-  BACKEND_FSYNC="0"
-else
-  BACKEND_FSYNC="buffers_backend_fsync"
-fi
-
 # Grab starting values for statistics
 get_bgwriter
-if [ "$SERVER_VERSION" -gt "100000" ]; then
+
+if [ "$SERVER_VERSION" -ge "100000" ]; then
 START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_wal_lsn()"`
 else
 START_WAL=`$TESTPSQL -A -t -F" " -c "select pg_current_xlog_location()"`
 fi
+
 $RESULTPSQL -c "insert into test_bgwriter(server,test,checkpoints_timed,checkpoints_req,buffers_checkpoint,buffers_clean,maxwritten_clean,buffers_backend,buffers_alloc,buffers_backend_fsync) values('$SERVERNAME','$TEST','$checkpoints_timed','$checkpoints_req','$buffers_checkpoint','$buffers_clean','$maxwritten_clean','$buffers_backend','$buffers_alloc','$buffers_backend_fsync')"
+
 $TESTPSQL -c 'SELECT pg_stat_reset()' >> /dev/null 2>&1
 $TESTPSQL -c 'SELECT pg_stat_statements_reset()' >> /dev/null 2>&1
 

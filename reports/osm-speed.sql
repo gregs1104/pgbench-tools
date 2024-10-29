@@ -51,9 +51,9 @@ SELECT
   --script,
   set,
   substring(server_version,1,16) AS server_ver,
-  clients AS procs,
+  --clients AS procs,
   --multi AS shift,
-  scale AS ncache,
+  --scale AS ncache,
   pg_size_pretty(dbsize) AS dbsize,
   round((artifacts->'overall')::numeric/60/60,2) AS hours,
   (
@@ -86,11 +86,18 @@ SELECT
     LIMIT 1
   ) as timeout,
   round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1) as chkp_mins,
-  pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bph
+  pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bph,
 --  pg_size_pretty(round(buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bytes_per_sec,
 --  60*60*(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / extract(epoch from (tests.end_time - tests.start_time))::bigint as chkp_per_hour,
 --  test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req as chkpts,
 --  test_bgwriter.checkpoints_timed as timed,test_bgwriter.checkpoints_req as req,
+  CASE WHEN
+    test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0 THEN
+    round(100::numeric * test_bgwriter.checkpoints_timed/(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req))
+  ELSE
+    100
+  END AS timed_pct,
+  pg_size_pretty(round(wal_written / extract(epoch from (tests.end_time - tests.start_time)))::bigint) AS wal_bps
 FROM tests,server,test_bgwriter
 WHERE
   script LIKE 'osm2pgsql%' AND tests.server=server.server AND

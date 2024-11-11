@@ -1,0 +1,13 @@
+#!/bin/bash
+# Linux tune disks and CPU, perhaps via sudo.
+# Install this into a directory like /usr/local/bin
+
+# Sample with sudo rule addition:
+#
+#   sudo cp bench_tune /usr/local/bin/
+#   sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/bench_tune\" >> /etc/sudoers.d/postgres"
+
+sudo cpupower frequency-set --governor=performance
+lsblk --nodeps -n -o NAME | sudo xargs -I{} --max-args=1 blockdev --setra 4096 /dev/{}
+sudo blockdev --report
+sudo fstrim -av

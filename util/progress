@@ -1,0 +1,5 @@
+#!/bin/bash -ex
+# TODO Lookup database name and use correct params
+df -h | egrep -v "/sys/fs/cgroup| /dev| /run"
+psql -c "select pg_size_pretty(pg_database_size('gis'))"
+tail nohup.out

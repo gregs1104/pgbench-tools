@@ -1,0 +1,8 @@
+#!/bin/bash -ex
+# TODO correctly set host parameters
+dropdb gis
+createdb gis
+psql -d gis -c "create extension pg_stat_statements"
+psql -d gis -c "create extension pg_buffercache"
+psql -d gis -c "create extension postgis"
+psql -d gis -c "create extension hstore"

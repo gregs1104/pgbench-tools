@@ -4,7 +4,9 @@ WITH lastset AS (
 SELECT
   set,script,scale,
   pg_size_pretty(dbsize::int8) AS db_size,
-  test,clients,multi,
+  test,
+  round(extract(epoch from (tests.end_time - tests.start_time))::numeric/60/60,2) AS hours,
+  clients,multi,
   rate_limit AS limit,
   client_limit AS client_limit,
   round(tps) AS tps,

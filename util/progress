@@ -1,5 +1,9 @@
-#!/bin/bash -ex
-# TODO Lookup database name and use correct params
-df -h | egrep -v "/sys/fs/cgroup| /dev| /run"
-psql -c "select pg_size_pretty(pg_database_size('gis'))"
+#!/bin/bash -e
+. ./config
+. ./params
+TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
+df -h | egrep -v "/sys/fs/cgroup|/dev/loop|/run|^tmpfs"
+echo
+$TESTPSQL -c "SELECT pg_size_pretty(pg_database_size(current_database())) AS db_size"
+echo
 tail nohup.out

@@ -17,5 +17,5 @@
 
 /usr/bin/cpupower frequency-set --governor=performance
 /usr/bin/lsblk --nodeps -n -o NAME | xargs -I{} --max-args=1 /usr/sbin/blockdev --setra 4096 /dev/{}
-/usr/sbin/blockdev --report
+/usr/sbin/blockdev --report | grep -v "/dev/loop"
 /usr/sbin/fstrim -av

@@ -4,6 +4,7 @@
 # Second parameter allows overriding the server name.
 
 source ./config
+source ./param
 TEST=$1
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 

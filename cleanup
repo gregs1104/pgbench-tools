@@ -1,13 +1,18 @@
 #!/bin/bash
 
-#Cleaning results from incomplete tests
+# Bulk cleanup of results from incomplete tests.
+# You probably want to use cleanup_singlevalue or cleanup_range instead.
+# Those cascade out to hit all the dependent tables.
+#
+# This script is a deprecated internal development tool for when runset fails to run
+# a *lot* of tests.  It's fallen behind the rest of the cleanup tools.
 
 source ./config
+source ./param
 TEST=$1
 
 pushd "results/${SERVERNAME}"
-psql -d results -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND tps=0 | xargs rm -rf
+psql -d results -At -c "SELECT test FROM tests WHERE server='${SERVERNAME}' AND tps=0 | xargs rm -rf"
 psql -d results -At -c "DELETE FROM tests WHERE server='${SERVERNAME}' AND tps=0"
 popd
 
-# TODO This won't cascade out to hit dependent tables anymore.  See cleanup_singlevalue

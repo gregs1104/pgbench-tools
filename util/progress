@@ -2,7 +2,7 @@
 . ./config
 . ./params
 TESTPSQL="psql -h $TESTHOST -U $TESTUSER -p $TESTPORT -d $TESTDB"
-df -h | egrep -v "/sys/fs/cgroup|/dev/loop|/run|^tmpfs|^udev/sys/firmware/|/boot/efi"
+df -h | egrep -v "^/sys/fs/cgroup|^/sys/firmware/|^/dev/loop|^/run|^tmpfs|^udev|^/boot/efi"
 echo
 $TESTPSQL -c "SELECT pg_size_pretty(pg_database_size(current_database())) AS db_size,pg_size_pretty(sum(size)) AS wal_used FROM pg_ls_waldir()"
 echo

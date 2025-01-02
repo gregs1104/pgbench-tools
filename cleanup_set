@@ -1,7 +1,7 @@
 #!/bin/bash
 
 source ./config
-source ./param
+source ./params
 TEST=$1
 if [ -n "$2" ] ; then
 	SERVERNAME=$2

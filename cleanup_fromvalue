@@ -3,7 +3,7 @@
 #Cleaning results from test number and all higher numbers
 
 source ./config
-source ./param
+source ./params
 TEST=$1
 
 pushd "results/${SERVERNAME}"

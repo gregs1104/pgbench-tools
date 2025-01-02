@@ -8,7 +8,7 @@
 # a *lot* of tests.  It's fallen behind the rest of the cleanup tools.
 
 source ./config
-source ./param
+source ./params
 TEST=$1
 
 pushd "results/${SERVERNAME}"

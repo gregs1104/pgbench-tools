@@ -3,7 +3,7 @@
 #Cleaning results from a range of test numbers
 
 source ./config
-source ./param
+source ./params
 START=$1
 END=$2
 

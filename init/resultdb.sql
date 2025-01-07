@@ -312,6 +312,18 @@ CREATE VIEW test_metric_summary AS
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb;
 
+DROP TABLE IF EXISTS metrics_info;
+CREATE TABLE metrics_info (
+  metric text,
+  category text,
+  multi numeric,
+  metric_label text,
+  units text,
+  style text,
+  visibility text,
+  prefix text
+);
+
 --
 -- Convert hex value to a decimal one.  It's possible to do this using
 -- undocumented features of the bit type, such as:

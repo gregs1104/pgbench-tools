@@ -301,3 +301,15 @@ CREATE VIEW test_metric_summary AS
   ORDER BY test_metrics_data.metric,ts.server,ts.set,ts.info,ts.script,ts.scale,ts.clients,ts.multi,ts.rate_limit,ts.test,ts.tps,
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb;
+
+DROP TABLE IF EXISTS metrics_info;
+CREATE TABLE metrics_info (
+  metric text,
+  category text,
+  multi numeric,
+  metric_label text,
+  units text,
+  style text,
+  visibility text,
+  prefix text
+);

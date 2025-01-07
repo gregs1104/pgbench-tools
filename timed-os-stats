@@ -178,7 +178,7 @@ if __name__=='__main__':
         if cmd=='vmstat':
             capture("vm_stat 1")
         elif cmd=='iostat':
-            capture("iostat -d -C -K 1")
+            capture("iostat -d -C -U -K 1")
         elif cmd=='meminfo':
             sys.stderr.write("meminfo unavailable on OS X, skipping\n")
         else:

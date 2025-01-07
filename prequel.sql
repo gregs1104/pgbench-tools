@@ -310,6 +310,6 @@ CREATE TABLE metrics_info (
   metric_label text,
   units text,
   style text,
-  visibility text,
+  visibility int,
   prefix text
 );

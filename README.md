@@ -1,5 +1,42 @@
-About pgbench-tools
+DEPRECATION WARNING!
 ===================
+
+2025/01/15:  After 18 years _pgbench-tools_ is changing names!  This repo will soon redirect to _pgbent_:  the PostgreSQL Benchmark Toolkit.
+
+The program's coming new documentation will revolve around its recent load generation orchestration features.  That includes metric collection going into a PG database for analysis with arbitrary workload scripts.  _pgbench_ is still the best supported load generator, but the program doesn't need it.  You can supply any script and get a results database comparing it across multiple runs, recording second level precision system metrics and whatever arbitrary database internals queries you want to attach.  A sample connection count query is bundled, you can change or extend that to collect anything you can read via SQL--which for Postgres means just about anything!
+
+While there are plenty of other options for running PostgreSQL scripts and collecting system metrics, the way _pgbent_ is assembled is aimed at providing repeatable standard workloads that can be audited for correctness.  That tookit has allowed creating a small set of novel synthetic database workloads that target the known strong and weak spots of modern storage, ones that respond predictably to database tuning.  Database storage is tricky stuff, and any amount of the metrics time averaging typical to monitoring tools obliterates the interesting peak behavior of modern SSD.
+
+Workloads
+=========
+
+![osm2pgsql workload](reports/images/samples/twilight-1494-read-write.png)
+
+For two years now, the most interesting benchmark results have been the Open Street Map tests, published as [blog entries](https://www.crunchydata.com/blog/loading-the-world-openstreetmap-import-in-under-4-hours), [talks](https://www.youtube.com/watch?v=BCMnu7xay2Y), or [social media posts](https://x.com/postgresperf/status/1858905975446556876).  That runs via the pgbent's artibrary workload interface script.  It's classic shell scripting work, there's no use of pgbench.
+
+That said, the pgbench support has also matured during that time.  If you run _pgbent_ on the database server itself, it identifies the system information, saves it so you can remember the configuration, sizes the pgbench workloads for you, and automates running client vs. size grids of several workload types.
+
+There's also a new storage stress test sample program included, Complete Block Check.  That runs anywhere you want, from a psql session to orchestrated via pgbench generating its workload.   I've even run it on our web based [Postgres Playground](https://www.crunchydata.com/developers/playground) to compare web browser block performance. Seriously!
+
+After the rename and associated code reorg, the follow up tech refresh coming in later 2025 is deprecating use of _gnuplot_ in favor of Python Pandas based graphs.  Right now Pandas is behind my slides and social media graph posts; there's still a few old gnuplot graphs left to replace.
+
+Sponsor notes
+=============
+
+The soon to be _pgbent_ is supported by a generous time allocation from [Crunchy Data](https://www.crunchydata.com/).  Crunchy has been successfully finding performance and integration issus in new releases with this work for two years now.  2025 is moving the _osm2pgsql_ tests into a Crunchy packaging team data center as a full time QA process.
+
+From project inception on PG8.2/2006 to PG17/2024, all the hardware for the original _pgbench_tools_ development period was personally supplied by Greg Smith, to keep the work independent of employer entangement and vendor influence.  Between hardware and home server lab overhead that gobbled about six figures of investment, offset in the early days by book sales, training classes, and even short selling of The SCO Group.
+
+The long original scope of the program has wrapped up, hardware costs are escalating, books are for old people, and I'm not traveling anymore. That finally and begrudingly has me accepting hardware and potentially other sponsorship ideas.  The first sponsored sample is from Crunchy:  one of the M4 Apple Silicon systems with the 128GB of RAM minimum needed to do well on the Open Street Map tests is coming to the lab next month.
+
+A medium memory sized Apple Silicon vs. Intel vs. AMD showdown is long in the making here.  I've been publishing Intel shootouts [since 1996](https://web.archive.org/web/19980521093812/http://westnet.com/~gsmith/memory.htm) when the competitors were Cyrix and VIA!  In 2020 I did a release day preview of [Apple Silicon's M1](https://www.crunchydata.com/blog/postgresql-benchmarks-apple-arm-m1-macbook-pro-2020).  It's only recently they've released models with enough memory to run more interesting database workloads.
+
+I hope that seeing the best we can do on Apple's popular and standardized hardware platform gives an easy to replicate arm64 result that other core PostgreSQL development can use as a reference.  ARM based cloud servers have been enough of price/performance success for Crunchy's customers we've architected some newer SaaS offerings around them. placing well on benchmarks like [ClickBench](https://benchmark.clickhouse.com/) (where unlike most of the competition, we actually [run the query set correctly](https://github.com/ClickHouse/ClickBench/pull/252).
+
+---
+
+Old documentation:  original pgbench-tools
+==========================================
 
 pgbench-tools automates running PostgreSQL's built-in pgbench tool in a
 useful way.  It will run some number of database sizes (the database
@@ -262,42 +299,35 @@ TODO: Planned features
 * Fix the static number of scales/clients for rates_webreport
 * Fix zombie files when crash of bench on OS-stats processes
 
-Documentation
-=============
-
-The documentation ``README.rst`` for the program is in ReST markup.  Tools
-that operate on ReST can be used to make versions of it formatted
-for other purposes, such as rst2html to make a HTML version.
-
 Contact
 =======
 
 The original project is hosted at https://github.com/gregs1104/pgbench-tools
-and is also a PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
+and there is an old version hosted on by the PostgreSQL project at http://git.postgresql.org/git/pgbench-tools.git
 or http://git.postgresql.org/gitweb
 
-If you have any hints, changes or improvements, please contact:
+If you have any hints, changes, improvements, or please contact:
 
  * Greg Smith gregs1104@gmail.com
  
 Notable forks
 =============
  
--Future featured upgrades and bug fixes:  https://github.com/emerichunter/pgbench-tools
--Full bash to Python port adding Windows compatibility:  https://github.com/rugging24/pg_pybench
+* Future featured upgrades and bug fixes:  https://github.com/emerichunter/pgbench-tools
+* Full bash to Python port adding Windows compatibility:  https://github.com/rugging24/pg_pybench
 
 Credits
 =======
 
-Copyright (c) 2007-2019, Gregory Smith
+Copyright (c) 2007-2025, Gregory Smith
 All rights reserved.
 See COPYRIGHT file for full license details and HISTORY for a full list of
 other contributions to the program.
 
 Major contributors:
 
--Josh Kupershmidt <schmiddy@gmail.com>
--Emeric Tabakhoff <etabakhoff@gmail.com> or <e.tabakhoff@loxodata.com>
+* Josh Kupershmidt <schmiddy@gmail.com>
+* Emeric Tabakhoff <etabakhoff@gmail.com> or <e.tabakhoff@loxodata.com>
 
 ******
 References:

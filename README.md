@@ -16,7 +16,7 @@ For two years now, the most interesting benchmark results have been the Open Str
 
 That said, the pgbench support has also matured during that time.  If you run _pgbent_ on the database server itself, it identifies the system information, saves it so you can remember the configuration, sizes the pgbench workloads for you, and automates running client vs. size grids of several workload types.
 
-There's also a new storage stress test sample program included, Complete Block Check.  That runs anywhere you want, from a psql session to orchestrated via pgbench generating its workload.   I've even run it on our web based [Postgres Playground](https://www.crunchydata.com/developers/playground) to compare web browser block performance. Seriously!
+There's also a new storage stress test sample program included, [Complete Block Check](tests/cbc/README.md).  That runs anywhere you want, from a psql session to orchestrated via pgbench generating its workload.   I've even run it on our web based [Postgres Playground](https://www.crunchydata.com/developers/playground) to compare web browser block performance. Seriously!
 
 After the rename and associated code reorg, the follow up tech refresh coming in later 2025 is deprecating use of _gnuplot_ in favor of Python Pandas based graphs.  Right now Pandas is behind my slides and social media graph posts; there's still a few old gnuplot graphs left to replace.
 

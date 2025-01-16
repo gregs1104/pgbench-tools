@@ -31,7 +31,7 @@ The long original scope of the program has wrapped up, hardware costs are escala
 
 A medium memory sized Apple Silicon vs. Intel vs. AMD showdown is long in the making here.  I've been publishing Intel shootouts [since 1996](https://web.archive.org/web/19980521093812/http://westnet.com/~gsmith/memory.htm) when the competitors were Cyrix and VIA!  In 2020 I did a release day preview of [Apple Silicon's M1](https://www.crunchydata.com/blog/postgresql-benchmarks-apple-arm-m1-macbook-pro-2020).  It's only recently they've released models with enough memory to run more interesting database workloads.
 
-I hope that seeing the best we can do on Apple's popular and standardized hardware platform gives an easy to replicate arm64 result that other core PostgreSQL development can use as a reference.  ARM based cloud servers have been enough of price/performance success for Crunchy's customers we've architected some newer SaaS offerings around them. placing well on benchmarks like [ClickBench](https://benchmark.clickhouse.com/) (where unlike most of the competition, we actually [run the query set correctly](https://github.com/ClickHouse/ClickBench/pull/252).
+I hope that seeing the best we can do on Apple's popular and standardized hardware platform gives an easy to replicate arm64 result that other core PostgreSQL development can use as a reference.  ARM based cloud servers have been enough of price/performance success for Crunchy's customers we've architected some newer SaaS offerings around them. placing well on benchmarks like [ClickBench](https://benchmark.clickhouse.com/), where unlike most of the competition, we actually [run the query set correctly](https://github.com/ClickHouse/ClickBench/pull/252).
 
 ---
 

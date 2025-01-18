@@ -9,7 +9,8 @@ SELECT
   scale AS ncache,
   multi AS shift,
   pg_size_pretty(dbsize) AS dbsize,
-  round((artifacts->'overall')::numeric/60/60,2) AS hours
+  round((artifacts->'overall')::numeric/60/60,2) AS hours,
+  round((artifacts->'node_count')::numeric / (artifacts->'overall')::numeric / 1000,0) AS nodes_kips
 FROM tests,server
 WHERE script LIKE 'osm2pgsql%' AND tests.server=server.server
 ORDER BY tests.server,tests.set,tests.server_cpu,tests.server_mem_gb,script,multi,scale,test;
@@ -37,7 +38,8 @@ SELECT
   --round((artifacts->'planet_osm_roads')::numeric/60/60,2) AS roads,
   round((artifacts->'node_count')::numeric/1000/(artifacts->'node_seconds')::numeric,0) AS node_kps,
   round((artifacts->'way_count')::numeric/1000/(artifacts->'way_seconds')::numeric,0) AS way_kps,
-  round((artifacts->'relation_count')::numeric/(artifacts->'relation_seconds')::numeric,0) AS rel_ps
+  round((artifacts->'relation_count')::numeric/(artifacts->'relation_seconds')::numeric,0) AS rel_ps,
+  round((artifacts->'node_count')::numeric / (artifacts->'overall')::numeric / 1000,0) AS nodes_kips
 FROM tests,server
 WHERE script LIKE 'osm2pgsql%' AND tests.server=server.server
 ORDER BY tests.server,tests.set,tests.server_cpu,tests.server_mem_gb,script,multi,scale,test;
@@ -55,7 +57,8 @@ SELECT
   --multi AS shift,
   --scale AS ncache,
   pg_size_pretty(dbsize) AS dbsize,
-  round((artifacts->'overall')::numeric/60/60,2) AS hours,
+  round((artifacts->'overall')::numeric/60/60,2) AS hrs,
+  round((artifacts->'node_count')::numeric / (artifacts->'overall')::numeric / 1000,0) AS nodes_kips,
   (
   SELECT value FROM test_settings WHERE
     test_settings.server=tests.server AND test_settings.test=tests.test AND
@@ -104,5 +107,7 @@ WHERE
   tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server AND
   extract(epoch from (tests.end_time - tests.start_time))::bigint > 0 AND
   (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) > 0
-ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,script,tests.set,
-  multi,scale,fsync,shared,maint,max_wal,timeout,tests.test;
+ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,
+-- script removed because OSM numbering doesn't sort correctly in alphanumeric
+  server_version,tests.set,
+  multi,scale,fsync,shared,maint,max_wal,timeout,(artifacts->'overall')::numeric desc;

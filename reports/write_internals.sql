@@ -6,11 +6,16 @@ SELECT
   script,
   set,
   substring(server_version,1,16) AS server_ver,
-  --clients AS procs,
-  --multi AS shift,
+  clients,
   scale,
+  CASE WHEN jsonb_exists(artifacts, 'node_count')
+    THEN (artifacts->'node_count')::numeric ELSE 0 END AS nodes,
   pg_size_pretty(dbsize) AS dbsize,
+  tps,  percentile_90_latency, rate_limit,
   round(extract(epoch from (tests.end_time - tests.start_time))/60/60,2) as hours,
+  CASE WHEN jsonb_exists(artifacts, 'node_count') AND jsonb_exists(artifacts, 'overall')
+    THEN round((artifacts->'node_count')::numeric / (artifacts->'overall')::numeric / 1000,0)
+    ELSE 0 END AS nodes_kips,
   (
   SELECT value FROM test_settings WHERE
     test_settings.server=tests.server AND test_settings.test=tests.test AND

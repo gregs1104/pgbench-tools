@@ -1,0 +1,13 @@
+#!/bin/bash -ex
+# Export results via the write_internals script and upload them
+
+source ./config
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+
+DEST="${ARCHIVE}:results/"
+
+NOW=`date "+%Y%m%d-%H%M%S"`
+OUTFILE="results/$SERVERNAME-$NOW-results.csv"
+
+$RESULTPSQL -f reports/write_internals.sql --csv > $OUTFILE
+rsync -av --progress $OUTFILE $DEST

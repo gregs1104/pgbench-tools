@@ -3,6 +3,7 @@ SELECT
   to_char(end_time,'YYYY/MM/DD') AS run,
   tests.server_cpu AS cpu,
   tests.server_mem_gb AS mem_gb,
+  tests.server_os_release AS os_rel,
   script,
   set,
   substring(server_version,1,16) AS server_ver,
@@ -48,13 +49,13 @@ SELECT
   round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1) as chkp_mins,
   round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as chkp_mbph,
   round(60*60*buffers_clean * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as clean_mbph,
-
 --pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bph,
 --pg_size_pretty(round(60*60*buffers_clean * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as clean_bph,
 --  pg_size_pretty(round(buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bytes_per_sec,
 --  60*60*(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / extract(epoch from (tests.end_time - tests.start_time))::bigint as chkp_per_hour,
 --  test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req as chkpts,
 --  test_bgwriter.checkpoints_timed as timed,test_bgwriter.checkpoints_req as req,
+  max_dirty,
   CASE WHEN
     test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0 THEN
     round(100::numeric * test_bgwriter.checkpoints_timed/(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req))
@@ -81,7 +82,23 @@ SELECT
     tests.test=test_metrics_data.test AND
     -- TODO Support secondary Mac disks
     (test_metrics_data.metric='disk0_MB/s' OR test_metrics_data.metric LIKE '%wMB/s')
-  ) AS max_write_MBps
+  ) AS max_write_MBps,
+  (
+  SELECT round(avg(test_metrics_data.value)) FROM test_metrics_data
+  WHERE
+    tests.server=test_metrics_data.server AND
+    tests.test=test_metrics_data.test AND
+    -- TODO Support secondary Mac disks
+    (test_metrics_data.metric='disk0_MB/s' OR test_metrics_data.metric LIKE '%rMB/s')
+  ) AS avg_read_MBps,
+  (
+  SELECT round(max(test_metrics_data.value)) FROM test_metrics_data
+  WHERE
+    tests.server=test_metrics_data.server AND
+    tests.test=test_metrics_data.test AND
+    -- TODO Support secondary Mac disks
+    (test_metrics_data.metric='disk0_MB/s' OR test_metrics_data.metric LIKE '%rMB/s')
+  ) AS max_read_MBps
 FROM tests,server,test_bgwriter,test_stat_database
 WHERE
 --    script LIKE ':-i%' AND

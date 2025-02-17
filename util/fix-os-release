@@ -1,7 +1,17 @@
-#!/bin/bash
 # 2025-02-17 Schema upgrade utility to add server_os_release to results database
 source ./config
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
-OS_REL=`uname -mrs`
+
+if [ -f /etc/lsb-release ] ; then
+  DISTRIB_ID=`grep ^DISTRIB_ID /etc/lsb-release | cut -d"=" -f 2`
+  DISTRIB_REL=`grep ^DISTRIB_RELEASE /etc/lsb-release | cut -d"=" -f 2`
+  DISTRIB="$DISTRIB_ID $DISTRIB_REL"
+else
+  # Presumably Darwin
+  DISTRIB=`sw_vers | cut -d":" -f 2 | xargs echo`
+fi
+
+UNAME=`uname -mrs`
+OS_REL="${DISTRIB} ${UNAME}"
 $RESULTPSQL -c "UPDATE server SET server_os_release='${OS_REL}';"
 $RESULTPSQL -c "UPDATE tests  SET server_os_release='${OS_REL}';"

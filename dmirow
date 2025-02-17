@@ -31,8 +31,8 @@ if [ "$OS" = "Linux" ] ; then
 	MEMGB=${MEMGB%"Gi"}
 	MEMGB=${MEMGB%"G"}
 
-	DISTRIB_ID=`grep ^DISTRIB_ID /etc/lsb-release`
-    DISTRIB_REL=`grep ^DISTRIB_RELEASE /etc/lsb-release`
+    DISTRIB_ID=`grep ^DISTRIB_ID /etc/lsb-release | cut -d"=" -f 2`
+    DISTRIB_REL=`grep ^DISTRIB_RELEASE /etc/lsb-release | cut -d"=" -f 2`
     DISTRIB="$DISTRIB_ID $DISTRIB_REL"
 
 elif [ "$OS" = "Darwin" ] ; then

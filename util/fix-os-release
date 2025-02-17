@@ -1,0 +1,7 @@
+#!/bin/bash
+# 2025-02-17 Schema upgrade utility to add server_os_release to results database
+source ./config
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+OS_REL=`uname -mrs`
+$RESULTPSQL -c "UPDATE server SET server_os_release='${OS_REL}';"
+$RESULTPSQL -c "UPDATE tests  SET server_os_release='${OS_REL}';"

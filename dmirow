@@ -4,10 +4,11 @@
 # This is not pretty or robust, it's bootstrapping until I can do better.
 
 source ./config
-RESULTUSER="postgres"
+RESULTUSER="gsmith"
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 SERVERNAME=`hostname`
 OS=`uname`
+OS_REL=`uname -mrs`
 
 if [ "$OS" = "Linux" ] ; then
 	CPU=`more /proc/cpuinfo | grep "^model name" | head -n 1 | cut -d: -f 2`
@@ -56,7 +57,7 @@ $RESULTPSQL -c "DELETE FROM server WHERE server='${SERVERNAME}'"
 $RESULTPSQL -c "
 INSERT INTO server
 	(server,server_info,server_cpu,server_mem,server_disk,
-	server_num_proc,server_mem_gb,server_disk_gb)
+	server_num_proc,server_mem_gb,server_disk_gb,server_os_release)
 VALUES
 (
 	TRIM('${SERVERNAME}'),
@@ -64,7 +65,7 @@ VALUES
 	TRIM('${CPU}'),
 	TRIM('${MEMPART}') || ' - ' || TRIM('${MEMVENDOR}') || ' - ' || TRIM('${MEMTYPE}') || '-' || TRIM('${MEMSPEED}'),
 	TRIM('${DISKMODEL}') || ' - ' || TRIM('${DISKFW}'),
-	${PROCS},${MEMGB},${DISKGB}
+	${PROCS},${MEMGB},${DISKGB},'${OS_REL}'
 );
 "
 

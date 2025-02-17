@@ -313,3 +313,6 @@ CREATE TABLE metrics_info (
   visibility int,
   prefix text
 );
+
+ALTER TABLE server ADD COLUMN server_os_release text;
+ALTER TABLE tests ADD COLUMN server_os_release text;

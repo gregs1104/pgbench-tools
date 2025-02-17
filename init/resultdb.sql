@@ -36,7 +36,8 @@ CREATE TABLE tests(
   multi numeric default 0,
   artifacts jsonb,
   server_mem_gb int,
-  server_cpu text
+  server_cpu text,
+  server_os_release text
   );
 
 DROP TABLE IF EXISTS timing;
@@ -118,7 +119,8 @@ CREATE TABLE server(
     server_num_proc int,
     server_mem_gb int,
     server_disk_gb int,
-    server_details jsonb
+    server_details jsonb,
+    server_os_release text
   );
 
 DROP TABLE IF EXISTS tmp_metric_import;

@@ -394,6 +394,7 @@ $RESULTPSQL -c "update test_bgwriter set \
 # Cache server info in the test record to save CPU/memory upgrade history
 SERVERCPU=`$RESULTPSQL -Atc "SELECT server_cpu FROM server WHERE server='${SERVERNAME}'"`
 MEMGB=`$RESULTPSQL -Atc "SELECT server_mem_gb FROM server WHERE server='${SERVERNAME}'"`
+OSREL=`$RESULTPSQL -Atc "SELECT server_os_release FROM server WHERE server='${SERVERNAME}'"`
 if [ -z "${MEMGB}" ] ; then
   MEMGB=0
   echo WARNING:  missing entry "${SERVERNAME}" in server table
@@ -401,7 +402,7 @@ fi
 
 # Save database size at the end to support init case
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
-$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB},server_cpu='${SERVERCPU}' WHERE server='${SERVERNAME}' AND test='${TEST}'"
+$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB},server_cpu='${SERVERCPU}',server_os_release='${OSREL}' WHERE server='${SERVERNAME}' AND test='${TEST}'"
 
 # Stats and buffer cache data are spoiled very fast by post processing, grab them as early as feasible
 

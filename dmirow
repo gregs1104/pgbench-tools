@@ -31,6 +31,10 @@ if [ "$OS" = "Linux" ] ; then
 	MEMGB=${MEMGB%"Gi"}
 	MEMGB=${MEMGB%"G"}
 
+	DISTRIB_ID=`grep ^DISTRIB_ID /etc/lsb-release`
+    DISTRIB_REL=`grep ^DISTRIB_RELEASE /etc/lsb-release`
+    DISTRIB="$DISTRIB_ID $DISTRIB_REL"
+
 elif [ "$OS" = "Darwin" ] ; then
 	BOARDVENDOR=`system_profiler SPHardwareDataType | grep "Model Name:" | cut -d":" -f 2`
 	BOARD=`system_profiler SPHardwareDataType | grep "Model Identifier:" | cut -d":" -f 2`
@@ -47,6 +51,8 @@ elif [ "$OS" = "Darwin" ] ; then
 	# There doesn't seem to be a way to get at disk firmware on Darwin.
 	# Use the volume type, like "AppleAPFSMedia", instead.
 	DISKFW=`system_profiler SPStorageDataType | grep "Media Name:" | head -n 1 | cut -d":" -f 2`
+    DISTRIB=`sw_vers | cut -d":" -f 2 | xargs echo`
+
 else
 	echo Unsupported OS:  $OS
 	exit 1
@@ -65,7 +71,7 @@ VALUES
 	TRIM('${CPU}'),
 	TRIM('${MEMPART}') || ' - ' || TRIM('${MEMVENDOR}') || ' - ' || TRIM('${MEMTYPE}') || '-' || TRIM('${MEMSPEED}'),
 	TRIM('${DISKMODEL}') || ' - ' || TRIM('${DISKFW}'),
-	${PROCS},${MEMGB},${DISKGB},'${OS_REL}'
+	${PROCS},${MEMGB},${DISKGB},'${DISTRIB} ${OS_REL}'
 );
 "
 

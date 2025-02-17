@@ -37,7 +37,8 @@ CREATE TABLE tests(
   artifacts jsonb,
   server_mem_gb int,
   server_cpu text,
-  server_os_release text
+  server_os_release text,
+  conn_method text
   );
 
 DROP TABLE IF EXISTS timing;

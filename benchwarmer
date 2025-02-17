@@ -170,9 +170,11 @@ fi
 # Only useful when running this script on the server itself for local testing.
 # TODO Allow specifying the location of the sockets file.
 TESTHOSTPARAM="-h $TESTHOST"
+CONNMETHOD="host"
 if [ -n "$SOCKETS" ]; then
   if [ "$SOCKETS" -eq "1" ]; then
     TESTHOSTPARAM=""
+    CONNMETHOD="sockets"
   fi
 fi
 
@@ -283,7 +285,7 @@ fi
 
 # Create the tests record
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
-$RESULTPSQL -q -c "insert into tests (server,server_version,script,clients,workers,set,scale,dbsize,rate_limit,client_limit,multi) values('$SERVERNAME','$VERSION_TEXT','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT,$MULTI)"
+$RESULTPSQL -q -c "insert into tests (server,server_version,script,clients,workers,set,scale,dbsize,rate_limit,client_limit,multi,conn_method) values('$SERVERNAME','$VERSION_TEXT','$SCRIPT','$CLIENTS','$NUM_WORKERS','$SET','$SCALE','$DBSIZE',$RATE, $CLIENT_LIMIT,$MULTI,'$CONNMETHOD')"
 TEST=`$RESULTPSQL -A -t -c "select max(test) from tests WHERE server='${SERVERNAME}'"`
 if [ "$?" -ne "0" ]; then
   echo ERROR  Can\'t read from tests table.  Was the test data installed?

@@ -15,3 +15,4 @@ UNAME=`uname -mrs`
 OS_REL="${DISTRIB} ${UNAME}"
 $RESULTPSQL -c "UPDATE server SET server_os_release='${OS_REL}';"
 $RESULTPSQL -c "UPDATE tests  SET server_os_release='${OS_REL}';"
+$RESULTPSQL -c "UPDATE tests  SET conn_method='host';"

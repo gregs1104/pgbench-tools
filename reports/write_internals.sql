@@ -1,9 +1,12 @@
-SELECT
+DROP VIEW IF EXISTS write_internals;
+CREATE OR REPLACE VIEW write_internals AS
+ SELECT
   tests.server || ' - ' || tests.set::text  || ' - ' || tests.test::text AS ref_info,
   to_char(end_time,'YYYY/MM/DD') AS run,
   tests.server_cpu AS cpu,
   tests.server_mem_gb AS mem_gb,
   tests.server_os_release AS os_rel,
+  tests.conn_method AS conn,
   script,
   set,
   substring(server_version,1,16) AS server_ver,
@@ -111,3 +114,5 @@ ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,
   script,
   server_version,tests.set,
   multi,scale,fsync,shared_gb,maint_gb,max_wal_gb,timeout,extract(epoch from (tests.end_time - tests.start_time)) desc;
+
+SELECT * FROM write_internals;

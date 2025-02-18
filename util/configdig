@@ -22,8 +22,15 @@ if [ ! -f "results.txt" ] ; then
   return 1
 fi
 
+# Sockets can be specified in config file or set in params
 CONN="host"
 SOCKETS=`grep "^SOCKETS" config | cut -d"=" -f 2`
+if [ -n "$SOCKETS" ] ; then
+  if [ "${SOCKETS}" -eq 1 ] ; then
+    CONN="sockets"
+  fi
+fi
+SOCKETS=`grep "^SOCKETS" params | cut -d"=" -f 2`
 if [ -n "$SOCKETS" ] ; then
   if [ "${SOCKETS}" -eq 1 ] ; then
     CONN="sockets"

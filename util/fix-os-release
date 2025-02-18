@@ -2,12 +2,19 @@
 source ./config
 RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
 
-if [ -f /etc/lsb-release ] ; then
+if [ -f /etc/os-release ] ; then
+  DISTRIB_ID=`grep ^DISTRIB_ID /etc/os-release | cut -d"=" -f 2`
+  DISTRIB_REL=`grep ^DISTRIB_RELEASE /etc/os-release | cut -d"=" -f 2`
+  DISTRIB="$DISTRIB_ID $DISTRIB_REL"
+elif [ -f /etc/lsb-release ] ; then
+  # TODO Consider lsb-release binary instead.  It's complicated.
+  # https://stackoverflow.com/questions/47838800/etc-lsb-release-vs-etc-os-release
   DISTRIB_ID=`grep ^DISTRIB_ID /etc/lsb-release | cut -d"=" -f 2`
   DISTRIB_REL=`grep ^DISTRIB_RELEASE /etc/lsb-release | cut -d"=" -f 2`
   DISTRIB="$DISTRIB_ID $DISTRIB_REL"
 else
   # Presumably Darwin
+  # TODO handle other systems
   DISTRIB=`sw_vers | cut -d":" -f 2 | xargs echo`
 fi
 

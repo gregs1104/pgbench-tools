@@ -31,7 +31,7 @@ if [ -n "$SOCKETS" ] ; then
   fi
 fi
 
-if [ ! -f "params" ] ; then
+if [ -f "params" ] ; then
   SOCKETS=`grep "^SOCKETS" params | cut -d"=" -f 2`
   if [ -n "$SOCKETS" ] ; then
     if [ "${SOCKETS}" -eq 1 ] ; then

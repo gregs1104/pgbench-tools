@@ -90,7 +90,7 @@ do
 	do
 	  if [ -d $t ] ; then
 	    pushd $t
-	    echo "Result directory $d/$f"
+	    echo "Result directory $serv/$t"
 	    process $t $serv
         popd
 	  fi

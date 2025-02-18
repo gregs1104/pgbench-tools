@@ -44,6 +44,12 @@ CREATE OR REPLACE VIEW write_internals AS
     LIMIT 1
   ) as fsync,
   (
+  SELECT test_settings.setting FROM test_settings WHERE
+    test_settings.server=tests.server AND test_settings.test=tests.test AND
+    test_settings.name='wal_level'
+    LIMIT 1
+  ) as wal_level,
+  (
   SELECT test_settings.setting::integer / 60 FROM test_settings WHERE
     test_settings.server=tests.server AND test_settings.test=tests.test AND
     test_settings.name='checkpoint_timeout'

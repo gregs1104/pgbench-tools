@@ -1,0 +1,136 @@
+#!/bin/bash
+# Usage:
+#
+#   configdig test server
+#
+# Or recursive re-processing of an entire directory tree instead:
+#
+#   configdig recurse
+
+source ./config
+TEST=$1
+RESULTPSQL="psql -h $RESULTHOST -U $RESULTUSER -p $RESULTPORT -d $RESULTDB"
+
+function process {
+# In theory I could rely on existing environment variables to figure these both
+# out.  In practice that's already caused one bug, so parameters for these two.
+TESTNUM="$1"
+H="$2"
+
+if [ ! -f "results.txt" ] ; then
+  echo Not a test result directory, skipping
+  return 1
+fi
+
+CONN="host"
+SOCKETS=`grep "^SOCKETS" config | cut -d"=" -f 2`
+if [ -n "$SOCKETS" ] ; then
+  if [ "${SOCKETS}" -eq 1 ] ; then
+    CONN="sockets"
+  fi
+fi
+echo Connection method:  $CONN
+
+# Benchmark client OS Configuration.  May not be the same as the server.  For new results,
+# the server table is supposed to be filled in correctly.  This is guessing code based on
+# what was collected before that approach was implemented.
+
+if [ -s "pg_settings.txt" ] ; then
+  OSCONFIG=`grep -A 1 "benchmark client OS Configuration" pg_settings.txt | tail -n 1 | cut -d" " -f 1,3`
+  DARWIN=`grep "^ProductName" -A 2 pg_settings.txt  | cut -d":" -f 2 | xargs echo`
+  UBUNTU=`grep "DISTRIB_DESCRIPTION" pg_settings.txt | cut -d'"' -f 2`
+  DEBIAN=`grep -A 1 "debian_version" pg_settings.txt | tail -n 1`
+  echo Collected OS information:
+  echo OS:  $OSCONFIG
+  echo Darwin:  $DARWIN
+  echo Ubuntu:  $UBUNTU
+  echo Debian:  $DEBIAN
+
+  # Ubuntu sample
+  #
+  # OS: Linux 5.4.0-72-generic
+  # Darwin:
+  # Ubuntu: Ubuntu 20.04.1 LTS
+  # Debian: bullseye/sid
+
+  # Darwin sample
+  # OS: Darwin 21.2.0
+  # Darwin: macOS 12.1 21C52
+  # Ubuntu:
+  # Debian:
+
+  # Debian sample
+  # OS: Linux 6.12.6-amd64
+  # Darwin:
+  # Ubuntu:
+  # Debian: trixie/sid
+
+  if [ -n "$DARWIN" ] ; then
+    RELINFO="$DARWIN $OSCONFIG"
+  elif [ -n "$UBUNTU" ] ; then
+    RELINFO="$UBUNTU $OSCONFIG"
+  elif [ -n "$DEBIAN" ] ; then
+    RELINFO="$DEBIAN $OSCONFIG"
+  else
+    # TODO RedHat, FreeBSD, Arch, ...
+    echo Not supported OS
+    exit 2
+  fi
+  echo server_os_release:  ${RELINFO}
+  $RESULTPSQL -c "UPDATE tests SET server_os_release='${RELINFO}',conn_method='${CONN}' WHERE test=${TESTNUM} AND server='${H}'"
+else
+  echo No pg_settings file found
+  exit 1
+fi
+
+}
+
+#
+# Recurse import an entire directory tree
+#
+function reprocess {
+shopt -s nullglob
+pushd results
+
+for serv in *
+do
+  if [ -d $serv ] ; then
+    pushd $serv
+    echo "Server directory $serv"
+
+	for t in *
+	do
+	  if [ -d $t ] ; then
+	    pushd $t
+	    echo "Result directory $serv/$t"
+	    process $t $serv
+        popd
+	  fi
+    done
+
+    popd
+  fi
+done
+}
+
+#
+# Main
+#
+
+echo current pwd
+pwd
+
+if [ "$1" = "recurse" ] ; then
+  echo "Recursion mode"
+  reprocess
+elif [ -n "$2" ] ; then
+  # Try to handle being called from test results directory or from
+  # toolkit base directory
+  if [ ! -f "results.txt" ] ; then
+    pushd results/$2/$1
+  fi
+  process $1 $2
+else
+    echo "Usage:  configdig test server."
+    echo "Or use 'recurse' from the code directory for automatic mode."
+fi

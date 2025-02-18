@@ -24,18 +24,42 @@ fi
 
 # Sockets can be specified in config file or set in params
 CONN="host"
-SOCKETS=`grep "^SOCKETS" config | cut -d"=" -f 2`
-if [ -n "$SOCKETS" ] ; then
-  if [ "${SOCKETS}" -eq 1 ] ; then
-    CONN="sockets"
-  fi
-fi
 
 if [ -f "params" ] ; then
   SOCKETS=`grep "^SOCKETS" params | cut -d"=" -f 2`
   if [ -n "$SOCKETS" ] ; then
     if [ "${SOCKETS}" -eq 1 ] ; then
       CONN="sockets"
+    fi
+  fi
+fi
+# Only check config file if there was no setting in params
+if [ -z "$SOCKETS" ] ; then
+  SOCKETS=`grep "^SOCKETS" config | cut -d"=" -f 2`
+  if [ -n "$SOCKETS" ] ; then
+    if [ "${SOCKETS}" -eq 1 ] ; then
+      CONN="sockets"
+    fi
+  fi
+fi
+
+# Ditto prepared statements
+CONNINFO="${CONN}"
+
+if [ -f "params" ] ; then
+  PREPPED=`grep "^PREPARED" params | cut -d"=" -f 2`
+  if [ -n "$PREPPED" ] ; then
+    if [ "${PREPPED}" -eq 1 ] ; then
+      CONNINFO="${CONN} prepared"
+    fi
+  fi
+fi
+# Only check config file if there was no setting in params
+if [ -z "$PARAMS" ] ; then
+  PREP=`grep "^PREPARED" config | cut -d"=" -f 2`
+  if [ -n "$PREP" ] ; then
+    if [ "${PREP}" -eq 1 ] ; then
+      CONNINFO="${CONN} prepared"
     fi
   fi
 fi
@@ -87,9 +111,9 @@ if [ -s "pg_settings.txt" ] ; then
   fi
   #echo server_os_release:  ${RELINFO}
 
-  echo $H $TESTNUM - $RELINFO - $CONN
+  echo $H $TESTNUM - $RELINFO - $CONNINFO
 
-  $RESULTPSQL -c "UPDATE tests SET server_os_release='${RELINFO}',conn_method='${CONN}' WHERE test=${TESTNUM} AND server='${H}'"
+  $RESULTPSQL -c "UPDATE tests SET server_os_release='${RELINFO}',conn_method='${CONNINFO}' WHERE test=${TESTNUM} AND server='${H}'"
 else
   echo No pg_settings file found for $H $TESTNUM
 fi

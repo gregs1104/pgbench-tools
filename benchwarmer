@@ -177,6 +177,9 @@ if [ -n "$SOCKETS" ]; then
     CONNMETHOD="sockets"
   fi
 fi
+if [ "$PREPARED" -gt 0 ] ; then
+    CONNMETHOD="${CONNMETHOD} prepared"
+fi
 
 # psql statements for the test database and the result database
 TESTPSQL="psql $TESTHOSTPARAM -U $TESTUSER -p $TESTPORT -d $TESTDB"

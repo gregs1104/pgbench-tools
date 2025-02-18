@@ -117,9 +117,6 @@ done
 # Main
 #
 
-echo current pwd
-pwd
-
 if [ "$1" = "recurse" ] ; then
   echo "Recursion mode"
   reprocess

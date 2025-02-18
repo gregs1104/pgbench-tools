@@ -29,7 +29,6 @@ if [ -n "$SOCKETS" ] ; then
     CONN="sockets"
   fi
 fi
-echo Connection method:  $CONN
 
 # Benchmark client OS Configuration.  May not be the same as the server.  For new results,
 # the server table is supposed to be filled in correctly.  This is guessing code based on
@@ -40,11 +39,12 @@ if [ -s "pg_settings.txt" ] ; then
   DARWIN=`grep "^ProductName" -A 2 pg_settings.txt  | cut -d":" -f 2 | xargs echo`
   UBUNTU=`grep "DISTRIB_DESCRIPTION" pg_settings.txt | cut -d'"' -f 2`
   DEBIAN=`grep -A 1 "debian_version" pg_settings.txt | tail -n 1`
-  echo Collected OS information:
-  echo OS:  $OSCONFIG
-  echo Darwin:  $DARWIN
-  echo Ubuntu:  $UBUNTU
-  echo Debian:  $DEBIAN
+
+  #echo Collected OS information:
+  #echo OS:  $OSCONFIG
+  #echo Darwin:  $DARWIN
+  #echo Ubuntu:  $UBUNTU
+  #echo Debian:  $DEBIAN
 
   # Ubuntu sample
   #
@@ -73,14 +73,15 @@ if [ -s "pg_settings.txt" ] ; then
     RELINFO="$DEBIAN $OSCONFIG"
   else
     # TODO RedHat, FreeBSD, Arch, ...
-    echo Not supported OS
-    exit 2
+    echo Not supported OS for $H $TESTNUM
   fi
-  echo server_os_release:  ${RELINFO}
+  #echo server_os_release:  ${RELINFO}
+
+  echo $H $TESTNUM - $RELINFO - $CONN
+
   $RESULTPSQL -c "UPDATE tests SET server_os_release='${RELINFO}',conn_method='${CONN}' WHERE test=${TESTNUM} AND server='${H}'"
 else
-  echo No pg_settings file found
-  exit 1
+  echo No pg_settings file found for $H $TESTNUM
 fi
 
 }
@@ -90,25 +91,25 @@ fi
 #
 function reprocess {
 shopt -s nullglob
-pushd results
+pushd results >/dev/null
 
 for serv in *
 do
   if [ -d $serv ] ; then
-    pushd $serv
+    pushd $serv >/dev/null
     echo "Server directory $serv"
 
 	for t in *
 	do
 	  if [ -d $t ] ; then
-	    pushd $t
-	    echo "Result directory $serv/$t"
+	    pushd $t >/dev/null
+#	    echo "Result directory $serv/$t"
 	    process $t $serv
-        popd
+        popd > /dev/null
 	  fi
     done
 
-    popd
+    popd >/dev/null
   fi
 done
 }
@@ -124,7 +125,7 @@ elif [ -n "$2" ] ; then
   # Try to handle being called from test results directory or from
   # toolkit base directory
   if [ ! -f "results.txt" ] ; then
-    pushd results/$2/$1
+    pushd results/$2/$1 >/dev/null
   fi
   process $1 $2
 else

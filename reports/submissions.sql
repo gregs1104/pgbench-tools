@@ -20,12 +20,12 @@ LIMIT 0;
 
 INSERT INTO submission (
     submitter, affiliation,
-    ref_info, run, cpu, mem_gb, os_rel, conn, 
-    script, set, server_ver, clients, scale, nodes, db_gb, 
-    tps, percentile_90_latency, rate_limit, hours, nodes_kips, 
+    ref_info, run, cpu, mem_gb, os_rel, conn,
+    script, set, server_ver, clients, scale, nodes, db_gb,
+    tps, percentile_90_latency, rate_limit, hours, nodes_kips,
     shared_gb, maint_gb, max_wal_gb, fsync, wal_level, timeout,
-    chkp_mins, chkp_mbph, clean_mbph, max_dirty, 
-    timed_pct, hit_pct, hit_mbps, read_mbps, wal_mbps, 
+    timed_pct, chkp_mins, chkp_mbph, clean_mbph, max_dirty,
+    hit_pct, hit_mbps, read_mbps, wal_mbps,
     avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps
 )
 SELECT

@@ -55,7 +55,14 @@ CREATE OR REPLACE VIEW write_internals AS
     test_settings.name='checkpoint_timeout'
     LIMIT 1
   ) as timeout,
-  round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1) as chkp_mins,
+  CASE WHEN
+    test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0
+    THEN round(100::numeric * test_bgwriter.checkpoints_timed/(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req))
+    ELSE 100 END AS timed_pct,
+  CASE WHEN
+    test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0
+    THEN round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1)
+    ELSE 0 END AS chkp_mins,
   round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as chkp_mbph,
   round(60*60*buffers_clean * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as clean_mbph,
 --pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bph,
@@ -65,12 +72,6 @@ CREATE OR REPLACE VIEW write_internals AS
 --  test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req as chkpts,
 --  test_bgwriter.checkpoints_timed as timed,test_bgwriter.checkpoints_req as req,
   max_dirty,
-  CASE WHEN
-    test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0 THEN
-    round(100::numeric * test_bgwriter.checkpoints_timed/(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req))
-  ELSE
-    100
-  END AS timed_pct,
   round(100.0 * blks_hit / (blks_read + blks_hit)) as hit_pct,
   round(blks_hit * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024,1) AS hit_mbps,
   round(blks_read * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024,1) AS read_mbps,
@@ -114,8 +115,7 @@ WHERE
   tests.server=server.server AND
   tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server AND
   tests.test=test_stat_database.test AND tests.server=test_stat_database.server AND
-  extract(epoch from (tests.end_time - tests.start_time))::bigint > 0 AND
-  (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) > 0
+  extract(epoch from (tests.end_time - tests.start_time))::bigint > 0
 ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,
   script,
   server_version,tests.set,

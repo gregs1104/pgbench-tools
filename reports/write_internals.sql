@@ -15,7 +15,7 @@ CREATE OR REPLACE VIEW write_internals AS
   CASE WHEN jsonb_exists(artifacts, 'node_count')
     THEN (artifacts->'node_count')::numeric ELSE 0 END AS nodes,
   round(dbsize / 1024 / 1024 / 1024,1) AS db_gb,
-  tps,  percentile_90_latency, rate_limit,
+  tps,  avg_latency, percentile_90_latency, max_latency, rate_limit,
   round(extract(epoch from (tests.end_time - tests.start_time))/60/60,2) as hours,
   CASE WHEN jsonb_exists(artifacts, 'node_count') AND jsonb_exists(artifacts, 'overall')
     THEN round((artifacts->'node_count')::numeric / (artifacts->'overall')::numeric / 1000,0)
@@ -56,11 +56,11 @@ CREATE OR REPLACE VIEW write_internals AS
     LIMIT 1
   ) as timeout,
   CASE WHEN
-    test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0
+    (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) > 0
     THEN round(100::numeric * test_bgwriter.checkpoints_timed/(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req))
     ELSE 100 END AS timed_pct,
   CASE WHEN
-    test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req > 0
+    (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) > 0
     THEN round(extract(epoch from (tests.end_time - tests.start_time)) / (test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / 60,1)
     ELSE 0 END AS chkp_mins,
   round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as chkp_mbph,
@@ -71,6 +71,10 @@ CREATE OR REPLACE VIEW write_internals AS
 --  60*60*(test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req) / extract(epoch from (tests.end_time - tests.start_time))::bigint as chkp_per_hour,
 --  test_bgwriter.checkpoints_timed + test_bgwriter.checkpoints_req as chkpts,
 --  test_bgwriter.checkpoints_timed as timed,test_bgwriter.checkpoints_req as req,
+  CASE WHEN
+    (test_bgwriter.buffers_checkpoint + test_bgwriter.buffers_clean) > 0
+    THEN round(100::numeric * test_bgwriter.buffers_clean/(test_bgwriter.buffers_checkpoint + test_bgwriter.buffers_clean))
+    ELSE 100 END AS cleaned_pct,
   max_dirty,
   round(100.0 * blks_hit / (blks_read + blks_hit)) as hit_pct,
   round(blks_hit * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024,1) AS hit_mbps,

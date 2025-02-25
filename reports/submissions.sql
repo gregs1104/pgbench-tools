@@ -22,9 +22,9 @@ INSERT INTO submission (
     submitter, affiliation,
     ref_info, run, cpu, mem_gb, os_rel, conn,
     script, set, server_ver, clients, scale, nodes, db_gb,
-    tps, percentile_90_latency, rate_limit, hours, nodes_kips,
+    tps, avg_latency, percentile_90_latency, max_latency, rate_limit, hours, nodes_kips,
     shared_gb, maint_gb, max_wal_gb, fsync, wal_level, timeout,
-    timed_pct, chkp_mins, chkp_mbph, clean_mbph, max_dirty,
+    timed_pct, chkp_mins, chkp_mbph, clean_mbph, cleaned_pct, max_dirty,
     hit_pct, hit_mbps, read_mbps, wal_mbps,
     avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps
 )

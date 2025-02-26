@@ -65,6 +65,7 @@ CREATE OR REPLACE VIEW write_internals AS
     ELSE 0 END AS chkp_mins,
   round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as chkp_mbph,
   round(60*60*buffers_clean * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as clean_mbph,
+  round(60*60*buffers_backend * 8192 / extract(epoch from (tests.end_time - tests.start_time)) / 1024 / 1024) as backend_mbph,
 --pg_size_pretty(round(60*60*buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bph,
 --pg_size_pretty(round(60*60*buffers_clean * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as clean_bph,
 --  pg_size_pretty(round(buffers_checkpoint * 8192 / extract(epoch from (tests.end_time - tests.start_time)))::bigint) as chkp_bytes_per_sec,
@@ -125,4 +126,4 @@ ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,
   server_version,tests.set,
   multi,scale,fsync,shared_gb,maint_gb,max_wal_gb,timeout,extract(epoch from (tests.end_time - tests.start_time)) desc;
 
-SELECT * FROM write_internals;
+--SELECT * FROM write_internals;

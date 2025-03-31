@@ -217,8 +217,8 @@ if [ -z "$SCALE" ] ; then
 fi
 
 # Confirm we have a useful pgbench to run
-if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
-  echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
+if [ -z $BENCHBIN ] || [ ! -x $BENCHBIN ]; then
+  echo ERROR:  cannot find benchmark binary $BENCHBIN , aborting
   exit
 fi
 
@@ -357,7 +357,7 @@ PSQLMET=$!
 cd results/$SERVERNAME/$TEST
 echo Script $SCRIPT executing for $CLIENTS concurrent users... 1>&2
 
-$PGBENCHBIN $SCRIPTOPT -s $SCALE $TESTHOSTPARAM -p $TESTPORT -U $TESTUSER $TESTDB > results.txt 2>&1 &
+$BENCHBIN $SCRIPTOPT -s $SCALE $TESTHOSTPARAM -p $TESTPORT -U $TESTUSER $TESTDB > results.txt 2>&1 &
 P=$!
 wait $P
 $RESULTPSQL -q -c "UPDATE tests SET end_time=now() WHERE server='${SERVERNAME}' AND test='${TEST}'"

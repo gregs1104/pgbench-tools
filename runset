@@ -4,8 +4,8 @@
 . ./params
 
 # Confirm we have a useful pgbench to run
-if [ -z $PGBENCHBIN ] || [ ! -x $PGBENCHBIN ]; then
-  echo ERROR:  cannot find pgbench binary $PGBENCHBIN , aborting
+if [ -z $BENCHBIN ] || [ ! -x $BENCHBIN ]; then
+  echo ERROR:  cannot find benchmark binary $BENCHBIN , aborting
   exit
 fi
 
@@ -58,7 +58,7 @@ for SCALE in $SCALES; do
       export SCALE && ./benchwarmer 1
       cp params.orig params
     else
-     time $PGBENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
+     time $BENCHBIN -i -s $SCALE -h $TESTHOST -U $TESTUSER -p $TESTPORT $TESTDB
     fi
 
   fi

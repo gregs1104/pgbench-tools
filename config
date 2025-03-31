@@ -5,7 +5,7 @@
 #
 
 BASEDIR=`pwd`
-PGBENCHBIN=`which pgbench`
+BENCHBIN=`which pgbench`
 GNUPLOT=`which gnuplot`
 
 # These values are for pgbench 9.6 - 13

@@ -1,0 +1,17 @@
+# Repeat run GIS osm2pgsql workload until prompted to stop.
+# Execute "touch complete" to signal when you want the testing to end.
+# Configure via environment variables
+
+# Set in seconds, default gives one hour recovery time between runs
+if [ -n "$RECOVERY"] ; then
+  RECOVERY=3600
+fi
+ 
+while [ ! -f complete ]
+  util/newgis
+  sudo /usr/local/bin/bench_tune
+  sleep $RECOVERY
+  nohup ./runset &
+  P=$!
+  wait $P
+

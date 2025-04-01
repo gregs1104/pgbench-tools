@@ -44,4 +44,4 @@ while [ ! -f ${STATEDIR}/complete ] ; do
     wait $P
   fi
 done
-rm complete ${STATEDIR}/pgbent.pid
+rm ${STATEDIR}/complete ${STATEDIR}/pgbent.pid

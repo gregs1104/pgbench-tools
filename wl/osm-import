@@ -22,6 +22,7 @@ SCRIPT="osm2pgsql-1.6"
 TESTDB="gis"
 SKIPINIT=1
 MULTI=5
+RECOVERY=3600
 EOF
 
 # TODO Correct connection string

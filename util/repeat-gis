@@ -1,22 +1,47 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Repeat run GIS osm2pgsql workload until prompted to stop.
 # Execute "touch complete" to signal when you want the testing to end.
 # Configure via environment variables.
 # Expected to be run via the nohup command.
 
-# Set in seconds, default gives one hour recovery time between runs
-if [ -n "$RECOVERY"] ; then
-  RECOVERY=3600
+source ./config
+source ./params
+
+rm -f ${STATEDIR}/complete
+PID=$$
+
+# Set in seconds, recovery time between runs
+if [ -z "$RECOVERY" ] ; then
+  RECOVERY=10
 fi
- 
-while [ ! -f complete ] ; do
+
+# bash booleans inspired by https://stackoverflow.com/a/26920580/118240
+# Allows one-liner chains like "(($FIRST)) && cmd && FIRST=0"
+FALSE=0
+TRUE=1
+FIRST=${TRUE}
+
+while [ ! -f ${STATEDIR}/complete ] ; do
   util/newgis
-  sudo /usr/local/bin/bench_tune
-  # TODO Maybe not sleep before first run?  Command line param?
-  echo Waiting $RECOVERY seconds for disk to recover its cache
-  sleep $RECOVERY
-  ./runset &
-  P=$!
-  wait $P
+
+  [ -x /usr/local/bin/bench_tune ] && sudo /usr/local/bin/bench_tune
+
+  if !(($FIRST)) ; then
+    echo Waiting $RECOVERY seconds for cooldown disk cache recovery
+    sleep ${RECOVERY}
+  else
+    FIRST=${FALSE}
+    fi
+
+  # Recheck in case complete appeared during sleep
+  if [ ! -f ${STATEDIR}/complete ] ; then
+    ./runset &
+    sleep 5 &
+    P=$!
+    echo $PID $P > ${STATEDIR}/pgbent.pid
+    echo Set running pid ${P}
+    wait $P
+  fi
 done
+rm complete ${STATEDIR}/pgbent.pid

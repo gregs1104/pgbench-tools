@@ -12,6 +12,7 @@ while [ ! -f complete ] ; do
   util/newgis
   sudo /usr/local/bin/bench_tune
   # TODO Maybe not sleep before first run?  Command line param?
+  echo Waiting $RECOVERY seconds for disk to recover its cache
   sleep $RECOVERY
   ./runset &
   P=$!

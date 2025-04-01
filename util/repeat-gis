@@ -8,7 +8,7 @@ if [ -n "$RECOVERY"] ; then
   RECOVERY=3600
 fi
  
-while [ ! -f complete ]
+while [ ! -f complete ] ; do
   util/newgis
   sudo /usr/local/bin/bench_tune
   # TODO Maybe not sleep before first run?  Command line param?
@@ -16,4 +16,4 @@ while [ ! -f complete ]
   ./runset &
   P=$!
   wait $P
-
+done

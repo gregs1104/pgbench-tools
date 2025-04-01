@@ -29,7 +29,7 @@ fi
 # Make sure the configured test script actually exists
 if [ ! -f "${TESTDIR}/${SCRIPT}.sql" ]; then
   echo "Warning: cannot find test script ${TESTDIR}/${SCRIPT}.sql"
-  echo "This is normal for internally run initialization steps"
+  echo "This is normal for non-pgbench binaries or for internally run pgbench initialization steps"
 fi
 
 $TESTPSQL -c "CREATE EXTENSION pg_buffercache;"

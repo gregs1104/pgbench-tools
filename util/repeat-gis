@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Repeat run GIS osm2pgsql workload until prompted to stop.
 # Execute "touch complete" to signal when you want the testing to end.
 # Configure via environment variables.

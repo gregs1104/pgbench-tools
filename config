@@ -7,6 +7,7 @@
 BASEDIR=`pwd`
 BENCHBIN=`which pgbench`
 GNUPLOT=`which gnuplot`
+STATEDIR="$BASEDIR"
 
 # These values are for pgbench 9.6 - 13
 TESTDIR="tests"

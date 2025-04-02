@@ -109,6 +109,9 @@ TRIM=0
 # Set over 0 to target more pages of data per transaction using a range sweep
 MULTI=0
 
+# Recovery time between test sets
+RECOVERY=10
+
 #
 # Disk inclusion prefix list.  Only active for Linux system monitoring.  Mac systems
 # ignore this in the code, setting it there is only useful for documenting the database disk.

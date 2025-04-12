@@ -236,6 +236,11 @@ fi
 SERVER_VERSION=`$TESTPSQL -A -t -F" " -c "select current_setting('server_version_num')::numeric;"`
 VERSION_TEXT=`$TESTPSQL -Atc "select version();"`
 
+# Platform uname that is running the test code.
+# This might not be the same as the server uname.  This is only used
+# for decoding the internally collected metrics data.
+UNAME=`uname`
+
 # Cleanup pgbench tables, unless we've been told to skip that
 if [ "$SKIPINIT" -ne "1" ]; then
   echo Cleaning up database $TESTDB
@@ -406,8 +411,8 @@ if [ -z "${MEMGB}" ] ; then
 fi
 
 # Save database size at the end to support init case
-DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
-$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB},server_cpu='${SERVERCPU}',server_os_release='${OSREL}' WHERE server='${SERVERNAME}' AND test='${TEST}'"
+DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`s
+$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB},server_cpu='${SERVERCPU}',server_os_release='${OSREL}',uname='${UNAME}' WHERE server='${SERVERNAME}' AND test='${TEST}'"
 
 # Stats and buffer cache data are spoiled very fast by post processing, grab them as early as feasible
 

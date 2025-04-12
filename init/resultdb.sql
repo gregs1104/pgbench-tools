@@ -38,7 +38,8 @@ CREATE TABLE tests(
   server_mem_gb int,
   server_cpu text,
   server_os_release text,
-  conn_method text
+  conn_method text,
+  uname text
   );
 
 DROP TABLE IF EXISTS timing;
@@ -317,6 +318,7 @@ CREATE VIEW test_metric_summary AS
 
 DROP TABLE IF EXISTS metrics_info;
 CREATE TABLE metrics_info (
+  uname text,
   metric text,
   category text,
   multi numeric,

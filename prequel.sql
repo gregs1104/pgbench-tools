@@ -317,3 +317,4 @@ CREATE TABLE metrics_info (
 ALTER TABLE server ADD COLUMN server_os_release text;
 ALTER TABLE tests ADD COLUMN server_os_release text;
 ALTER TABLE tests ADD COLUMN conn_method text;
+ALTER TABLE tests ADD COLUMN uname text;

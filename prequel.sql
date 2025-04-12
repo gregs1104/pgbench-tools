@@ -304,6 +304,7 @@ CREATE VIEW test_metric_summary AS
 
 DROP TABLE IF EXISTS metrics_info;
 CREATE TABLE metrics_info (
+  uname text,
   metric text,
   category text,
   multi numeric,

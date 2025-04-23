@@ -341,7 +341,9 @@ SELECT
   CASE WHEN mi.multi IS null THEN d.value ELSE d.value * mi.multi END AS value,
   CASE WHEN mi.multi IS null THEN pg_size_pretty(d.value::int8) ELSE
     pg_size_pretty((d.value * mi.multi)::int8) END AS value_p,
-  mi.units
+  mi.units,
+  mi.category AS cat,
+  mi.visibility AS vis
 FROM
   tests t,test_metrics_data d
   LEFT OUTER JOIN metrics_info mi ON 

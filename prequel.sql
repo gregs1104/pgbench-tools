@@ -344,3 +344,6 @@ WHERE
   (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database')
 --ORDER BY t.server,t.test,d.metric,d.collected
 ;
+
+TRUNCATE table metrics_info;
+\copy metrics_info from 'init/metrics_map.csv' WITH (FORMAT CSV, header);

@@ -55,8 +55,8 @@ Linux,WritebackTmp,Linux Mem,1024,WritebackTmp,bytes,gauge,1,
 Linux,Zswap,Linux Mem,1024,Zswap,bytes,gauge,1,
 Linux,Zswapped,Linux Mem,1024,Zswapped,bytes,gauge,1,
 Linux,b,Linux VM,1,blocked,integer,gauge,5,
-Linux,bi,Linux VM,1,in_bps,bytes,gauge,9,
-Linux,bo,Linux VM,1,out_bps,bytes,gauge,9,
+Linux,bi,Linux VM,1024,in_bps,bytes,gauge,9,
+Linux,bo,Linux VM,1024,out_bps,bytes,gauge,9,
 Linux,buff,Linux VM,1000,buffers,bytes,gauge,5,
 Linux,cache,Linux VM,1000,cache,bytes,gauge,5,
 Linux,cs,Linux VM,1,switches,integer,gauge,1,
@@ -83,14 +83,14 @@ Linux,_f_await,Linux Disk,1,f_await,ms,gauge,7,disk
 Linux,_f/s,Linux Disk,1,f/s,integer,gauge,7,disk
 Linux,_rareq-sz,Linux Disk,1,r_req_sz,integer,gauge,7,disk
 Linux,_r_await,Linux Disk,1,r_await,ms,gauge,7,disk
-Linux,_rMB/s,Linux Disk,1048576,r_bps,integer,gauge,9,disk
+Linux,_rMB/s,Linux Disk,1048576,r_bps,bytes,gauge,9,disk
 Linux,_%rrqm,Linux Disk,1,%rrqm,percent,gauge,7,disk
 Linux,_rrqm/s,Linux Disk,1,rrqm/s,integer,gauge,7,disk
 Linux,_r/s,Linux Disk,1,r/s,integer,gauge,9,disk
 Linux,_%util,Linux Disk,1,util_pct,percent,gauge,9,disk
 Linux,_wareq-sz,Linux Disk,1,w_req_sz,integer,gauge,7,disk
 Linux,_w_await,Linux Disk,1,w_await,ms,gauge,7,disk
-Linux,_wMB/s,Linux Disk,1048576,w_bps,integer,gauge,9,disk
+Linux,_wMB/s,Linux Disk,1048576,w_bps,bytes,gauge,9,disk
 Linux,_%wrqm,Linux Disk,1,%wrqm,percent,gauge,7,disk
 Linux,_wrqm/s,Linux Disk,1,wrqm/s,integer,gauge,7,disk
 Linux,_w/s,Linux Disk,1,w/s,integer,gauge,9,disk

@@ -1,9 +1,9 @@
 DEPRECATION WARNING!
 ===================
 
-2025/01/15:  After 18 years _pgbench-tools_ is changing names!  This repo will soon redirect to _pgbent_:  the PostgreSQL Benchmark Toolkit.
+2025/06/18:  After 18 years _pgbench-tools_ has changed its name to _pgbent_:  the PostgreSQL Benchmark Toolkit.
 
-The program's coming new documentation will revolve around its recent load generation orchestration features.  That includes metric collection going into a PG database for analysis with arbitrary workload scripts.  _pgbench_ is still the best supported load generator, but the program doesn't need it.  You can supply any script and get a results database comparing it across multiple runs, recording second level precision system metrics and whatever arbitrary database internals queries you want to attach.  A sample connection count query is bundled, you can change or extend that to collect anything you can read via SQL--which for Postgres means just about anything!
+The program's coming new documentation will revolve around its more recent load generation orchestration features.  That includes metric collection going into a PG database for analysis with arbitrary workload scripts.  _pgbench_ is still the best supported load generator, but the program doesn't need it.  You can supply any script and get a results database comparing it across multiple runs, recording second level precision system metrics and whatever arbitrary database internals queries you want to attach.  A sample connection count query is bundled, you can change or extend that to collect anything you can read via SQL--which for Postgres means just about anything!
 
 While there are plenty of other options for running PostgreSQL scripts and collecting system metrics, the way _pgbent_ is assembled is aimed at providing repeatable standard workloads that can be audited for correctness.  That tookit has allowed creating a small set of novel synthetic database workloads that target the known strong and weak spots of modern storage, ones that respond predictably to database tuning.  Database storage is tricky stuff, and any amount of the metrics time averaging typical to monitoring tools obliterates the interesting GB/s peak behavior of modern SSD.
 
@@ -23,7 +23,7 @@ After the rename and associated code reorg, the follow up tech refresh coming in
 Sponsor notes
 =============
 
-The soon to be _pgbent_ has supported from 2019-2025 by a generous time allocation from [Crunchy Data](https://www.crunchydata.com/).  We successfully found performance and integration issues in two successive new PostgreSQL releases.  As of June 2025 Crunchy Data has been acquired by Snowflake.
+_pgbent_ was supported from 2019-2025 by a generous time allocation from [Crunchy Data](https://www.crunchydata.com/).  The work successfully found performance and integration issues in two successive new PostgreSQL releases.  As of June 2025 Crunchy Data has been acquired by Snowflake.
 
 From project inception on PG8.2/2006 to PG17/2024, all the hardware for the original _pgbench_tools_ development period was personally supplied by Greg Smith, to keep the work independent of employer entangement and vendor influence.  The first sponsored sample is from Crunchy:  one of the M4 Apple Silicon systems with the 128GB of RAM minimum needed to do well on the Open Street Map tests is under evaluation for PG17 and then PG18.
 

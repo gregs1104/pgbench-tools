@@ -357,7 +357,7 @@ fi
 # Scripts that run via sudo.  Off by default because you need to install the relevant
 # sudo rules before this will work as expected.
 if [ "$SUDODATA" -eq "1" ]; then
-  sudo ./timed-os-stats power > results/$SERVERNAME/$TEST/power.log &
+  ./timed-os-stats power > results/$SERVERNAME/$TEST/power.log &
   POWERSTAT=$!
 fi
 

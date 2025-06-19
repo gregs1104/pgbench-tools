@@ -25,6 +25,9 @@ TABBED=0
 # Set OSDATA to 1 to collect OS data using vmstat and iostat
 OSDATA=1
 
+# sudo data includes power and requires sudoer helper scripts to enable
+SUDODATA=0
+
 # Set SOCKETS to 1 to eliminate "-h host" from test connection string
 SOCKETS=0
 

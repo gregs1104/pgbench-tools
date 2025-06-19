@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # timed-os-stats
-# Copyright 2012-2020 Greg Smith gregs1104@gmail.com
+# Copyright 2012-2025 Greg Smith gregs1104@gmail.com
 #
 # Runs a command that produces regularly timed output and adds time
 # stamps for each line when appropriate.  Typical commands it might
@@ -171,6 +171,8 @@ if __name__=='__main__':
             capture("iostat -mx 1")
         elif cmd=='meminfo':
             linux_meminfo(1)
+        elif cmd=='power':
+            capture("sudo /usr/local/bin/pgbent_powermon")
         else:
             usage()
 
@@ -181,6 +183,8 @@ if __name__=='__main__':
             capture("iostat -d -C -U -K 1")
         elif cmd=='meminfo':
             sys.stderr.write("meminfo unavailable on OS X, skipping\n")
+        elif cmd=='power':
+            capture("sudo /usr/local/bin/pgbent_powermon")
         else:
             usage()
     # TODO Test this section actually works

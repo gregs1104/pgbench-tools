@@ -354,6 +354,13 @@ if [ "$OSDATA" -eq "1" ]; then
   fi
 fi
 
+# Scripts that run via sudo.  Off by default because you need to install the relevant
+# sudo rules before this will work as expected.
+if [ "$SUDODATA" -eq "1" ]; then
+  sudo ./timed-os-stats power > results/$SERVERNAME/$TEST/power.log &
+  POWERSTAT=$!
+fi
+
 # This one should run even if osdata collectors are not available
 ./timed-os-stats $TESTPSQL -At -f $BASEDIR/util/metric-query.sql > results/$SERVERNAME/$TEST/psql.log &
 PSQLMET=$!
@@ -380,6 +387,10 @@ if [ "$OSDATA" -eq "1" ]; then
     # Find largest dirty memory value (which is in kB)
     max_dirty=`cat meminfo.log | grep Dirty | awk '{print $4}' | sort -n | tail -n 1`
   fi
+fi
+
+if [ "$SUDODATA" -eq "1" ]; then
+  ../../../kill_pg "${POWERSTAT}"
 fi
 
 # max_dirty has to be a valid integer value
@@ -607,6 +618,7 @@ if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   # should be a command line option in csv2gnuplot that informs this program of that path.
   $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
   $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat.png
+  # TODO Add power monitoring
 else
   echo "gnuplot not found, skipping benchwarmer charts generation"
 fi

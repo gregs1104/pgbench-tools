@@ -2,14 +2,14 @@
 # Linux tune disks and CPU for PostgreSQL benchmarking.
 # Suggested install directory is /usr/local/bin
 #
-# Starting from a checkout of pgbench-tools into the postgres user's home directory, you
+# Starting from a checkout of pgbent into the postgres user's home directory, you
 # likely need to run sudo as another user to install this, then add a sudo rule to allow
 # the postgres user to run it.  This idiom works here:
 #
-#    cp util/bench_tune /tmp
+#    cp util/pgbent_tune /tmp
 #    logout
-#    sudo cp /tmp/bench_tune /usr/local/bin/
-#    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/bench_tune\" >> /etc/sudoers.d/postgres"
+#    sudo cp /tmp/pgbent_tune /usr/local/bin/
+#    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/pgbent_tune\" >> /etc/sudoers.d/postgres"
 #
 # Read-ahead is fixed at 4096.  You may want to use higher values for large systems, benefits
 # reduce but continue to at least 16384.  This script might take an input for this value.

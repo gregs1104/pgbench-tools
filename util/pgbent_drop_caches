@@ -6,16 +6,16 @@
 # version of PG and cluster name to restart as part of cache dropping.
 # Sample:
 #
-#   /usr/local/bin/drop_caches 17 main
+#   /usr/local/bin/pgbent_drop_caches 17 main
 #
-# Starting from a checkout of pgbench-tools into the postgres user's home directory, you
+# Starting from a checkout of pgbent into the postgres user's home directory, you
 # likely need to run sudo as another user to install this, then add a sudo rule to allow
 # the postgres user to run it.  This idiom works here:
 #
-#    cp util/drop_caches /tmp
+#    cp util/pgbent_drop_caches /tmp
 #    logout
-#    sudo cp /tmp/drop_caches /usr/local/bin/
-#    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/drop_caches\" >> /etc/sudoers.d/postgres"
+#    sudo cp /tmp/pgbent_drop_caches /usr/local/bin/
+#    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/pgbent_drop_caches\" >> /etc/sudoers.d/postgres"
 #
 
 if [[ $(id -u) -ne 0 ]] ; then echo "Cache dropping must run as root" ; exit 1 ; fi

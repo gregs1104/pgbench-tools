@@ -5,14 +5,14 @@
 #
 # Suggested install directory is /usr/local/bin
 #
-# Starting from a checkout of pgbench-tools into the postgres user's home directory, you
+# Starting from a checkout of pgbent into the postgres user's home directory, you
 # likely need to run sudo as another user to install this, then add a sudo rule to allow
 # the postgres user to run it.  This idiom works here:
 #
-#    cp util/bench_powermon /tmp
+#    cp util/pgbent_powermon /tmp
 #    logout
-#    sudo cp /tmp/bench_powermon /usr/local/bin/
-#    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/bench_powermon\" >> /etc/sudoers.d/postgres"
+#    sudo cp /tmp/pgbent_powermon /usr/local/bin/
+#    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/pgbent_powermon\" >> /etc/sudoers.d/postgres"
 #
 
 OS=`uname`

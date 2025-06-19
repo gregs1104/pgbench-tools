@@ -16,8 +16,8 @@
   this code will not have those libraries available.  A long-term goal is to provide a functionally similar
   program to this one that's based on a proper scientific Python stack instead.
 
-  Copyright 2011-2023, Greg Smith.
-  Part of the pgbench-tools set
+  Copyright 2011-2025, Greg Smith.
+  Part of the pgbent set
 """
 
 import csv
@@ -58,7 +58,7 @@ def parse_options():
                          help="Header signal")
 
     optparser.add_option('-d', '--data', dest="data_type", default=None,
-                         help="Type of data file.  options are 'table', 'iostat' and 'vmstat'")
+                         help="Type of data file.  options are 'table', 'iostat', 'vmstat', and 'power'")
 
     optparser.add_option('--disks', dest="disk_list", default='',
                          help="Comma separated list of disks to include in iostat format")
@@ -360,8 +360,11 @@ def statdata2gnuplot(in_file, output_file, graph_title, filt_text, header_signal
             if row.find(header_signal) >= 0:
                 signals=signals + 1
                 if header_labels is None:
-                    logger.debug("Previous line to header:  %s" % prev_line)
-                    prev_columns=prev_line.split()
+                    if prev_line is None:
+                        prev_columns=None
+                    else:
+                        logger.debug("Previous line to header:  %s" % prev_line)
+                        prev_columns=prev_line.split()
                     logger.debug("Previous line columns:  %s" % prev_columns)
                     header_labels = columns[2:]
                     logger.debug("Header labels:  %s" % header_labels)
@@ -536,6 +539,12 @@ def main():
                                filt_text=None, 
                                header_signal=options.header_signal,
                                setlabel="vmstat")
+    elif options.data_type == "power":
+        # TODO add OS check and Mac compatible version
+        return statdata2gnuplot(in_file=file_to_process, output_file=out_file, graph_title=options.title,
+                               filt_text=None,
+                               header_signal=options.header_signal,
+                               setlabel="power")
     else:
         print("Error:  unknown data file type %s" % options.data_type)
 

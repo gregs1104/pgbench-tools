@@ -618,7 +618,6 @@ if [ ! -z $GNUPLOT ] && [ -x $GNUPLOT ]; then
   # should be a command line option in csv2gnuplot that informs this program of that path.
   $BASEDIR/csv2gnuplot -i iostat.log -d iostat -t "pgbench iostat" --disks="$DISKLIST" -o iostat.png
   $BASEDIR/csv2gnuplot -i vmstat.log -d vmstat -t "pgbench vmstat" -o vmstat.png
-  # TODO Add power monitoring
 else
   echo "gnuplot not found, skipping benchwarmer charts generation"
 fi

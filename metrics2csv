@@ -43,6 +43,7 @@ else
     echo Processing Darwin formatted log files server $H test $TESTNUM
     ../../../csv2gnuplot -i iostat.log -d iostat -s "KB/t" -t "pgbench disk" -o iostat
     ../../../csv2gnuplot -i vmstat.log -d vmstat -s "wired" -t "pgbench vmstat" -o vmstat
+    ../../../util/power-darwin-parse
 fi
 
 $RESULTPSQL -f ../../../export-latency-metric.sql
@@ -52,7 +53,9 @@ $RESULTPSQL -c "\copy tmp_metric_import FROM 'psql.log' WITH DELIMITER '|'"
 $RESULTPSQL -c "\copy tmp_metric_import FROM 'latency_metric.csv' WITH CSV HEADER"
 $RESULTPSQL -c "\copy tmp_metric_import FROM 'vmstat.csv' WITH CSV HEADER"
 $RESULTPSQL -c "\copy tmp_metric_import FROM 'iostat.csv' WITH CSV HEADER"
-$RESULTPSQL -c "\copy tmp_metric_import FROM 'power.csv' WITH CSV HEADER"
+if [ -f "power.csv" ] ; then
+  $RESULTPSQL -c "\copy tmp_metric_import FROM 'power.csv' WITH CSV HEADER"
+fi
 if [ -f "meminfo.csv" ] ; then
   $RESULTPSQL -c "\copy tmp_metric_import FROM 'meminfo.csv' WITH CSV HEADER"
 fi

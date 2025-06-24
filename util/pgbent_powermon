@@ -5,6 +5,7 @@
 #
 # Suggested install directory is /usr/local/bin
 #
+# Linux:
 # Starting from a checkout of pgbent into the postgres user's home directory, you
 # likely need to run sudo as another user to install this, then add a sudo rule to allow
 # the postgres user to run it.  This idiom works here:
@@ -14,7 +15,10 @@
 #    sudo cp /tmp/pgbent_powermon /usr/local/bin/
 #    sudo sh -c "echo \"postgres ALL = (ALL) NOPASSWD: /usr/local/bin/pgbent_powermon\" >> /etc/sudoers.d/postgres"
 #
-
+# Mac:
+# Use 'sudo visudo' and add a line like this for the user you are running as:
+#    postgres ALL = (ALL) NOPASSWD: ALL
+#
 OS=`uname`
 
 if [ "$OS" = "Linux" ] ; then

@@ -16,8 +16,6 @@ cpu_idle_residency_pattern = re.compile(r'CPU (\d+) idle residency:\s+([\d.]+)%'
 power_pattern = re.compile(r'(\w+) Power: (\d+) mW')
 combined_power_pattern = re.compile(r'Combined Power \(CPU \+ GPU \+ ANE\): (\d+) mW')
 
-detailed=False
-
 def parse_log_with_timestamps(logfile, csvfile):
     current_timestamp = None
     rows = []
@@ -42,9 +40,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'Cluster',
-                    'Name': m.group(1),
-                    'Metric': 'Online',
+                    'Metric': m.group(1)+' Online',
                     'Value': m.group(2)
                 })
                 continue
@@ -53,9 +49,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'Cluster',
-                    'Name': m.group(1),
-                    'Metric': 'HW active frequency (MHz)',
+                    'Metric': m.group(1)+' HW active frequency (MHz)',
                     'Value': m.group(2)
                 })
                 continue
@@ -64,9 +58,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'Cluster',
-                    'Name': m.group(1),
-                    'Metric': 'HW active residency (%)',
+                    'Metric': m.group(1)+' HW active residency (%)',
                     'Value': m.group(2)
                 })
                 continue
@@ -75,9 +67,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'Cluster',
-                    'Name': m.group(1),
-                    'Metric': 'Idle residency (%)',
+                    'Metric': m.group(1)+'Idle residency (%)',
                     'Value': m.group(2)
                 })
                 continue
@@ -87,9 +77,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'CPU',
-                    'Name': m.group(1),
-                    'Metric': 'Frequency (MHz)',
+                    'Metric': 'CPU-'+m.group(1)+' Frequency (MHz)',
                     'Value': m.group(2)
                 })
                 continue
@@ -98,9 +86,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'CPU',
-                    'Name': m.group(1),
-                    'Metric': 'Active residency (%)',
+                    'Metric': 'CPU-'+m.group(1)+' Active residency (%)',
                     'Value': m.group(2)
                 })
                 continue
@@ -109,9 +95,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'CPU',
-                    'Name': m.group(1),
-                    'Metric': 'Idle residency (%)',
+                    'Metric': 'CPU-'+m.group(1)+' Idle residency (%)',
                     'Value': m.group(2)
                 })
                 continue
@@ -121,9 +105,7 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'Power',
-                    'Name': m.group(1),
-                    'Metric': 'Power (mW)',
+                    'Metric': m.group(1)+'_Power_mW',
                     'Value': m.group(2)
                 })
                 continue
@@ -132,16 +114,14 @@ def parse_log_with_timestamps(logfile, csvfile):
             if m:
                 rows.append({
                     'Timestamp': current_timestamp,
-                    'Type': 'Power',
-                    'Name': 'Combined',
-                    'Metric': 'Power (mW)',
+                    'Metric': 'Combined_Power_mW',
                     'Value': m.group(1)
                 })
                 continue
 
     # Write to CSV
     with open(csvfile, 'w', newline='') as csvfile:
-        fieldnames = ['Timestamp', 'Type', 'Name', 'Metric', 'Value']
+        fieldnames = ['Timestamp', 'Metric', 'Value']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:

@@ -1,0 +1,151 @@
+#!/usr/bin/env python3
+import re
+import csv
+
+# Regex patterns to extract timestamps and data lines
+timestamp_pattern = re.compile(r'^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+)')
+cluster_online_pattern = re.compile(r'(\w+-Cluster) Online: (\d+)%')
+cluster_freq_pattern = re.compile(r'(\w+-Cluster) HW active frequency: (\d+) MHz')
+cluster_active_residency_pattern = re.compile(r'(\w+-Cluster) HW active residency:\s+([\d.]+)%')
+cluster_idle_residency_pattern = re.compile(r'(\w+-Cluster) idle residency:\s+([\d.]+)%')
+
+cpu_freq_pattern = re.compile(r'CPU (\d+) frequency: (\d+) MHz')
+cpu_active_residency_pattern = re.compile(r'CPU (\d+) active residency:\s+([\d.]+)%')
+cpu_idle_residency_pattern = re.compile(r'CPU (\d+) idle residency:\s+([\d.]+)%')
+
+power_pattern = re.compile(r'(\w+) Power: (\d+) mW')
+combined_power_pattern = re.compile(r'Combined Power \(CPU \+ GPU \+ ANE\): (\d+) mW')
+
+detailed=False
+
+def parse_log_with_timestamps(logfile, csvfile):
+    current_timestamp = None
+    rows = []
+
+    with open(logfile, 'r') as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+
+            # Extract timestamp if present
+            ts_match = timestamp_pattern.match(line)
+            if ts_match:
+                current_timestamp = ts_match.group(1)
+                # Remove timestamp from line for further processing
+                line = line[len(current_timestamp):].strip()
+                if not line:
+                    continue  # Only timestamp on this line, no data
+
+            # Parse cluster data
+            m = cluster_online_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'Cluster',
+                    'Name': m.group(1),
+                    'Metric': 'Online',
+                    'Value': m.group(2)
+                })
+                continue
+
+            m = cluster_freq_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'Cluster',
+                    'Name': m.group(1),
+                    'Metric': 'HW active frequency (MHz)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            m = cluster_active_residency_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'Cluster',
+                    'Name': m.group(1),
+                    'Metric': 'HW active residency (%)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            m = cluster_idle_residency_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'Cluster',
+                    'Name': m.group(1),
+                    'Metric': 'Idle residency (%)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            # Parse CPU data
+            m = cpu_freq_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'CPU',
+                    'Name': m.group(1),
+                    'Metric': 'Frequency (MHz)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            m = cpu_active_residency_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'CPU',
+                    'Name': m.group(1),
+                    'Metric': 'Active residency (%)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            m = cpu_idle_residency_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'CPU',
+                    'Name': m.group(1),
+                    'Metric': 'Idle residency (%)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            # Parse power data
+            m = power_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'Power',
+                    'Name': m.group(1),
+                    'Metric': 'Power (mW)',
+                    'Value': m.group(2)
+                })
+                continue
+
+            m = combined_power_pattern.search(line)
+            if m:
+                rows.append({
+                    'Timestamp': current_timestamp,
+                    'Type': 'Power',
+                    'Name': 'Combined',
+                    'Metric': 'Power (mW)',
+                    'Value': m.group(1)
+                })
+                continue
+
+    # Write to CSV
+    with open(csvfile, 'w', newline='') as csvfile:
+        fieldnames = ['Timestamp', 'Type', 'Name', 'Metric', 'Value']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+if __name__ == "__main__":
+    parse_log_with_timestamps('power.log', 'power.csv')

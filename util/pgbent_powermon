@@ -21,7 +21,8 @@ if [ "$OS" = "Linux" ] ; then
 	# Manual runs of this command may want to add "--enable Time_Of_Day_Seconds".
 	sudo turbostat -S --quiet  --interval 1 --hide "IRQ,POLL,POLL%,IPC,C1,C2,C1%,C2%,SMI,C1ACPI,C2ACPI,C3ACPI,C1ACPI%,C2ACPI%,C3ACPI%,CPU%c1,CPU%c6,CPU%c7,CoreThr,Totl%C0,Any%C0,GFX%C0,CPUGFX%,Pkg%pc2,Pkg%pc3,Pkg%pc6,Pkg%pc8,Pk%pc10,CPU%LPI,SYS%LPI,PKG_%,RAM_%,TSC_MHz"
 elif [ "$OS" = "Darwin" ] ; then
-	sudo /usr/bin/powermetrics -i 1000 --samplers cpu_power -a1 --hide-cpu-duty-cycle | egrep -v "residency|online"
+	# Manual runs might want to reduce the output with "| egrep -v "residency|online"
+	sudo /usr/bin/powermetrics -i 1000 --samplers cpu_power -a1 --hide-cpu-duty-cycle
 else
 	echo Unsupported OS:  $OS
 	exit 1

@@ -131,8 +131,8 @@ def linux_meminfo(interval=1):
         time.sleep(interval)
 
 def usage():
-    sys.stderr.write("Usage:  %s [vmstat | iostat | meminfo | psql]\n" % sys.argv[0])
-    sys.stderr.write("Supported platforms are linux and darwin\n")
+    sys.stderr.write("Usage:  %s [vmstat | iostat | meminfo | power | psql]\n" % sys.argv[0])
+    sys.stderr.write("Supported platforms are Linux and Darwin\n")
     sys.stderr.write("meminfo is only available on linux\n")
     sys.exit(1)
 

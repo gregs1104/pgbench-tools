@@ -121,7 +121,7 @@ def parse_log_with_timestamps(logfile, csvfile):
 
     # Write to CSV
     with open(csvfile, 'w', newline='') as csvfile:
-        fieldnames = ['Timestamp', 'Metric', 'Value']
+        fieldnames = ['Timestamp', 'Value', 'Metric', ]
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for row in rows:

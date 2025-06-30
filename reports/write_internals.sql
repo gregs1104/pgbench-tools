@@ -6,6 +6,7 @@ CREATE OR REPLACE VIEW write_internals AS
   tests.server_cpu AS cpu,
   tests.server_mem_gb AS mem_gb,
   tests.server_os_release AS os_rel,
+  tests.server_disk AS disk,
   tests.conn_method AS conn,
   script,
   set,

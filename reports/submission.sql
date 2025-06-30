@@ -20,7 +20,7 @@ LIMIT 0;
 
 INSERT INTO submission (
     submitter, affiliation,
-    ref_info, run, cpu, mem_gb, os_rel, conn,
+    ref_info, run, cpu, mem_gb, disk, os_rel, conn,
     script, set, server_ver, clients, scale, nodes, db_gb,
     tps, avg_latency, percentile_90_latency, max_latency, rate_limit, hours, nodes_kips,
     shared_gb, maint_gb, max_wal_gb, fsync, wal_level, timeout,

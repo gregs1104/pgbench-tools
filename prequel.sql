@@ -347,3 +347,5 @@ WHERE
 
 TRUNCATE table metrics_info;
 \copy metrics_info from 'init/metrics_map.csv' WITH (FORMAT CSV, header);
+
+ALTER TABLE tests ADD COLUMN server_disk text;

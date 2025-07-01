@@ -424,7 +424,7 @@ fi
 
 # Save database size at the end to support init case
 DBSIZE=`$TESTPSQL -A -t -c "select pg_database_size(current_database())"`
-$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB},server_cpu='${SERVERCPU}',server_os_release='${OSREL}',server_disk='${SERVERDISK}'uname='${UNAME}' WHERE server='${SERVERNAME}' AND test='${TEST}'"
+$RESULTPSQL -c "update tests set dbsize=${DBSIZE},server_mem_gb=${MEMGB},server_cpu='${SERVERCPU}',server_os_release='${OSREL}',server_disk='${SERVERDISK}',uname='${UNAME}' WHERE server='${SERVERNAME}' AND test='${TEST}'"
 
 # Stats and buffer cache data are spoiled very fast by post processing, grab them as early as feasible
 

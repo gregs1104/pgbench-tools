@@ -10,18 +10,24 @@ INSERT INTO submission_author(submitter,email,affiliation) VALUES
   ('Greg Smith','greg.smith@crunchydata.com','Crunchy Data');
 
 DROP TABLE IF EXISTS submission;
--- TODO Finished table needs a serial number for each submission
 CREATE TABLE submission AS
 SELECT
+  0 AS submit_id,
   submitter,affiliation,
   write_internals.*
 FROM write_internals,submission_author
 LIMIT 0;
 
+CREATE SEQUENCE submission_seq;
+ALTER TABLE submission ALTER COLUMN submit_id SET DEFAULT nextval('submission_seq');
+ALTER TABLE submission ALTER COLUMN submit_id SET NOT NULL;
+ALTER SEQUENCE submission_seq OWNED BY submission.submit_id;
+SELECT setval('submission_seq', 1);
+
 INSERT INTO submission (
     submitter, affiliation,
-    ref_info, run, cpu, mem_gb, disk, os_rel, conn,
-    script, set, server_ver, clients, scale, nodes, db_gb,
+    ref_info, run, cpu, mem_gb, disk, server_ver, os_rel, conn,
+    script, set, scale, clients, db_gb, nodes,
     tps, avg_latency, percentile_90_latency, max_latency, rate_limit, hours, nodes_kips,
     shared_gb, maint_gb, max_wal_gb, fsync, wal_level, timeout,
     timed_pct, chkp_mins, chkp_mbph, clean_mbph, backend_mbph, cleaned_pct, max_dirty,

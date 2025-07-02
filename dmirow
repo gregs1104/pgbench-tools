@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # Collect Linux server info you can only grab as root, mostly DMI.
 # This is not pretty or robust, it's bootstrapping until I can do better.
@@ -47,7 +47,11 @@ elif [ "$OS" = "Darwin" ] ; then
 	# Memory part number is often "-", save it regardless.
 	MEMPART=`system_profiler SPMemoryDataType | grep "Part Number:" | head -n 1 | cut -d":" -f 2`
 	DISKMODEL=`system_profiler SPStorageDataType | grep "Device Name:" | head -n 1 | cut -d":" -f 2`
-    DISKGB=`df -g | grep ${DISKLIST} | head -n 1 | awk '{print $2}'`
+
+    # The DISKLIST feature isn't solid right now.  Record the system disk size instead.
+	#DISKGB=`df -g | grep ${DISKLIST} | head -n 1 | awk '{print $2}'`
+	DISKGB=`system_profiler SPStorageDataType | grep "Capacity:" | head -n 1 | awk '{print $2}'`
+
 	# There doesn't seem to be a way to get at disk firmware on Darwin.
 	# Use the volume type, like "AppleAPFSMedia", instead.
 	DISKFW=`system_profiler SPStorageDataType | grep "Media Name:" | head -n 1 | cut -d":" -f 2`
@@ -71,7 +75,7 @@ VALUES
 	TRIM('${CPU}'),
 	TRIM('${MEMPART}') || ' - ' || TRIM('${MEMVENDOR}') || ' - ' || TRIM('${MEMTYPE}') || '-' || TRIM('${MEMSPEED}'),
 	TRIM('${DISKMODEL}') || ' - ' || TRIM('${DISKFW}'),
-	${PROCS},${MEMGB},${DISKGB},'${DISTRIB} ${OS_REL}'
+	${PROCS},${MEMGB},${DISKGB},'${DISTRIB},TRIM('${OS_REL}')'
 );
 "
 

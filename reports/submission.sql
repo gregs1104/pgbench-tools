@@ -22,7 +22,7 @@ CREATE SEQUENCE submission_seq;
 ALTER TABLE submission ALTER COLUMN submit_id SET DEFAULT nextval('submission_seq');
 ALTER TABLE submission ALTER COLUMN submit_id SET NOT NULL;
 ALTER SEQUENCE submission_seq OWNED BY submission.submit_id;
-SELECT setval('submission_seq', 1);
+SELECT setval('submission_seq', 0);
 
 INSERT INTO submission (
     submitter, affiliation,

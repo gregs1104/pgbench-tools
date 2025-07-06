@@ -22,7 +22,6 @@ CREATE SEQUENCE submission_seq;
 ALTER TABLE submission ALTER COLUMN submit_id SET DEFAULT nextval('submission_seq');
 ALTER TABLE submission ALTER COLUMN submit_id SET NOT NULL;
 ALTER SEQUENCE submission_seq OWNED BY submission.submit_id;
-SELECT setval('submission_seq', 0);
 
 INSERT INTO submission (
     submitter, affiliation,
@@ -32,8 +31,8 @@ INSERT INTO submission (
     shared_gb, maint_gb, max_wal_gb, fsync, wal_level, timeout,
     timed_pct, chkp_mins, chkp_mbph, clean_mbph, backend_mbph, cleaned_pct, max_dirty,
     hit_pct, hit_mbps, read_mbps, wal_mbps,
-    avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps
-)
+    avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps,
+    avg_package_watts, max_package_watts)
 SELECT
   submitter,affiliation,
   write_internals.*

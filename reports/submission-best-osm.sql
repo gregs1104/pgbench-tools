@@ -2,7 +2,7 @@ WITH
 best AS
   (SELECT
     cpu,disk,server_ver,conn,script,clients,tps,hours,nodes,nodes_kips,fsync,wal_level,max_wal_gb,db_gb,
-      wal_mbps, avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps,
+      wal_mbps, avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps,avg_package_watts, max_package_watts,
     ROW_NUMBER()
     OVER(
         PARTITION BY server_ver,script,conn,nodes,fsync,wal_level,max_wal_gb
@@ -12,6 +12,6 @@ best AS
   )
 SELECT
     cpu,disk,substring(server_ver,1,16) AS server_version,conn,script,clients,tps,hours,nodes,nodes_kips,fsync,wal_level,max_wal_gb,
-      wal_mbps, avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps    
+      wal_mbps, avg_write_mbps, max_write_mbps, avg_read_mbps, max_read_mbps, avg_package_watts, max_package_watts
 FROM best WHERE r=1
 ORDER BY nodes DESC,nodes_kips DESC,script,db_gb;

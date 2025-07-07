@@ -25,3 +25,7 @@ $TESTPSQL -c "create extension pg_stat_statements"
 $TESTPSQL -c "create extension pg_buffercache"
 $TESTPSQL -c "create extension postgis"
 $TESTPSQL -c "create extension hstore"
+
+if [ -x /usr/local/bin/pgbent_tune ] ; then
+  sudo /usr/local/bin/pgbent_tune
+fi

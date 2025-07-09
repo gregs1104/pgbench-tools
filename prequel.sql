@@ -302,6 +302,12 @@ CREATE VIEW test_metric_summary AS
     hit_bps,read_bps,check_bps,clean_bps,backend_bps,wal_written_bps,dbsize_mb,
     server_num_proc,server_mem_gb,server_disk_gb;
 
+ALTER TABLE server ADD COLUMN server_os_release text;
+ALTER TABLE tests ADD COLUMN server_os_release text;
+ALTER TABLE tests ADD COLUMN conn_method text;
+ALTER TABLE tests ADD COLUMN uname text;
+ALTER TABLE tests ADD COLUMN server_disk text;
+
 DROP TABLE IF EXISTS metrics_info;
 CREATE TABLE metrics_info (
   uname text,
@@ -316,10 +322,8 @@ CREATE TABLE metrics_info (
   scale text
 );
 
-ALTER TABLE server ADD COLUMN server_os_release text;
-ALTER TABLE tests ADD COLUMN server_os_release text;
-ALTER TABLE tests ADD COLUMN conn_method text;
-ALTER TABLE tests ADD COLUMN uname text;
+TRUNCATE table metrics_info;
+\copy metrics_info from 'init/metrics_map.csv' WITH (FORMAT CSV, header);
 
 DROP VIEW test_metrics_decode;
 CREATE OR REPLACE VIEW test_metrics_decode AS
@@ -342,11 +346,7 @@ FROM
     (d.metric=mi.metric OR (mi.prefix='disk' AND d.metric LIKE ('%' || mi.metric)))
 WHERE
   t.server=d.server AND t.test=d.test AND
-  (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database')
+  (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database') AND
+  mi.scale='bytes'
 --ORDER BY t.server,t.test,d.metric,d.collected
 ;
-
-TRUNCATE table metrics_info;
-\copy metrics_info from 'init/metrics_map.csv' WITH (FORMAT CSV, header);
-
-ALTER TABLE tests ADD COLUMN server_disk text;

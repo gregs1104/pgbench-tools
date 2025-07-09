@@ -352,7 +352,8 @@ FROM
     (d.metric=mi.metric OR (mi.prefix='disk' AND d.metric LIKE ('%' || mi.metric)))
 WHERE
   t.server=d.server AND t.test=d.test AND
-  (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database')
+  (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database') AND
+  mi.scale='bytes'
 --ORDER BY t.server,t.test,d.metric,d.collected
 ;
 

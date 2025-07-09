@@ -308,7 +308,7 @@ ALTER TABLE tests ADD COLUMN conn_method text;
 ALTER TABLE tests ADD COLUMN uname text;
 ALTER TABLE tests ADD COLUMN server_disk text;
 
-DROP TABLE IF EXISTS metrics_info;
+DROP TABLE IF EXISTS metrics_info CASCADE;
 CREATE TABLE metrics_info (
   uname text,
   metric text,

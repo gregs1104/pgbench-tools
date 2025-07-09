@@ -327,7 +327,8 @@ CREATE TABLE metrics_info (
   units text,
   style text,
   visibility int,
-  prefix text
+  prefix text,
+  scale text
 );
 
 DROP VIEW test_metrics_decode;

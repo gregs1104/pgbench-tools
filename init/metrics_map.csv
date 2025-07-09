@@ -1,140 +1,140 @@
-uname,metric,category,multi,metric_label,units,style,priority,prefix
-Linux,Active,Linux Mem,1024,Active,bytes,gauge,9,
-Linux,Active(anon),Linux Mem,1024,Active(anon),bytes,gauge,3,
-Linux,Active(file),Linux Mem,1024,Active(file),bytes,gauge,3,
-Linux,AnonHugePages,Linux Mem,1024,AnonHugePages,bytes,gauge,1,
-Linux,AnonPages,Linux Mem,1024,AnonPages,bytes,gauge,1,
-Linux,Bounce,Linux Mem,1024,Bounce,bytes,gauge,1,
-Linux,Buffers,Linux Mem,1024,Buffers,bytes,gauge,1,
-Linux,Cached,Linux Mem,1024,Cached,bytes,gauge,9,
-Linux,CommitLimit,Linux Mem,1024,CommitLimit,bytes,gauge,1,
-Linux,Committed_AS,Linux Mem,1024,Committed_AS,bytes,gauge,1,
-Linux,DirectMap1G,Linux Mem,1024,DirectMap1G,bytes,gauge,1,
-Linux,DirectMap2M,Linux Mem,1024,DirectMap2M,bytes,gauge,1,
-Linux,DirectMap4k,Linux Mem,1024,DirectMap4k,bytes,gauge,1,
-Linux,Dirty,Linux Mem,1024,Dirty,bytes,gauge,9,
-Linux,FileHugePages,Linux Mem,1024,FileHugePages,bytes,gauge,1,
-Linux,FilePmdMapped,Linux Mem,1024,FilePmdMapped,bytes,gauge,1,
-Linux,HardwareCorrupted,Linux Mem,1024,HardwareCorrupted,bytes,gauge,1,
-Linux,HugePages_Free,Linux Mem,1024,HugePages_Free,bytes,gauge,1,
-Linux,Hugepagesize,Linux Mem,1024,Hugepagesize,bytes,gauge,1,
-Linux,HugePages_Rsvd,Linux Mem,1024,HugePages_Rsvd,bytes,gauge,1,
-Linux,HugePages_Surp,Linux Mem,1024,HugePages_Surp,bytes,gauge,1,
-Linux,HugePages_Total,Linux Mem,1024,HugePages_Total,bytes,gauge,1,
-Linux,Hugetlb,Linux Mem,1024,Hugetlb,bytes,gauge,1,
-Linux,Inactive,Linux Mem,1024,Inactive,bytes,gauge,1,
-Linux,Inactive(anon),Linux Mem,1024,Inactive(anon),bytes,gauge,1,
-Linux,Inactive(file),Linux Mem,1024,Inactive(file),bytes,gauge,1,
-Linux,KernelStack,Linux Mem,1024,KernelStack,bytes,gauge,1,
-Linux,KReclaimable,Linux Mem,1024,KReclaimable,bytes,gauge,1,
-Linux,Mapped,Linux Mem,1024,Mapped,bytes,gauge,1,
-Linux,MemAvailable,Linux Mem,1024,MemAvailable,bytes,gauge,9,
-Linux,MemFree,Linux Mem,1024,MemFree,bytes,gauge,9,
-Linux,MemTotal,Linux Mem,1024,MemTotal,bytes,gauge,9,
-Linux,Mlocked,Linux Mem,1024,Mlocked,bytes,gauge,1,
-Linux,NFS_Unstable,Linux Mem,1024,NFS_Unstable,bytes,gauge,1,
-Linux,PageTables,Linux Mem,1024,PageTables,bytes,gauge,1,
-Linux,Percpu,Linux Mem,1024,Percpu,bytes,gauge,1,
-Linux,SecPageTables,Linux Mem,1024,SecPageTables,bytes,gauge,1,
-Linux,Shmem,Linux Mem,1024,Shmem,bytes,gauge,1,
-Linux,ShmemHugePages,Linux Mem,1024,ShmemHugePages,bytes,gauge,1,
-Linux,ShmemPmdMapped,Linux Mem,1024,ShmemPmdMapped,bytes,gauge,1,
-Linux,Slab,Linux Mem,1024,Slab,bytes,gauge,1,
-Linux,SReclaimable,Linux Mem,1024,SReclaimable,bytes,gauge,1,
-Linux,SUnreclaim,Linux Mem,1024,SUnreclaim,bytes,gauge,1,
-Linux,SwapCached,Linux Mem,1024,SwapCached,bytes,gauge,1,
-Linux,SwapFree,Linux Mem,1024,SwapFree,bytes,gauge,5,
-Linux,SwapTotal,Linux Mem,1024,SwapTotal,bytes,gauge,5,
-Linux,Unaccepted,Linux Mem,1024,Unaccepted,bytes,gauge,1,
-Linux,Unevictable,Linux Mem,1024,Unevictable,bytes,gauge,1,
-Linux,VmallocChunk,Linux Mem,1024,VmallocChunk,bytes,gauge,1,
-Linux,VmallocTotal,Linux Mem,1024,VmallocTotal,bytes,gauge,1,
-Linux,VmallocUsed,Linux Mem,1024,VmallocUsed,bytes,gauge,1,
-Linux,Writeback,Linux Mem,1024,Writeback,bytes,gauge,3,
-Linux,WritebackTmp,Linux Mem,1024,WritebackTmp,bytes,gauge,1,
-Linux,Zswap,Linux Mem,1024,Zswap,bytes,gauge,1,
-Linux,Zswapped,Linux Mem,1024,Zswapped,bytes,gauge,1,
-Linux,b,Linux VM,1,blocked,integer,gauge,7,
-Linux,bi,Linux VM,1024,in_bps,bytes,gauge,9,
-Linux,bo,Linux VM,1024,out_bps,bytes,gauge,9,
-Linux,buff,Linux VM,1000,buffers,bytes,gauge,5,
-Linux,cache,Linux VM,1000,cache,bytes,gauge,3,
-Linux,cs,Linux VM,1,switches,integer,gauge,3,
-Linux,free,Linux VM,1000,free,bytes,gauge,3,
-Linux,gu,Linux VM,1,guest,percent,gauge,7,
-Linux,in,Linux VM,1,interrupts,integer,gauge,1,
-Linux,r,Linux VM,1,runnable,integer,gauge,7,
-Linux,si,Linux VM,1000,swap_in,bytes,gauge,5,
-Linux,so,Linux VM,1000,swap_out,bytes,gauge,5,
-Linux,st,Linux VM,1,stolen,percent,gauge,5,
-Linux,swpd,Linux VM,1000,swapped,bytes,gauge,9,
-Linux,wa,Linux VM,1,wait_io,percent,gauge,9,
-CPU,sy,VM,1,sustem,percent,gauge,9,
-CPU,us,VM,1,user,percent,gauge,9,
-CPU,id,VM,1,idle,percent,gauge,9,
-Linux,_aqu-sz,Linux Disk,1,aqu-sz,integer,gauge,7,disk
-Linux,_dareq-sz,Linux Disk,1,dareq-sz,integer,gauge,1,disk
-Linux,_d_await,Linux Disk,1,d_await,ms,gauge,1,disk
-Linux,_dMB/s,Linux Disk,1048576,d_bps,bytes,gauge,1,disk
-Linux,_%drqm,Linux Disk,1,%drqm,percent,gauge,1,disk
-Linux,_drqm/s,Linux Disk,1,drqm/s,integer,gauge,1,disk
-Linux,_d/s,Linux Disk,1,d/s,integer,gauge,1,disk
-Linux,_f_await,Linux Disk,1,f_await,ms,gauge,3,disk
-Linux,_f/s,Linux Disk,1,f/s,integer,gauge,3,disk
-Linux,_rareq-sz,Linux Disk,1,r_req_sz,integer,gauge,5,disk
-Linux,_r_await,Linux Disk,1,r_await,ms,gauge,7,disk
-Linux,_rMB/s,Linux Disk,1048576,r_bps,bytes,gauge,9,disk
-Linux,_%rrqm,Linux Disk,1,%rrqm,percent,gauge,5,disk
-Linux,_rrqm/s,Linux Disk,1,rrqm/s,integer,gauge,5,disk
-Linux,_r/s,Linux Disk,1,r/s,integer,gauge,9,disk
-Linux,_%util,Linux Disk,1,util_pct,percent,gauge,9,disk
-Linux,_wareq-sz,Linux Disk,1,w_req_sz,integer,gauge,5,disk
-Linux,_w_await,Linux Disk,1,w_await,ms,gauge,7,disk
-Linux,_wMB/s,Linux Disk,1048576,w_bps,bytes,gauge,9,disk
-Linux,_%wrqm,Linux Disk,1,%wrqm,percent,gauge,5,disk
-Linux,_wrqm/s,Linux Disk,1,wrqm/s,integer,gauge,5,disk
-Linux,_w/s,Linux Disk,1,w/s,integer,gauge,9,disk
-Darwin,_KB/t,Mac Disk,1,KB/t,integer,gauge,7,disk
-Darwin,_MB/s,Mac Disk,1048576,tot_bps,bytes,gauge,9,disk
-Darwin,_tps,Mac Disk,1,total_ps,integer,gauge,9,disk
-Darwin,1m,Mac Disk,1,load_1m,integer,gauge,9,
-Darwin,5m,Mac Disk,1,load_5m,integer,gauge,7,
-Darwin,15m,Mac Disk,1,load_15m,integer,gauge,7,
-Darwin,0fill,Mac Mem,4096,0fill,bytes,gauge,1,
-Darwin,active,Mac Mem,4096,active,bytes,gauge,9,
-Darwin,anonymous,Mac Mem,4096,anonymous,bytes,gauge,1,
-Darwin,cmprssed,Mac Mem,4096,cmprssed,bytes,gauge,1,
-Darwin,cmprssor,Mac Mem,4096,cmprssor,bytes,gauge,1,
-Darwin,comprs,Mac Mem,1,comprs,integer,gauge,1,
-Darwin,copy,Mac Mem,4096,copy,bytes,gauge,1,
-Darwin,dcomprs,Mac Mem,1,dcomprs,integer,gauge,1,
-Darwin,faults,Mac Mem,1,faults,integer,gauge,1,
-Darwin,file-backed,Mac Mem,4096,file-backed,bytes,gauge,1,
-Darwin,free,Mac Mem,4096,free,bytes,gauge,9,
-Darwin,inactive,Mac Mem,4096,inactive,bytes,gauge,1,
-Darwin,pageins,Mac Mem,4096,pageins,bytes,gauge,1,
-Darwin,pageout,Mac Mem,4096,pageout,bytes,gauge,1,
-Darwin,prgable,Mac Mem,4096,prgable,bytes,gauge,1,
-Darwin,purged,Mac Mem,4096,purged,bytes,gauge,1,
-Darwin,reactive,Mac Mem,4096,reactive,bytes,gauge,1,
-Darwin,specul,Mac Mem,4096,specul,bytes,gauge,1,
-Darwin,swapins,Mac Mem,4096,swapins,bytes,gauge,5,
-Darwin,swapouts,Mac Mem,4096,swapouts,bytes,gauge,5,
-Darwin,throttle,Mac Mem,4096,throttle,bytes,gauge,5,
-Darwin,wired,Mac Mem,4096,wired,bytes,gauge,1,
-Database,pg_clients_active,Database,1,clients_active,integer,gauge,7,
-Database,pg_clients_idle,Database,1,clients_idle,integer,gauge,7,
-Database,pg_db_size,Database,1,db_size,bytes,gauge,9,
-Database,pg_max_query_runtime_sec,Database,1,max_runtime,seconds,gauge,7,
-Database,min_latency,Database,1,pg_min_latency,ms,gauge,9,
-Database,avg_latency,Database,1,pg_avg_latency,ms,gauge,9,
-Database,max_latency,Database,1,pg_max_latency,ms,gauge,9,
-Linux,Avg_MHz,Power,1,avg_mhz,mhz,integer,5,
-Linux,Bzy_MHz,Power,1,busy_mhz,mhz,integer,5,
-Linux,Busy%,Power,1,busy_pct,percent,gauge,5,
-Linux,C3,Power,1,C3,integer,gauge,1,
-Linux,C3%,Power,1,c3_pct,percent,gauge,5,
-Linux,CorWatt,Power,1,core,watts,gauge,5,
-Linux,PkgWatt,Power,1,package,watts,gauge,5,
-Darwin,CPU_Power_mW,Power,0.001,core,watts,gauge,5,
-Darwin,Combined_Power_mW,Power,0.001,package,watts,gauge,5,
+uname,metric,category,multi,metric_label,units,style,priority,prefix,scale
+Linux,Active,Linux Mem,1024,Active,bytes,gauge,9,,bytes
+Linux,Active(anon),Linux Mem,1024,Active(anon),bytes,gauge,3,,bytes
+Linux,Active(file),Linux Mem,1024,Active(file),bytes,gauge,3,,bytes
+Linux,AnonHugePages,Linux Mem,1024,AnonHugePages,bytes,gauge,1,,bytes
+Linux,AnonPages,Linux Mem,1024,AnonPages,bytes,gauge,1,,bytes
+Linux,Bounce,Linux Mem,1024,Bounce,bytes,gauge,1,,bytes
+Linux,Buffers,Linux Mem,1024,Buffers,bytes,gauge,1,,bytes
+Linux,Cached,Linux Mem,1024,Cached,bytes,gauge,9,,bytes
+Linux,CommitLimit,Linux Mem,1024,CommitLimit,bytes,gauge,1,,bytes
+Linux,Committed_AS,Linux Mem,1024,Committed_AS,bytes,gauge,1,,bytes
+Linux,DirectMap1G,Linux Mem,1024,DirectMap1G,bytes,gauge,1,,bytes
+Linux,DirectMap2M,Linux Mem,1024,DirectMap2M,bytes,gauge,1,,bytes
+Linux,DirectMap4k,Linux Mem,1024,DirectMap4k,bytes,gauge,1,,bytes
+Linux,Dirty,Linux Mem,1024,Dirty,bytes,gauge,9,,bytes
+Linux,FileHugePages,Linux Mem,1024,FileHugePages,bytes,gauge,1,,bytes
+Linux,FilePmdMapped,Linux Mem,1024,FilePmdMapped,bytes,gauge,1,,bytes
+Linux,HardwareCorrupted,Linux Mem,1024,HardwareCorrupted,bytes,gauge,1,,bytes
+Linux,HugePages_Free,Linux Mem,1024,HugePages_Free,bytes,gauge,1,,bytes
+Linux,Hugepagesize,Linux Mem,1024,Hugepagesize,bytes,gauge,1,,bytes
+Linux,HugePages_Rsvd,Linux Mem,1024,HugePages_Rsvd,bytes,gauge,1,,bytes
+Linux,HugePages_Surp,Linux Mem,1024,HugePages_Surp,bytes,gauge,1,,bytes
+Linux,HugePages_Total,Linux Mem,1024,HugePages_Total,bytes,gauge,1,,bytes
+Linux,Hugetlb,Linux Mem,1024,Hugetlb,bytes,gauge,1,,bytes
+Linux,Inactive,Linux Mem,1024,Inactive,bytes,gauge,1,,bytes
+Linux,Inactive(anon),Linux Mem,1024,Inactive(anon),bytes,gauge,1,,bytes
+Linux,Inactive(file),Linux Mem,1024,Inactive(file),bytes,gauge,1,,bytes
+Linux,KernelStack,Linux Mem,1024,KernelStack,bytes,gauge,1,,bytes
+Linux,KReclaimable,Linux Mem,1024,KReclaimable,bytes,gauge,1,,bytes
+Linux,Mapped,Linux Mem,1024,Mapped,bytes,gauge,1,,bytes
+Linux,MemAvailable,Linux Mem,1024,MemAvailable,bytes,gauge,9,,bytes
+Linux,MemFree,Linux Mem,1024,MemFree,bytes,gauge,9,,bytes
+Linux,MemTotal,Linux Mem,1024,MemTotal,bytes,gauge,9,,bytes
+Linux,Mlocked,Linux Mem,1024,Mlocked,bytes,gauge,1,,bytes
+Linux,NFS_Unstable,Linux Mem,1024,NFS_Unstable,bytes,gauge,1,,bytes
+Linux,PageTables,Linux Mem,1024,PageTables,bytes,gauge,1,,bytes
+Linux,Percpu,Linux Mem,1024,Percpu,bytes,gauge,1,,bytes
+Linux,SecPageTables,Linux Mem,1024,SecPageTables,bytes,gauge,1,,bytes
+Linux,Shmem,Linux Mem,1024,Shmem,bytes,gauge,1,,bytes
+Linux,ShmemHugePages,Linux Mem,1024,ShmemHugePages,bytes,gauge,1,,bytes
+Linux,ShmemPmdMapped,Linux Mem,1024,ShmemPmdMapped,bytes,gauge,1,,bytes
+Linux,Slab,Linux Mem,1024,Slab,bytes,gauge,1,,bytes
+Linux,SReclaimable,Linux Mem,1024,SReclaimable,bytes,gauge,1,,bytes
+Linux,SUnreclaim,Linux Mem,1024,SUnreclaim,bytes,gauge,1,,bytes
+Linux,SwapCached,Linux Mem,1024,SwapCached,bytes,gauge,1,,bytes
+Linux,SwapFree,Linux Mem,1024,SwapFree,bytes,gauge,5,,bytes
+Linux,SwapTotal,Linux Mem,1024,SwapTotal,bytes,gauge,5,,bytes
+Linux,Unaccepted,Linux Mem,1024,Unaccepted,bytes,gauge,1,,bytes
+Linux,Unevictable,Linux Mem,1024,Unevictable,bytes,gauge,1,,bytes
+Linux,VmallocChunk,Linux Mem,1024,VmallocChunk,bytes,gauge,1,,bytes
+Linux,VmallocTotal,Linux Mem,1024,VmallocTotal,bytes,gauge,1,,bytes
+Linux,VmallocUsed,Linux Mem,1024,VmallocUsed,bytes,gauge,1,,bytes
+Linux,Writeback,Linux Mem,1024,Writeback,bytes,gauge,3,,bytes
+Linux,WritebackTmp,Linux Mem,1024,WritebackTmp,bytes,gauge,1,,bytes
+Linux,Zswap,Linux Mem,1024,Zswap,bytes,gauge,1,,bytes
+Linux,Zswapped,Linux Mem,1024,Zswapped,bytes,gauge,1,,bytes
+Linux,b,Linux VM,1,blocked,integer,gauge,7,,bytes
+Linux,bi,Linux VM,1024,in_bps,bytes,gauge,9,,bytes
+Linux,bo,Linux VM,1024,out_bps,bytes,gauge,9,,bytes
+Linux,buff,Linux VM,1000,buffers,bytes,gauge,5,,bytes
+Linux,cache,Linux VM,1000,cache,bytes,gauge,3,,bytes
+Linux,cs,Linux VM,1,switches,integer,gauge,3,,bytes
+Linux,free,Linux VM,1000,free,bytes,gauge,3,,bytes
+Linux,gu,Linux VM,1,guest,percent,gauge,7,,bytes
+Linux,in,Linux VM,1,interrupts,integer,gauge,1,,bytes
+Linux,r,Linux VM,1,runnable,integer,gauge,7,,bytes
+Linux,si,Linux VM,1000,swap_in,bytes,gauge,5,,bytes
+Linux,so,Linux VM,1000,swap_out,bytes,gauge,5,,bytes
+Linux,st,Linux VM,1,stolen,percent,gauge,5,,bytes
+Linux,swpd,Linux VM,1000,swapped,bytes,gauge,9,,bytes
+Linux,wa,Linux VM,1,wait_io,percent,gauge,9,,bytes
+CPU,sy,VM,1,sustem,percent,gauge,9,,bytes
+CPU,us,VM,1,user,percent,gauge,9,,bytes
+CPU,id,VM,1,idle,percent,gauge,9,,bytes
+Linux,_aqu-sz,Linux Disk,1,aqu-sz,integer,gauge,7,disk,bytes
+Linux,_dareq-sz,Linux Disk,1,dareq-sz,integer,gauge,1,disk,bytes
+Linux,_d_await,Linux Disk,1,d_await,ms,gauge,1,disk,bytes
+Linux,_dMB/s,Linux Disk,1048576,d_bps,bytes,gauge,1,disk,bytes
+Linux,_%drqm,Linux Disk,1,%drqm,percent,gauge,1,disk,bytes
+Linux,_drqm/s,Linux Disk,1,drqm/s,integer,gauge,1,disk,bytes
+Linux,_d/s,Linux Disk,1,d/s,integer,gauge,1,disk,bytes
+Linux,_f_await,Linux Disk,1,f_await,ms,gauge,3,disk,bytes
+Linux,_f/s,Linux Disk,1,f/s,integer,gauge,3,disk,bytes
+Linux,_rareq-sz,Linux Disk,1,r_req_sz,integer,gauge,5,disk,bytes
+Linux,_r_await,Linux Disk,1,r_await,ms,gauge,7,disk,bytes
+Linux,_rMB/s,Linux Disk,1048576,r_bps,bytes,gauge,9,disk,bytes
+Linux,_%rrqm,Linux Disk,1,%rrqm,percent,gauge,5,disk,bytes
+Linux,_rrqm/s,Linux Disk,1,rrqm/s,integer,gauge,5,disk,bytes
+Linux,_r/s,Linux Disk,1,r/s,integer,gauge,9,disk,bytes
+Linux,_%util,Linux Disk,1,util_pct,percent,gauge,9,disk,bytes
+Linux,_wareq-sz,Linux Disk,1,w_req_sz,integer,gauge,5,disk,bytes
+Linux,_w_await,Linux Disk,1,w_await,ms,gauge,7,disk,bytes
+Linux,_wMB/s,Linux Disk,1048576,w_bps,bytes,gauge,9,disk,bytes
+Linux,_%wrqm,Linux Disk,1,%wrqm,percent,gauge,5,disk,bytes
+Linux,_wrqm/s,Linux Disk,1,wrqm/s,integer,gauge,5,disk,bytes
+Linux,_w/s,Linux Disk,1,w/s,integer,gauge,9,disk,bytes
+Darwin,_KB/t,Mac Disk,1,KB/t,integer,gauge,7,disk,bytes
+Darwin,_MB/s,Mac Disk,1048576,tot_bps,bytes,gauge,9,disk,bytes
+Darwin,_tps,Mac Disk,1,total_ps,integer,gauge,9,disk,bytes
+Darwin,1m,Mac Disk,1,load_1m,integer,gauge,9,,bytes
+Darwin,5m,Mac Disk,1,load_5m,integer,gauge,7,,bytes
+Darwin,15m,Mac Disk,1,load_15m,integer,gauge,7,,bytes
+Darwin,0fill,Mac Mem,4096,0fill,bytes,gauge,1,,bytes
+Darwin,active,Mac Mem,4096,active,bytes,gauge,9,,bytes
+Darwin,anonymous,Mac Mem,4096,anonymous,bytes,gauge,1,,bytes
+Darwin,cmprssed,Mac Mem,4096,cmprssed,bytes,gauge,1,,bytes
+Darwin,cmprssor,Mac Mem,4096,cmprssor,bytes,gauge,1,,bytes
+Darwin,comprs,Mac Mem,1,comprs,integer,gauge,1,,bytes
+Darwin,copy,Mac Mem,4096,copy,bytes,gauge,1,,bytes
+Darwin,dcomprs,Mac Mem,1,dcomprs,integer,gauge,1,,bytes
+Darwin,faults,Mac Mem,1,faults,integer,gauge,1,,bytes
+Darwin,file-backed,Mac Mem,4096,file-backed,bytes,gauge,1,,bytes
+Darwin,free,Mac Mem,4096,free,bytes,gauge,9,,bytes
+Darwin,inactive,Mac Mem,4096,inactive,bytes,gauge,1,,bytes
+Darwin,pageins,Mac Mem,4096,pageins,bytes,gauge,1,,bytes
+Darwin,pageout,Mac Mem,4096,pageout,bytes,gauge,1,,bytes
+Darwin,prgable,Mac Mem,4096,prgable,bytes,gauge,1,,bytes
+Darwin,purged,Mac Mem,4096,purged,bytes,gauge,1,,bytes
+Darwin,reactive,Mac Mem,4096,reactive,bytes,gauge,1,,bytes
+Darwin,specul,Mac Mem,4096,specul,bytes,gauge,1,,bytes
+Darwin,swapins,Mac Mem,4096,swapins,bytes,gauge,5,,bytes
+Darwin,swapouts,Mac Mem,4096,swapouts,bytes,gauge,5,,bytes
+Darwin,throttle,Mac Mem,4096,throttle,bytes,gauge,5,,bytes
+Darwin,wired,Mac Mem,4096,wired,bytes,gauge,1,,bytes
+Database,pg_clients_active,Database,1,clients_active,integer,gauge,7,,bytes
+Database,pg_clients_idle,Database,1,clients_idle,integer,gauge,7,,bytes
+Database,pg_db_size,Database,1,db_size,bytes,gauge,9,,bytes
+Database,pg_max_query_runtime_sec,Database,1,max_runtime,seconds,gauge,7,,bytes
+Database,min_latency,Database,1,pg_min_latency,ms,gauge,9,,bytes
+Database,avg_latency,Database,1,pg_avg_latency,ms,gauge,9,,bytes
+Database,max_latency,Database,1,pg_max_latency,ms,gauge,9,,bytes
+Linux,Avg_MHz,Power,1,avg_mhz,mhz,integer,5,,bytes
+Linux,Bzy_MHz,Power,1,busy_mhz,mhz,integer,5,,bytes
+Linux,Busy%,Power,1,busy_pct,percent,gauge,5,,bytes
+Linux,C3,Power,1,C3,integer,gauge,1,,bytes
+Linux,C3%,Power,1,c3_pct,percent,gauge,5,,bytes
+Linux,CorWatt,Power,1,core,watts,gauge,5,,bytes
+Linux,PkgWatt,Power,1,package,watts,gauge,5,,bytes
+Darwin,CPU_Power_mW,Power,0.001,core,watts,gauge,5,,bytes
+Darwin,Combined_Power_mW,Power,0.001,package,watts,gauge,5,,bytes

@@ -312,7 +312,8 @@ CREATE TABLE metrics_info (
   units text,
   style text,
   visibility int,
-  prefix text
+  prefix text,
+  scale text
 );
 
 ALTER TABLE server ADD COLUMN server_os_release text;

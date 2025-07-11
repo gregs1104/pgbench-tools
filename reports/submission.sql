@@ -26,8 +26,9 @@ ALTER SEQUENCE submission_seq OWNED BY submission.submit_id;
 INSERT INTO submission (
     submitter, affiliation,
     ref_info, run, cpu, mem_gb, disk, server_ver, os_rel, conn,
-    script, set, scale, clients, db_gb, nodes,
-    tps, avg_latency, percentile_90_latency, max_latency, rate_limit, hours, nodes_kips,
+    script, set, clients, scale, nodes, db_gb,
+    tps, avg_latency, percentile_90_latency, max_latency, rate_limit,
+    hours, nodes_kips,
     shared_gb, maint_gb, max_wal_gb, fsync, wal_level, timeout,
     timed_pct, chkp_mins, chkp_mbph, clean_mbph, backend_mbph, cleaned_pct, max_dirty,
     hit_pct, hit_mbps, read_mbps, wal_mbps,

@@ -325,7 +325,7 @@ CREATE TABLE metrics_info (
 TRUNCATE table metrics_info;
 \copy metrics_info from 'init/metrics_map.csv' WITH (FORMAT CSV, header);
 
-DROP VIEW test_metrics_decode;
+DROP VIEW test_metrics_decode CASCADE;
 CREATE OR REPLACE VIEW test_metrics_decode AS
 SELECT
   d.server,

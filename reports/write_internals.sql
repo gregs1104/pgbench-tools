@@ -123,7 +123,7 @@ CREATE OR REPLACE VIEW write_internals AS
   WHERE
     tests.server=d.server AND
     tests.test=d.test AND
-    (d.metric='PkgWatt' OR d.metric='CPU_Power_mW')
+    (d.metric='PkgWatt' OR d.metric='Combined_Power_mW')
   GROUP BY mi.multi,d.metric
   ) AS avg_package_watts,
   (SELECT
@@ -134,7 +134,7 @@ CREATE OR REPLACE VIEW write_internals AS
   WHERE
     tests.server=d.server AND
     tests.test=d.test AND
-    (d.metric='PkgWatt' OR d.metric='CPU_Power_mW')
+    (d.metric='PkgWatt' OR d.metric='Combined_Power_mW')
   GROUP BY mi.multi,d.metric
   ) AS max_package_watts
 FROM tests,server,test_bgwriter,test_stat_database

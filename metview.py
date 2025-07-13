@@ -151,9 +151,8 @@ def graph_single(options,df):
 
         view_label=gen_label(options,df)
 
-        # TODO put k into generated label
-        units=v['units'][0]
-        ylabel=units
+        units=v['units'].iloc[0]
+        ylabel=k[0]+" - "+units
 
         metrics[k]=metrics[k].drop(columns=['avg','metric'])
         metrics[k].rename(columns={'max': k}, inplace=True)
@@ -167,7 +166,7 @@ def graph_single(options,df):
         ax.set_ylabel(ylabel)
         ax.grid(True,which='both')
 
-        fn=gen_file_name(base,k,server,test)
+        fn=gen_file_name(base,k[0],server,test)
         # TODO Bottom part of graph is strangely cut off?  Rotation issue?
         plt.savefig(fn,dpi=600)  # 80 for =640x480 figures
         print("saved to '%s.png'" % fn)

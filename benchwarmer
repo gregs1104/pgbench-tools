@@ -524,6 +524,8 @@ if [ -z "$trans" ] ; then
 fi
 $RESULTPSQL -q -c "UPDATE tests SET tps='$tps',trans='$trans', trans_latency='$trans' WHERE server='${SERVERNAME}' AND test=$TEST"
 
+$RESULTPSQL -q -c "UPDATE tests SET tps=round((artifacts->'node_count')::numeric / (artifacts->'overall')::numeric / 1000,0) WHERE server='${SERVERNAME}' AND test=$TEST" AND script like \"osm%\" and tps=0;
+
 cp $BASEDIR/config config
 cp $BASEDIR/params params
 cp $BASEDIR/templates/test-index.html index.html

@@ -50,9 +50,10 @@ def gen_label(options,df):
     cpu=df.iloc[0]['server_cpu']
     clients=df.iloc[0]['clients']
     db_gb=round(df.iloc[0]['db_gb'])
-#   Only need to uppercase the basic operations tests like select
-    if (False):
-        script=df.iloc[0]['script'].upper()
+    script=df.iloc[0]['script']
+
+    # TODO Only need to uppercase the basic operations tests like select
+    if (False):  script=script.upper()
 
     try:
         rate_limit=round(df.iloc[0]['rate_limit'])

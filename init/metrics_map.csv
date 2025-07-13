@@ -129,8 +129,8 @@ Database,pg_max_query_runtime_sec,Database,1,max_runtime,seconds,gauge,7,,bytes
 Database,min_latency,Database,1,pg_min_latency,ms,gauge,9,,bytes
 Database,avg_latency,Database,1,pg_avg_latency,ms,gauge,9,,bytes
 Database,max_latency,Database,1,pg_max_latency,ms,gauge,9,,bytes
-Linux,Avg_MHz,Power,1,CPU Average,mhz,gauge,5,,bytes
-Linux,Bzy_MHz,Power,1,CPU Busy,mhz,gauge,5,,bytes
+Linux,Avg_MHz,Power,1,CPU Average Freq,mhz,gauge,5,,bytes
+Linux,Bzy_MHz,Power,1,CPU Busy Freq,mhz,gauge,5,,bytes
 Linux,Busy%,Power,1,CPU Busy,percent,gauge,5,,bytes
 Linux,C3,Power,1,C3,integer,gauge,1,,bytes
 Linux,C3%,Power,1,C3,percent,gauge,5,,bytes
@@ -268,8 +268,8 @@ Database,pg_max_query_runtime_sec,Database,1,max_runtime,seconds,gauge,7,,megaby
 Database,min_latency,Database,1,pg_min_latency,ms,gauge,9,,megabytes
 Database,avg_latency,Database,1,pg_avg_latency,ms,gauge,9,,megabytes
 Database,max_latency,Database,1,pg_max_latency,ms,gauge,9,,megabytes
-Linux,Avg_MHz,Power,1,CPU Average,mhz,gauge,5,,megabytes
-Linux,Bzy_MHz,Power,1,CPU Busy,mhz,gauge,5,,megabytes
+Linux,Avg_MHz,Power,1,CPU Average Freq,mhz,gauge,5,,megabytes
+Linux,Bzy_MHz,Power,1,CPU Busy Freq,mhz,gauge,5,,megabytes
 Linux,Busy%,Power,1,CPU Busy,percent,gauge,5,,megabytes
 Linux,C3,Power,1,C3,integer,gauge,1,,megabytes
 Linux,C3%,Power,1,C3,percent,gauge,5,,megabytes

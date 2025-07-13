@@ -116,7 +116,7 @@ def query_multi_met(options):
     dbagg='second'
 
     sql=gen_sql(options, dbagg)
-    print ("sql=",sql)
+    if (False):  print ("sql=",sql)
     return sql
 
 def query_single_met(options):
@@ -124,7 +124,7 @@ def query_single_met(options):
     dbagg='second'
 
     sql=gen_sql(options, dbagg)
-    print ("sql=",sql)
+    if (False):  print ("sql=",sql)
     return sql
 
 def graph_single(options,df):

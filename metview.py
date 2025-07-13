@@ -61,7 +61,7 @@ def gen_label(options,df):
         rate_limit=round(df.iloc[0]['tps'])
 
     if rate_limit>0:
-        view_label=cpu+" "+script+" "+str(db_gb)+"GB "+str(clients)+" clients @ "+str(rate_limit)+" TPS"
+        view_label=cpu+" "+script+" "+str(db_gb)+"GB "+str(clients)+" clients "+str(rate_limit)+" TPS"
     else:
         view_label=cpu+" "+script+" "+str(db_gb)+"GB "+str(clients)+" clients"
 
@@ -75,6 +75,7 @@ def gen_file_name(base,view,server,test):
 def gen_sql(options,dbagg):
     server=options['server']
     test=options['test']
+    scale='bytes'
 
     # TODO Use SQL injection proof parameter substitution here instead of Python's?
     sql="""
@@ -105,10 +106,11 @@ def gen_sql(options,dbagg):
         d.test=t.test AND
         (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database') AND
         d.test=%s AND
-        d.server='%s'
+        d.server='%s' AND
+        mi.scale='%s'
     GROUP BY d.server,t.server_cpu,script,t.scale,clients,rate_limit,tps,round(dbsize / (1024*1024*1024)),d.metric,mi.prefix,mi.metric_label,mi.units,mi.category,mi.multi,mi.visibility,date_trunc('%s',collected)
     ORDER BY d.server,t.server_cpu,script,t.scale,clients,rate_limit,round(dbsize / (1024*1024*1024)),d.metric,mi.prefix,mi.metric_label,mi.units,mi.category,mi.multi,mi.visibility,date_trunc('%s',collected)
-    ;""" % (dbagg,test,server,dbagg,dbagg)
+    ;""" % (dbagg,test,server,scale,dbagg,dbagg,)
 
     return sql
 

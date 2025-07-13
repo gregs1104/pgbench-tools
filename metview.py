@@ -75,7 +75,7 @@ def gen_file_name(base,view,server,test):
 def gen_sql(options,dbagg):
     server=options['server']
     test=options['test']
-    scale='bytes'
+    scale='megabytes'
 
     # TODO Use SQL injection proof parameter substitution here instead of Python's?
     sql="""

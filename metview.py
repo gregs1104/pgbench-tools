@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
 metview.py generates metrics graphs out of a pgbent benchmark results
@@ -34,7 +34,7 @@ def images_dir(options):
     server=options['server']
     test=str(options['test'])
     # TODO Deal with output to server/test directory given some are missing
-    base=os.path.join("results","images")
+    base=os.path.join("results",server,test,"images")
     try:
         os.mkdir(base)
     except:
@@ -50,7 +50,9 @@ def gen_label(options,df):
     cpu=df.iloc[0]['server_cpu']
     clients=df.iloc[0]['clients']
     db_gb=round(df.iloc[0]['db_gb'])
-    script=df.iloc[0]['script'].upper()
+#   Only need to uppercase the basic operations tests like select
+    if (False):
+        script=df.iloc[0]['script'].upper()
 
     try:
         rate_limit=round(df.iloc[0]['rate_limit'])
@@ -103,8 +105,8 @@ def gen_sql(options,dbagg):
         (mi.uname=t.uname OR mi.uname IS null OR mi.uname='Database') AND
         d.test=%s AND
         d.server='%s'
-    GROUP BY d.server,t.server_cpu,script,scale,clients,rate_limit,tps,round(dbsize / (1024*1024*1024)),d.metric,mi.prefix,mi.metric_label,mi.units,mi.category,mi.multi,mi.visibility,date_trunc('%s',collected)
-    ORDER BY d.server,t.server_cpu,script,scale,clients,rate_limit,round(dbsize / (1024*1024*1024)),d.metric,mi.prefix,mi.metric_label,mi.units,mi.category,mi.multi,mi.visibility,date_trunc('%s',collected)
+    GROUP BY d.server,t.server_cpu,script,t.scale,clients,rate_limit,tps,round(dbsize / (1024*1024*1024)),d.metric,mi.prefix,mi.metric_label,mi.units,mi.category,mi.multi,mi.visibility,date_trunc('%s',collected)
+    ORDER BY d.server,t.server_cpu,script,t.scale,clients,rate_limit,round(dbsize / (1024*1024*1024)),d.metric,mi.prefix,mi.metric_label,mi.units,mi.category,mi.multi,mi.visibility,date_trunc('%s',collected)
     ;""" % (dbagg,test,server,dbagg,dbagg)
 
     return sql
@@ -128,15 +130,10 @@ def query_single_met(options):
 def graph_single(options,df):
     server=options['server']
     test=options['test']
-
     metrics={}
-    rendered=0
-
     base=images_dir(options)
 
     plt.rcParams.update({'font.size':'18'})
-    colors=('green','blue','purple')
-
     logo_file="reports/Color Horizontal.jpg"
     logo=image.imread(logo_file)
     logo_im = OffsetImage(logo, zoom=.03)

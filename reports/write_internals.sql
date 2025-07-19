@@ -1,6 +1,8 @@
 DROP VIEW IF EXISTS write_internals;
 CREATE OR REPLACE VIEW write_internals AS
  SELECT
+  tests.set AS batch_id,
+  testset.info AS batch,
   tests.server || ' - ' || tests.set::text  || ' - ' || tests.test::text AS ref_info,
   to_char(end_time,'YYYY/MM/DD') AS run,
   tests.server_cpu AS cpu,
@@ -10,7 +12,6 @@ CREATE OR REPLACE VIEW write_internals AS
   substring(server_version,1,16) AS server_ver,
   tests.conn_method AS conn,
   script,
-  set,
   clients,
   scale,
   CASE WHEN jsonb_exists(artifacts, 'node_count')
@@ -137,12 +138,13 @@ CREATE OR REPLACE VIEW write_internals AS
     (d.metric='PkgWatt' OR d.metric='Combined_Power_mW')
   GROUP BY mi.multi,d.metric
   ) AS max_package_watts
-FROM tests,server,test_bgwriter,test_stat_database
+FROM tests,server,test_bgwriter,test_stat_database,testset
 WHERE
 --    script LIKE ':-i%' AND
   tests.server=server.server AND
   tests.test=test_bgwriter.test AND tests.server=test_bgwriter.server AND
   tests.test=test_stat_database.test AND tests.server=test_stat_database.server AND
+  testset.set=tests.set AND testset.server=tests.server AND
   extract(epoch from (tests.end_time - tests.start_time))::bigint > 0
 ORDER BY tests.server,tests.server_cpu,tests.server_mem_gb,
   script,
